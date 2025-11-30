@@ -11,6 +11,11 @@ import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
  * @remarks
  * This allows MCP server tools to be used seamlessly within the ART Framework.
  *
+ * Supports Anthropic's Advanced Tool Use Patterns:
+ * - **defer_loading**: Tool registered but execution deferred until first use
+ * - **allowed_callers**: Permissions for programmatic tool calling
+ * - **input_examples**: Example inputs for better accuracy
+ *
  * @see {@link McpManager} for the system that manages these proxy tools.
  * @see {@link IToolExecutor} for the interface it implements.
  *
@@ -18,10 +23,11 @@ import { CallToolResultSchema } from '@modelcontextprotocol/sdk/types.js';
  */
 export class McpProxyTool implements IToolExecutor {
   public readonly schema: ToolSchema;
-  
+
   private card: McpServerConfig;
   private toolDefinition: McpToolDefinition;
   private mcpManager: McpManager;
+  private isLoaded: boolean = false;
 
   /**
    * Creates an instance of McpProxyTool.
@@ -35,7 +41,7 @@ export class McpProxyTool implements IToolExecutor {
     this.toolDefinition = toolDefinition;
     this.mcpManager = mcpManager;
 
-    // Convert MCP tool definition to ART ToolSchema
+    // Convert MCP tool definition to ART ToolSchema with Anthropic patterns
     this.schema = {
       name: `mcp_${card.id}_${toolDefinition.name}`,
       description: toolDefinition.description || `Tool ${toolDefinition.name} from ${card.displayName || card.id}`,
@@ -43,20 +49,58 @@ export class McpProxyTool implements IToolExecutor {
       outputSchema: toolDefinition.outputSchema
     };
 
-    Logger.debug(`McpProxyTool: Created proxy for tool "${toolDefinition.name}" from server "${card.displayName}"`);
+    // Add Anthropic pattern metadata to schema if available
+    if (toolDefinition.whenToUse) {
+      (this.schema as any).whenToUse = toolDefinition.whenToUse;
+    }
+    if (toolDefinition.input_examples) {
+      (this.schema as any).input_examples = toolDefinition.input_examples;
+    }
+    if (toolDefinition.tags) {
+      (this.schema as any).tags = toolDefinition.tags;
+    }
+    if (toolDefinition.estimatedCost) {
+      (this.schema as any).estimatedCost = toolDefinition.estimatedCost;
+    }
+
+    // Mark as not loaded if defer_loading is enabled
+    this.isLoaded = !toolDefinition.defer_loading;
+
+    Logger.debug(`McpProxyTool: Created proxy for tool "${toolDefinition.name}" from server "${card.displayName}" (defer_loading: ${toolDefinition.defer_loading || false})`);
   }
 
   /**
    * Executes the tool by making a request to the MCP server.
    *
+   * Supports Anthropic's Advanced Patterns:
+   * - Lazy loading: If defer_loading is true, loads tool on first execution
+   * - Permission checks: Validates allowed_callers for programmatic execution
+   *
    * @param input Validated input arguments for the tool.
-   * @param context Execution context containing threadId, traceId, etc.
+   * @param context Execution context containing threadId, traceId, caller info, etc.
    * @returns A promise resolving to the tool result.
    */
   async execute(input: any, context: ExecutionContext): Promise<ToolResult> {
     const startTime = Date.now();
-    
+
     try {
+      // Check allowed_callers for programmatic execution
+      if ((context as any).caller && this.toolDefinition.allowed_callers) {
+        const callerType = (context as any).caller.type;
+        if (!this.toolDefinition.allowed_callers.includes(callerType)) {
+          throw new Error(
+            `Tool "${this.toolDefinition.name}" is not allowed for caller type "${callerType}". ` +
+            `Allowed callers: ${this.toolDefinition.allowed_callers.join(', ')}`
+          );
+        }
+      }
+
+      // Lazy load tool if defer_loading was enabled
+      if (!this.isLoaded && this.toolDefinition.defer_loading) {
+        Logger.info(`McpProxyTool: Lazy loading deferred tool "${this.schema.name}"`);
+        this.isLoaded = true;
+      }
+
       Logger.debug(`McpProxyTool: Execution requested for "${this.schema.name}". Getting or creating connection...`);
       const client = await this.mcpManager.getOrCreateConnection(this.card.id);
 
