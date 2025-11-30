@@ -83,6 +83,7 @@ export interface StreamableHttpConnection {
 
 /**
  * Defines the schema for a tool provided by an MCP server.
+ * Enhanced with Anthropic's advanced tool use patterns.
  *
  * @interface McpToolDefinition
  */
@@ -107,6 +108,76 @@ export interface McpToolDefinition {
    * @property {any} [outputSchema]
    */
   outputSchema?: any;
+
+  // ===== Anthropic Advanced Tool Use Patterns =====
+
+  /**
+   * Whether to defer loading this tool until explicitly needed.
+   * Part of Anthropic's Tool Search Tool pattern.
+   * When true, tool definition is not loaded into context upfront.
+   * Instead, it's discovered on-demand via tool search.
+   *
+   * @see https://www.anthropic.com/engineering/advanced-tool-use
+   * @property {boolean} [defer_loading]
+   */
+  defer_loading?: boolean;
+
+  /**
+   * List of callers allowed to invoke this tool programmatically.
+   * Part of Anthropic's Programmatic Tool Calling pattern.
+   * Tools can be called from code execution environment instead of
+   * individual API round-trips, enabling efficient orchestration.
+   *
+   * Example: ['code_execution_20250825']
+   *
+   * @see https://www.anthropic.com/engineering/advanced-tool-use
+   * @property {string[]} [allowed_callers]
+   */
+  allowed_callers?: string[];
+
+  /**
+   * Example tool invocations demonstrating correct usage.
+   * Part of Anthropic's Tool Use Examples pattern.
+   * Shows format conventions, nested structures, optional parameters,
+   * and domain-specific patterns not captured in JSON Schema.
+   *
+   * Improves accuracy from 72% to 90% on complex parameter handling.
+   *
+   * @see https://www.anthropic.com/engineering/advanced-tool-use
+   * @property {any[]} [input_examples]
+   */
+  input_examples?: any[];
+
+  /**
+   * When to use this tool (guidance for the model).
+   * Helps with tool selection accuracy, especially when multiple
+   * similar tools are available.
+   *
+   * @property {string} [whenToUse]
+   */
+  whenToUse?: string;
+
+  /**
+   * Server ID this tool belongs to (internal use).
+   * Added automatically when tool is registered.
+   *
+   * @property {string} [serverId]
+   */
+  serverId?: string;
+
+  /**
+   * Cost estimate for this tool (for user display/tracking).
+   *
+   * @property {number} [estimatedCost]
+   */
+  estimatedCost?: number;
+
+  /**
+   * Tags for categorizing and searching tools.
+   *
+   * @property {string[]} [tags]
+   */
+  tags?: string[];
 }
 
 /**
@@ -169,8 +240,9 @@ export interface McpResourceTemplate {
  * Represents the configuration for a single MCP server.
  *
  * @remarks
- * This is the format for each server entry in the `art_mcp_config.json` file.
+ * This is the format for each server entry in the MCP configuration.
  * It contains all the necessary information for discovering, installing, and connecting to an MCP server.
+ * Enhanced with support for Anthropic's advanced tool use patterns and multi-tenant architecture.
  *
  * @typedef {object} McpServerConfig
  */
@@ -181,10 +253,11 @@ export type McpServerConfig = {
      */
     id: string;
     /**
-     * The transport type for the server, currently only 'streamable-http' is supported.
-     * @property {'streamable-http'} type
+     * The transport type for the server.
+     * Browser-compatible transports only.
+     * @property {'streamable-http' | 'websocket'} type
      */
-    type: 'streamable-http';
+    type: 'streamable-http' | 'websocket';
     /**
      * Whether the server is enabled and should be connected to.
      * @property {boolean} enabled
@@ -230,6 +303,118 @@ export type McpServerConfig = {
      * @property {McpResourceTemplate[]} resourceTemplates
      */
     resourceTemplates: McpResourceTemplate[];
+
+    // ===== Advanced Patterns and Multi-Tenancy Support =====
+
+    /**
+     * Defer loading ALL tools from this server (Tool Search Tool pattern).
+     * When true, tools are only loaded on-demand via search.
+     * Can be overridden per-tool with tool.defer_loading.
+     *
+     * @property {boolean} [defer_loading]
+     */
+    defer_loading?: boolean;
+
+    /**
+     * Scope of this server configuration.
+     * - 'app': Provided by the application developer, available to all users
+     * - 'user': Added by a specific user, isolated per-user
+     *
+     * @property {'app' | 'user'} [scope]
+     */
+    scope?: 'app' | 'user';
+
+    /**
+     * User ID this server belongs to (if scope is 'user').
+     *
+     * @property {string} [userId]
+     */
+    userId?: string;
+
+    /**
+     * Trust level for this server.
+     * - 'verified': Official or verified by registry
+     * - 'community': Community-provided
+     * - 'user': User-added (default)
+     *
+     * @property {'verified' | 'community' | 'user'} [trustLevel]
+     */
+    trustLevel?: 'verified' | 'community' | 'user';
+
+    /**
+     * Cost/pricing information for this server.
+     *
+     * @property {object} [pricing]
+     */
+    pricing?: {
+      /** Pricing model */
+      model?: 'free' | 'freemium' | 'paid' | 'enterprise';
+      /** Cost per tool call (for display) */
+      costPerCall?: number;
+      /** Free tier limits */
+      freeTier?: {
+        callsPerDay?: number;
+        callsPerMonth?: number;
+      };
+    };
+
+    /**
+     * Rate limits for this server.
+     *
+     * @property {object} [rateLimits]
+     */
+    rateLimits?: {
+      /** Maximum calls per minute */
+      callsPerMinute?: number;
+      /** Maximum calls per hour */
+      callsPerHour?: number;
+      /** Maximum calls per day */
+      callsPerDay?: number;
+    };
+
+    /**
+     * Tags for categorizing and discovering servers.
+     *
+     * @property {string[]} [tags]
+     */
+    tags?: string[];
+
+    /**
+     * Icon URL for UI display.
+     *
+     * @property {string} [icon]
+     */
+    icon?: string;
+
+    /**
+     * Provider/vendor information.
+     *
+     * @property {object} [provider]
+     */
+    provider?: {
+      /** Provider name */
+      name?: string;
+      /** Provider website */
+      website?: string;
+      /** Documentation URL */
+      documentation?: string;
+      /** Support URL */
+      support?: string;
+    };
+
+    /**
+     * When this server configuration was created.
+     *
+     * @property {number} [createdAt]
+     */
+    createdAt?: number;
+
+    /**
+     * When this server configuration was last updated.
+     *
+     * @property {number} [updatedAt]
+     */
+    updatedAt?: number;
 };
 
 /**
