@@ -266,15 +266,53 @@ export class AgentFactory {
             if (!this.toolRegistry || !this.stateManager) {
                 throw new Error("MCP Manager requires ToolRegistry and StateManager to be initialized first.");
             }
-            // McpManager now reads its own config from the file system and discovers from Zyntopia.
-            this.mcpManager = new McpManager(
-                this.toolRegistry,
-                this.stateManager,
-                this.authManager || undefined
-            );
-            // Initialize with both local config and Zyntopia discovery
-            await this.mcpManager.initialize(this.config.mcpConfig);
-            Logger.info("McpManager Hub initialized with local config and Zyntopia discovery.");
+
+            // Determine MCP version (default to V2)
+            const mcpVersion = this.config.mcpConfig.version || 'v2';
+
+            if (mcpVersion === 'v2') {
+                // Initialize McpManagerV2 (new multi-tenant system)
+                const { McpManagerV2 } = await import('@/systems/mcp');
+
+                // Get user ID from auth or config
+                const userId = this.config.mcpConfig.userId
+                    || this.authManager?.getCurrentUser?.()?.id
+                    || 'anonymous';
+
+                this.mcpManager = new McpManagerV2(
+                    this.toolRegistry,
+                    this.stateManager,
+                    this.authManager || undefined,
+                    {
+                        userId,
+                        corsProxyUrl: this.config.mcpConfig.corsProxyUrl,
+                        toolSearchStrategy: this.config.mcpConfig.toolSearchStrategy || 'bm25',
+                        enableProgrammaticCalling: this.config.mcpConfig.enableProgrammaticCalling !== false
+                    }
+                );
+
+                await this.mcpManager.initialize({
+                    enabled: this.config.mcpConfig.enabled,
+                    userId,
+                    discoveryEndpoint: this.config.mcpConfig.discoveryEndpoint,
+                    corsProxyUrl: this.config.mcpConfig.corsProxyUrl,
+                    toolSearchStrategy: this.config.mcpConfig.toolSearchStrategy
+                });
+
+                Logger.info("McpManagerV2 initialized with multi-tenant architecture and Anthropic patterns.");
+            } else {
+                // Initialize legacy McpManager (V1)
+                const { McpManager } = await import('@/systems/mcp');
+
+                this.mcpManager = new McpManager(
+                    this.toolRegistry,
+                    this.stateManager,
+                    this.authManager || undefined
+                );
+
+                await this.mcpManager.initialize(this.config.mcpConfig);
+                Logger.info("McpManager (V1) initialized with local config and Zyntopia discovery.");
+            }
         }
     }
 

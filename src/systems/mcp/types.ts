@@ -481,6 +481,39 @@ export interface McpManagerConfig {
    * @property {string} [discoveryEndpoint]
    */
   discoveryEndpoint?: string;
+  /**
+   * MCP Manager version to use. Defaults to 'v2'.
+   * - 'v1': Legacy McpManager (localStorage-based, static config)
+   * - 'v2': McpManagerV2 (IndexedDB-based, multi-tenant, Anthropic patterns)
+   * @property {'v1' | 'v2'} [version]
+   */
+  version?: 'v1' | 'v2';
+  /**
+   * User ID for multi-tenant isolation (V2 only).
+   * If not provided, will be derived from AuthManager or set to 'anonymous'.
+   * @property {string} [userId]
+   */
+  userId?: string;
+  /**
+   * CORS proxy URL for browser-friendly MCP connections (V2 only).
+   * Use edge function templates from /edge-functions/cors-proxy/
+   * @property {string} [corsProxyUrl]
+   */
+  corsProxyUrl?: string;
+  /**
+   * Tool search strategy for on-demand tool loading (V2 only).
+   * - 'regex': Fast keyword matching
+   * - 'bm25': Balanced accuracy and speed (default)
+   * - 'semantic': Embedding-based (future)
+   * @property {'regex' | 'bm25' | 'semantic'} [toolSearchStrategy]
+   */
+  toolSearchStrategy?: 'regex' | 'bm25' | 'semantic';
+  /**
+   * Enable programmatic tool calling from code execution (V2 only).
+   * Defaults to true.
+   * @property {boolean} [enableProgrammaticCalling]
+   */
+  enableProgrammaticCalling?: boolean;
 }
 
 // McpClientConfig is no longer needed as the new McpClient takes a simpler config.
