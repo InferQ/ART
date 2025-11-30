@@ -1,0 +1,40 @@
+# Cloudflare Worker Configuration for ART CORS Proxy
+
+name = "art-cors-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+account_id = "" # Add your Cloudflare account ID
+
+# Workers Free Tier: 100,000 requests/day
+workers_dev = true
+
+# Route configuration (optional - for custom domains)
+# routes = [
+#   { pattern = "cors-proxy.your-domain.com/*", zone_name = "your-domain.com" }
+# ]
+
+# Environment variables
+[vars]
+# Add any environment-specific variables here
+# NODE_ENV = "production"
+
+# Limits
+[limits]
+cpu_ms = 10  # 10ms CPU time per request (Free tier)
+
+# Development configuration
+[env.development]
+name = "art-cors-proxy-dev"
+
+# Production configuration
+[env.production]
+name = "art-cors-proxy"
+routes = []  # Add your production routes here
+
+# Build configuration
+[build]
+command = "echo 'No build required'"
+
+[build.upload]
+format = "modules"
+main = "./src/index.ts"

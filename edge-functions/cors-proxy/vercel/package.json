@@ -1,0 +1,22 @@
+{
+  "name": "art-cors-proxy-vercel",
+  "version": "1.0.0",
+  "description": "CORS Proxy Edge Function for ART Framework - Vercel Deployment",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "vercel build",
+    "deploy": "vercel deploy --prod"
+  },
+  "dependencies": {
+    "@vercel/edge": "^1.1.1"
+  },
+  "devDependencies": {
+    "vercel": "^33.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
