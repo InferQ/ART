@@ -2,7 +2,7 @@
 
 ## Overview
 
-The PES (Plan-Execute-Synthesize) Agent is a core component of the ART framework that implements a structured approach to AI agent orchestration. It follows a three-phase execution model that separates planning, execution, and response synthesis to create more reliable and explainable AI interactions.
+The PES (Plan-Execute-Synthesize) Agent is a core component of the ART framework that implements a structured approach to AI agent orchestration. Starting from v0.3.9, it follows a **ReAct-like iterative loop** model that separates planning, execution, and response synthesis to create more reliable and explainable AI interactions. The agent can now iterate multiple times (up to 5) to refine its plan based on tool execution results.
 
 ## Key Components and Their Roles
 
@@ -20,32 +20,43 @@ The PESAgent relies on several key dependencies that are injected at initializat
 - **ToolSystem**: Orchestrates tool execution
 - **UISystem**: Provides UI communication sockets
 - **A2ATaskRepository**: Manages Agent-to-Agent tasks
-- **AgentDiscoveryService**: Discovers remote agents
-- **TaskDelegationService**: Delegates tasks to remote agents
+- **AgentDiscoveryService**: Discovers remote agents (optional)
+- **TaskDelegationService**: Delegates tasks to remote agents (optional)
 - **SystemPromptResolver**: Resolves system prompt hierarchy
+- **Persona**: Optional agent persona defining name and stage-specific prompts
+
+Note: As of v0.3.9, the PromptManager dependency has been removed. The PESAgent now constructs prompts directly as `ArtStandardPrompt` objects.
 
 ### 3. Agent Persona
 Defines the identity and guidance for the agent with separate prompts for planning and synthesis phases.
 
 ## Workflow of the PES Agent
 
-The PES agent follows a structured 8-phase workflow:
+The PES agent follows a structured workflow with a **ReAct-like iterative loop** (v0.3.9+):
 
-1. **Configuration Loading**
-   - Loads thread context and configuration
-   - Resolves system prompts through the hierarchy (call → thread → instance)
-   - Determines runtime provider configuration
+### Phase 1: Configuration Loading
+- Loads thread context and configuration
+- Resolves persona hierarchy (call → thread → instance)
+- Resolves system prompts through the hierarchy for both planning and synthesis stages
+- Determines runtime provider configuration
 
-2. **Context Gathering**
-   - Retrieves conversation history based on thread configuration
-   - Gathers available tools for the current thread
+### Phase 2: Context Gathering
+- Retrieves conversation history based on thread configuration
+- Gathers available tools for the current thread
 
-3. **Planning Phase**
+### Phase 3: Execution Loop (ReAct-like)
+
+The agent now executes an iterative loop (max 5 iterations) that allows it to refine its plan based on tool execution results:
+
+**For each iteration:**
+
+1. **Planning**
    - Constructs a planning prompt with:
      - System prompt guidance
      - Conversation history
      - Available tools (including virtual delegation tool)
      - Agent delegation context
+     - **Previous execution steps** (tool results, A2A task results from prior iterations)
    - Calls the LLM for planning
    - Parses the planning output to extract:
      - Thread title
@@ -54,38 +65,73 @@ The PES agent follows a structured 8-phase workflow:
      - Tool calls
    - Records observations for each planning element
 
-4. **A2A Task Delegation**
+2. **A2A Task Delegation** (if tool calls present)
    - Identifies delegation tool calls in the plan
    - Delegates tasks to remote agents through the A2A system
    - Persists task information in the repository
 
-5. **A2A Task Completion Waiting**
-   - Waits for delegated tasks to complete with configurable timeout
-   - Polls task status periodically
+3. **A2A Task Completion Waiting** (if A2A tasks were delegated)
+   - Waits for delegated tasks to complete with configurable timeout (default 30s)
+   - Polls task status periodically (default 2s)
    - Updates task information with results
 
-6. **Tool Execution**
+4. **Tool Execution** (if local tool calls present)
    - Executes local tool calls identified in the planning phase
    - Records tool execution results and errors
-   - Handles partial success scenarios
+   - Tool errors no longer halt execution; results (including errors) are fed to next iteration
 
-7. **Synthesis Phase**
-   - Constructs a synthesis prompt with:
-     - System prompt guidance
-     - Conversation history
+5. **Observation Recording**
+   - Records the execution step including:
+     - Iteration number
      - Planning output
-     - Tool execution results
+     - Tool results
      - A2A task results
-   - Calls the LLM for final response generation
-   - Parses the final response to extract:
-     - Main content
-     - UI metadata (sources, suggestions)
-   - Records synthesis observations
+     - Planning context
 
-8. **Finalization**
-   - Saves the final AI response message
-   - Records the final response observation
-   - Saves state if modified
+**Loop Termination Conditions:**
+- No tool calls were identified in the planning phase
+- Maximum iterations (5) reached
+
+### Phase 4: Synthesis
+- Constructs a synthesis prompt with:
+  - System prompt guidance
+  - Conversation history
+  - **Complete execution history from all iterations**
+- Calls the LLM for final response generation
+- Parses the final response to extract:
+  - Main content
+  - UI metadata (sources, suggestions)
+- Records synthesis observations
+
+### Phase 5: Finalization
+- Saves the final AI response message
+- Records the final response observation
+- Saves state if modified
+
+### ExecutionStep Interface
+
+Each iteration is tracked via an `ExecutionStep` object:
+
+```typescript
+interface ExecutionStep {
+    iteration: number;
+    planningOutput: {
+        title?: string;
+        intent?: string;
+        plan?: any;
+        toolCalls?: ParsedToolCall[];
+        thoughts?: string;
+    };
+    toolResults: ToolResult[];
+    a2aTasks: A2ATask[];
+    planningContext?: {
+        toolsList: { name: string; description?: string }[];
+        a2aSummary: string;
+        plannedToolCalls: ParsedToolCall[];
+        rawPlanningText?: string;
+    };
+}
+```
 
 ## Statement Features and Developer Usage
 
@@ -319,82 +365,99 @@ const art = await createArtInstance(config);
 flowchart TD
     A[Start: User Query] --> B[Load Configuration]
     B --> C[Gather Context]
-    C --> D[Planning Phase]
-    D --> E[Parse Planning Output]
-    E --> F[A2A Task Delegation]
-    F --> G[A2A Task Completion]
-    G --> H[Tool Execution]
-    H --> I[Synthesis Phase]
-    I --> J[Parse Final Response]
-    J --> K[Finalization]
-    K --> L[Save State]
-    L --> M[Return Response]
-    
+    C --> D{Iteration < MAX?}
+    D -->|Yes| E[Planning Phase]
+    E --> F[Parse Planning Output]
+    F --> G{Has Tool Calls?}
+    G -->|Yes| H[A2A Task Delegation]
+    H --> I[A2A Task Completion]
+    I --> J[Tool Execution]
+    J --> K[Record Execution Step]
+    K --> D
+    G -->|No| L[Record Final Step]
+    D -->|No - Max Reached| L
+    L --> M[Synthesis Phase]
+    M --> N[Parse Final Response]
+    N --> O[Finalization]
+    O --> P[Save State]
+    P --> Q[Return Response]
+
     subgraph Configuration
         B1[Load Thread Context]
-        B2[Resolve System Prompts]
-        B3[Determine Provider Config]
-        B --> B1 --> B2 --> B3 --> C
+        B2[Resolve Persona Hierarchy]
+        B3[Resolve System Prompts]
+        B4[Determine Provider Config]
+        B --> B1 --> B2 --> B3 --> B4 --> C
     end
-    
+
     subgraph Context_Gathering
         C1[Gather History]
         C2[Gather Tools]
         C --> C1 --> C2 --> D
     end
-    
-    subgraph Planning
-        D1[Construct Planning Prompt]
-        D2[LLM Call for Planning]
-        D3[Stream Planning Tokens]
-        D --> D1 --> D2 --> D3 --> E
+
+    subgraph Execution_Loop["Execution Loop (ReAct-like, Max 5 Iterations)"]
+        subgraph Planning
+            E1[Construct Planning Prompt]
+            E2[Include Previous Steps]
+            E3[LLM Call for Planning]
+            E4[Stream Planning Tokens]
+            E --> E1 --> E2 --> E3 --> E4 --> F
+        end
+
+        subgraph Planning_Parse
+            F1[Parse Intent/Title]
+            F2[Parse Plan]
+            F3[Parse Tool Calls]
+            F --> F1 --> F2 --> F3 --> G
+        end
+
+        subgraph A2A_Delegation
+            H1[Identify Delegation Calls]
+            H2[Delegate to Remote Agents]
+            H3[Persist Task Data]
+            H --> H1 --> H2 --> H3 --> I
+        end
+
+        subgraph A2A_Waiting
+            I1[Wait for Task Completion]
+            I2[Poll Task Status]
+            I3[Update Task Results]
+            I --> I1 --> I2 --> I3 --> J
+        end
+
+        subgraph Tool_Execution
+            J1[Execute Local Tools]
+            J2[Record Tool Results]
+            J --> J1 --> J2 --> K
+        end
+
+        subgraph Step_Recording
+            K1[Create ExecutionStep]
+            K2[Add to History]
+            K --> K1 --> K2 --> D
+        end
     end
-    
-    subgraph Planning_Parse
-        E1[Parse Intent/Title]
-        E2[Parse Plan]
-        E3[Parse Tool Calls]
-        E --> E1 --> E2 --> E3 --> F
-    end
-    
-    subgraph A2A_Delegation
-        F1[Identify Delegation Calls]
-        F2[Delegate to Remote Agents]
-        F3[Persist Task Data]
-        F --> F1 --> F2 --> F3 --> G
-    end
-    
-    subgraph A2A_Waiting
-        G1[Wait for Task Completion]
-        G2[Poll Task Status]
-        G3[Update Task Results]
-        G --> G1 --> G2 --> G3 --> H
-    end
-    
-    subgraph Tool_Execution
-        H1[Execute Local Tools]
-        H2[Record Tool Results]
-        H --> H1 --> H2 --> I
-    end
-    
+
     subgraph Synthesis
-        I1[Construct Synthesis Prompt]
-        I2[LLM Call for Synthesis]
-        I3[Stream Response Tokens]
-        I --> I1 --> I2 --> I3 --> J
+        M1[Construct Synthesis Prompt]
+        M2[Include All Execution History]
+        M3[LLM Call for Synthesis]
+        M4[Stream Response Tokens]
+        M --> M1 --> M2 --> M3 --> M4 --> N
     end
-    
+
     subgraph Synthesis_Parse
-        J1[Extract Main Content]
-        J2[Extract UI Metadata]
-        J --> J1 --> J2 --> K
+        N1[Extract Main Content]
+        N2[Extract UI Metadata]
+        N --> N1 --> N2 --> O
     end
-    
+
     subgraph Finalization
-        K1[Save AI Response]
-        K2[Record Final Observation]
-        K --> K1 --> K2 --> L
+        O1[Save AI Response]
+        O2[Record Final Observation]
+        O --> O1 --> O2 --> P
     end
 ```
 
-The PES agent provides a robust, extensible framework for building AI applications with clear separation of concerns, detailed observability, and support for both local and distributed agent architectures.
+The PES agent provides a robust, extensible framework for building AI applications with clear separation of concerns, detailed observability, iterative refinement through ReAct-like loops, and support for both local and distributed agent architectures.
