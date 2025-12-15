@@ -12,7 +12,6 @@ import {
     ToolRegistry,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     type IToolExecutor, // type-only import
-    PromptManager,
     // ProviderAdapter, // Removed direct ProviderAdapter interface import
     ReasoningEngine,
     OutputParser,
@@ -46,7 +45,6 @@ import { ObservationManager as ObservationManagerImpl } from '@/systems/observat
 import { ToolRegistry as ToolRegistryImpl } from '@/systems/tool/ToolRegistry'; // Correct path
 import { ToolSystem as ToolSystemImpl } from '@/systems/tool/ToolSystem'; // Correct path
 // Reasoning System
-import { PromptManager as PromptManagerImpl } from '@/systems/reasoning/PromptManager'; // Correct path
 import { SystemPromptResolver as SystemPromptResolverImpl } from '@/systems/reasoning/SystemPromptResolver';
 import { ReasoningEngine as ReasoningEngineImpl } from '@/systems/reasoning/ReasoningEngine'; // Correct path
 import { OutputParser as OutputParserImpl } from '@/systems/reasoning/OutputParser'; // Correct path
@@ -137,7 +135,6 @@ export class AgentFactory {
     // private providerAdapter: ProviderAdapter | null = null; // Replaced with providerManager
     private providerManager: IProviderManager | null = null; // Added providerManager
     private reasoningEngine: ReasoningEngine | null = null;
-    private promptManager: PromptManager | null = null;
     private outputParser: OutputParser | null = null;
     private systemPromptResolver: any | null = null;
     private toolSystem: ToolSystem | null = null;
@@ -227,10 +224,9 @@ export class AgentFactory {
 
         // --- Initialize Reasoning Components ---
         this.reasoningEngine = new ReasoningEngineImpl(this.providerManager!); // Pass ProviderManager
-        this.promptManager = new PromptManagerImpl(); // Basic implementation for now
         // Initialize SystemPromptResolver with registry from config if provided
         const registry = (this.config as any).systemPrompts as import('../types').SystemPromptsRegistry | undefined;
-        this.systemPromptResolver = new SystemPromptResolverImpl(this.promptManager as any, registry);
+        this.systemPromptResolver = new SystemPromptResolverImpl(registry);
         this.outputParser = new OutputParserImpl(); // Basic implementation for now
 
         // --- Initialize Tool System ---
@@ -288,7 +284,7 @@ export class AgentFactory {
     createAgent(): IAgentCore {
         // Check for all required components after initialization
         if (!this.stateManager || !this.conversationManager || !this.toolRegistry ||
-            !this.promptManager || !this.reasoningEngine || !this.outputParser ||
+            !this.reasoningEngine || !this.outputParser ||
             !this.observationManager || !this.toolSystem || !this.providerManager ||
             !this.a2aTaskRepository) { // Check A2A task repository
             throw new Error("AgentFactory not fully initialized. Call initialize() before creating an agent.");
@@ -300,7 +296,6 @@ export class AgentFactory {
             stateManager: this.stateManager,
             conversationManager: this.conversationManager,
             toolRegistry: this.toolRegistry,
-            promptManager: this.promptManager,
             reasoningEngine: this.reasoningEngine,
             outputParser: this.outputParser,
             observationManager: this.observationManager,
