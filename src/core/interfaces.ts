@@ -20,6 +20,8 @@ import {
   AgentState,
   // --- Import new types (Refactor Phase 1) ---
   ArtStandardPrompt,
+  TodoItem,
+  ExecutionOutput
 } from '@/types';
 
 // Re-export types that might be needed by implementers of these core interfaces
@@ -43,7 +45,9 @@ export type {
   AgentState,
   ArtStandardPrompt,
   StreamEvent, // Also re-export StreamEvent as it's used in ReasoningEngine
-  LLMMetadata  // Also re-export LLMMetadata
+  LLMMetadata,  // Also re-export LLMMetadata
+  TodoItem,
+  ExecutionOutput
 } from '@/types';
 
 
@@ -131,7 +135,15 @@ export interface OutputParser {
     plan?: string;
     toolCalls?: ParsedToolCall[];
     thoughts?: string;
+    todoList?: TodoItem[];
   }>;
+
+  /**
+   * Parses the raw string output from the execution LLM call (per todo item).
+   * @param output - The raw string response from the execution LLM call.
+   * @returns A promise resolving to the structured execution output.
+   */
+  parseExecutionOutput(output: string): Promise<ExecutionOutput>;
 
   /**
    * Parses the raw string output from the synthesis LLM call to extract the final, user-facing response content.

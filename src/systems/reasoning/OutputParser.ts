@@ -1,7 +1,7 @@
 // src/systems/reasoning/OutputParser.ts
 import * as z from 'zod'; // Import Zod
 import { OutputParser as IOutputParser } from '@/core/interfaces';
-import { ParsedToolCall } from '@/types';
+import { ParsedToolCall, TodoItem, TodoItemStatus, ExecutionOutput } from '@/types';
 import { Logger } from '@/utils/logger'; // Import the Logger class
 import { XmlMatcher } from '@/utils/xml-matcher'; // Import XmlMatcher
 
@@ -15,230 +15,197 @@ const parsedToolCallSchema = z.object({
 // Define Zod schema for an array of tool calls
 const toolCallsSchema = z.array(parsedToolCallSchema);
 
+const todoItemSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  status: z.nativeEnum(TodoItemStatus).optional().default(TodoItemStatus.PENDING),
+  dependencies: z.array(z.string()).optional()
+});
+const todoListSchema = z.array(todoItemSchema);
+
 /**
  * Default implementation of the `OutputParser` interface.
- * - Planning: Extracts Intent, Plan, and Tool Calls from the LLM output while ignoring any
- *   custom formatting constraints that apps may add. Tool Calls MUST be a JSON array where each
- *   item conforms to { callId: string, toolName: string, arguments: object }. If Tool Calls
- *   appears but contains no items, returns []. If the section is absent, leaves `toolCalls` undefined.
- * - Synthesis: Returns the final response text (trimmed).
- *
- * This enforces the framework-level Output Contract and keeps the structure provider-agnostic
- * and tool-type-agnostic (native and MCP tools share the same interface).
- *
- * It is responsible for parsing the raw string output from a Large Language Model (LLM)
- * and converting it into a structured format that the ART agent can understand and act upon.
- * This includes extracting the agent's intent, the plan, and any tool calls it intends to make.
- *
- * @see {@link IOutputParser} for the interface definition.
  */
 export class OutputParser implements IOutputParser {
+
   /**
-   * Parses the raw string output from the planning LLM call to extract structured information.
-   *
-   * This method performs the following steps:
-   * 1. Uses `XmlMatcher` to identify and extract content within `<think>...</think>` tags.
-   *    The extracted content is aggregated into the `thoughts` field of the result.
-   * 2. Attempts a JSON-first parse (Option 2): tries to parse a single JSON object containing
-   *    `{ title?, intent, plan, toolCalls }`. If successful, returns immediately.
-   * 3. Falls back to the section-based parser (Option 1): parses `Title:`, `Intent:`, `Plan:`, and `Tool Calls:`
-   *    sections from the remaining content. Includes tolerant fallbacks for common wrappers (e.g., code fences).
-   *
-   * The `title` value should be a concise sentence with no more than 10 words.
+   * Parses the raw string output from the planning LLM call.
+   * Expects JSON output with `title`, `intent`, `plan` (description), and `todoList`.
    */
   async parsePlanningOutput(output: string): Promise<{
     title?: string;
     intent?: string;
     plan?: string;
     toolCalls?: ParsedToolCall[];
-    thoughts?: string; // Add thoughts to the return type
+    thoughts?: string;
+    todoList?: TodoItem[];
   }> {
-   const result: {
-     title?: string;
-     intent?: string;
-     plan?: string;
-     toolCalls?: ParsedToolCall[];
-     thoughts?: string;
-   } = {};
+    const result: {
+      title?: string;
+      intent?: string;
+      plan?: string;
+      toolCalls?: ParsedToolCall[];
+      thoughts?: string;
+      todoList?: TodoItem[];
+    } = {};
 
-   let processedOutput = output;
-   const thoughtsList: string[] = [];
+    let processedOutput = output;
+    const thoughtsList: string[] = [];
 
-   // Use XmlMatcher to extract <think> tags first
-   // The XmlMatcher will process the entire `output` string.
-   // We assume `output` is the full aggregated string from the LLM's planning phase.
-   const xmlMatcher = new XmlMatcher('think');
-   const chunks = xmlMatcher.final(output); // Process the whole string at once
+    // Extract thoughts using XmlMatcher
+    const xmlMatcher = new XmlMatcher('think');
+    const chunks = xmlMatcher.final(output);
 
-   let nonThinkingContent = "";
-   chunks.forEach(chunk => {
-     if (chunk.matched) {
-       thoughtsList.push(chunk.data.trim());
-     } else {
-       nonThinkingContent += chunk.data;
-     }
-   });
-
-   if (thoughtsList.length > 0) {
-     result.thoughts = thoughtsList.join("\n\n---\n\n"); // Join multiple thoughts
-   }
-
-   // Now parse Title, Intent, Plan, Tool Calls from the non-thinking content
-   processedOutput = nonThinkingContent;
-
-   // --- Option 2: JSON-first parsing for a single object ---
-   const tryParsePlanningJson = (raw: string): { title?: string; intent?: string; plan?: string; toolCalls?: ParsedToolCall[] } | null => {
-     if (!raw) return null;
-     let s = raw.trim();
-     // Remove code fences if present
-     s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
-     // Remove a leading 'json' token on its own line
-     s = s.replace(/^json\s*/i, '').trim();
-     // If it doesn't start with {, try to slice between first { and last }
-     if (!s.startsWith('{') && s.includes('{') && s.includes('}')) {
-       const first = s.indexOf('{');
-       const last = s.lastIndexOf('}');
-       if (first >= 0 && last > first) {
-         s = s.slice(first, last + 1);
-       }
-     }
-     try {
-       const obj: any = JSON.parse(s);
-       if (!obj || (typeof obj !== 'object')) return null;
-       const out: { title?: string; intent?: string; plan?: string; toolCalls?: ParsedToolCall[] } = {};
-       if (typeof obj.title === 'string') out.title = obj.title;
-       if (typeof obj.intent === 'string') out.intent = obj.intent;
-       if (Array.isArray(obj.plan)) out.plan = obj.plan.join('\n');
-       else if (typeof obj.plan === 'string') out.plan = obj.plan;
-       if (Array.isArray(obj.toolCalls)) {
-         const validation = toolCallsSchema.safeParse(obj.toolCalls);
-         if (validation.success) out.toolCalls = validation.data as ParsedToolCall[];
-         else out.toolCalls = [];
-       }
-       // Accept if at least one of the expected fields exists
-       if (out.title || out.intent || out.plan || out.toolCalls) return out;
-       return null;
-     } catch {
-       return null;
-     }
-   };
-
-   const jsonParsed = tryParsePlanningJson(processedOutput);
-   if (jsonParsed) {
-     result.title = jsonParsed.title;
-     result.intent = jsonParsed.intent;
-     result.plan = jsonParsed.plan;
-     result.toolCalls = jsonParsed.toolCalls;
-     return result;
-   }
-
-   // --- Fallback: section-based parsing (Option 1) ---
-   // Robustly extract sections from the processedOutput (non-thinking part)
-   const titleMatch = processedOutput.match(/Title:\s*([\s\S]*?)(Intent:|Plan:|Tool Calls:|$)/i);
-   result.title = titleMatch?.[1]?.trim();
-
-   const intentMatch = processedOutput.match(/Intent:\s*([\s\S]*?)(Plan:|Tool Calls:|$)/i);
-   result.intent = intentMatch?.[1]?.trim();
-
-   const planMatch = processedOutput.match(/Plan:\s*([\s\S]*?)(Tool Calls:|$)/i);
-   result.plan = planMatch?.[1]?.trim();
-
-   const toolCallsMatch = processedOutput.match(/Tool Calls:\s*([\s\S]*?)$/i);
-   const toolCallsString = toolCallsMatch?.[1]?.trim();
-
-    // Initialize toolCalls to indicate no valid calls found yet
-    result.toolCalls = undefined;
-
-    if (toolCallsString) {
-      let jsonArrayString: string | null = null;
-      let parsedJson: any = null;
-
-      // 1. Find JSON Array: Look for ```json[...]``` or ```[...]``` or [...]
-      // Regex explanation:
-      // - ```(?:json)?\s* : Optional markdown fence start (```json or ```)
-      // - (\[[\s\S]*?\])  : Capture group 1: The JSON array content (non-greedy)
-      // - \s*```          : Optional markdown fence end
-      // - |               : OR
-      // - (\[[\s\S]*?\])  : Capture group 2: A standalone JSON array (non-greedy)
-      const jsonRegex = /```(?:json)?\s*(\[[\s\S]*?\])\s*```|(\[[\s\S]*?\])/;
-      const jsonMatch = toolCallsString.match(jsonRegex);
-
-      if (jsonMatch) {
-        // Prioritize fenced match (group 1), fallback to standalone match (group 2)
-        jsonArrayString = jsonMatch[1] ? jsonMatch[1].trim() : jsonMatch[2] ? jsonMatch[2].trim() : null;
+    let nonThinkingContent = "";
+    chunks.forEach(chunk => {
+      if (chunk.matched) {
+        thoughtsList.push(chunk.data.trim());
       } else {
-         Logger.debug(`OutputParser: No JSON array found in Tool Calls section. Content: ${toolCallsString}`);
+        nonThinkingContent += chunk.data;
       }
+    });
 
-
-      // 2. Parse JSON (if found)
-      if (jsonArrayString) {
-        try {
-          // Attempt to remove trailing comma just before the closing bracket
-          const cleanedJsonString = jsonArrayString.replace(/,\s*(?=]$)/, '');
-          parsedJson = JSON.parse(cleanedJsonString);
-        } catch (error) {
-          Logger.error(`OutputParser: Failed to parse extracted JSON array. Error: ${error}. Extracted Content: ${jsonArrayString}. Original Content: ${toolCallsString}`);
-          // Keep parsedJson as null, will default to empty array later
-        }
-      }
-
-      // 3. Validate with Zod (if parsed)
-      if (parsedJson !== null) {
-        const validationResult = toolCallsSchema.safeParse(parsedJson);
-        if (validationResult.success) {
-          // Explicitly cast validated data to ParsedToolCall[] to resolve TS inference issue
-          result.toolCalls = validationResult.data as ParsedToolCall[];
-        } else {
-          Logger.warn(`OutputParser: Tool Calls JSON structure validation failed. Errors: ${validationResult.error.toString()}. Parsed Content: ${JSON.stringify(parsedJson)}`);
-          result.toolCalls = []; // Default to empty array on validation failure
-        }
-      } else {
-        // JSON parsing failed or no JSON array found
-        // If toolCallsString existed but we couldn't parse/validate, default to empty array
-        result.toolCalls = [];
-      }
-    } else {
-        // If the "Tool Calls:" section exists but is empty or just whitespace after it
-        if (toolCallsMatch) {
-             result.toolCalls = [];
-        }
-        // If the "Tool Calls:" section doesn't exist at all, toolCalls remains undefined
+    if (thoughtsList.length > 0) {
+      result.thoughts = thoughtsList.join("\n\n---\n\n");
     }
 
-     // Handle cases where sections might be missing entirely from the non-thinking content
-     if (!result.title && !result.intent && !result.plan && (result.toolCalls === undefined || result.toolCalls.length === 0) && !result.thoughts) {
-        Logger.warn(`OutputParser: Could not parse any structured data (Title, Intent, Plan, Tool Calls, Thoughts) from planning output. Original output: ${output}`);
-        // If nothing structured is found, but there were thoughts, that's still a partial parse.
-        // If no thoughts AND no other structure, then it's a more complete failure to parse structure.
-        // If the original output was just thoughts, result.thoughts would be populated.
-        // If original output had thoughts and other text that wasn't parsable, result.thoughts would be populated.
-        // This warning triggers if even thoughts couldn't be extracted AND other sections are also missing.
-        // If only thoughts were present, result.thoughts would exist, and this condition might not be met.
-        // Let's refine the condition: if no standard sections (intent, plan, toolCalls) are found in `processedOutput`
-        if (!result.title && !result.intent && !result.plan && (result.toolCalls === undefined || result.toolCalls.length === 0)) {
-           Logger.debug(`OutputParser: No Title, Intent, Plan, or Tool Calls found in non-thinking content part: ${processedOutput}`);
-        }
-     } else if (!result.title && !result.intent && !result.plan && !result.toolCalls && !result.thoughts) {
-        // This case means absolutely nothing was parsed, not even thoughts.
-        Logger.warn(`OutputParser: Complete failure to parse any structured data or thoughts from planning output: ${output}`);
-     }
+    processedOutput = nonThinkingContent;
 
+    // Helper for JSON parsing
+    const tryParseJson = (raw: string) => {
+        if (!raw) return null;
+        let s = raw.trim();
+        s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+        if (!s.startsWith('{') && s.includes('{') && s.includes('}')) {
+             const first = s.indexOf('{');
+             const last = s.lastIndexOf('}');
+             if (first >= 0 && last > first) {
+                 s = s.slice(first, last + 1);
+             }
+        }
+        try {
+            return JSON.parse(s);
+        } catch {
+            return null;
+        }
+    };
+
+    const obj = tryParseJson(processedOutput);
+
+    if (obj && typeof obj === 'object') {
+        if (typeof obj.title === 'string') result.title = obj.title;
+        if (typeof obj.intent === 'string') result.intent = obj.intent;
+        // Handle plan as string or array
+        if (Array.isArray(obj.plan)) result.plan = obj.plan.map((p:any) => typeof p === 'string' ? p : JSON.stringify(p)).join('\n');
+        else if (typeof obj.plan === 'string') result.plan = obj.plan;
+
+        if (Array.isArray(obj.toolCalls)) {
+            const validation = toolCallsSchema.safeParse(obj.toolCalls);
+            if (validation.success) result.toolCalls = validation.data as ParsedToolCall[];
+            else result.toolCalls = [];
+        }
+
+        if (Array.isArray(obj.todoList)) {
+             const validation = todoListSchema.safeParse(obj.todoList);
+             if (validation.success) {
+                 result.todoList = (validation.data as any[]).map((item: any) => ({
+                     ...item,
+                     createdTimestamp: Date.now(),
+                     updatedTimestamp: Date.now()
+                 })) as TodoItem[];
+             } else {
+                 Logger.warn(`OutputParser: TodoList validation failed: ${validation.error}`);
+             }
+        }
+    } else {
+        // Fallback for legacy section parsing or non-JSON output (Best effort)
+        // For the new requirement, JSON is strongly preferred/enforced by prompt.
+        // We can reuse the legacy regexes for title/intent/plan if JSON fails.
+        const titleMatch = processedOutput.match(/Title:\s*([\s\S]*?)(Intent:|Plan:|Tool Calls:|Todo List:|$)/i);
+        if (titleMatch) result.title = titleMatch[1].trim();
+
+        const intentMatch = processedOutput.match(/Intent:\s*([\s\S]*?)(Plan:|Tool Calls:|Todo List:|$)/i);
+        if (intentMatch) result.intent = intentMatch[1].trim();
+
+        const planMatch = processedOutput.match(/Plan:\s*([\s\S]*?)(Tool Calls:|Todo List:|$)/i);
+        if (planMatch) result.plan = planMatch[1].trim();
+    }
 
     return result;
   }
 
   /**
-   /**
-    * Parses the raw string output from the synthesis LLM call to extract the final, user-facing response content.
-    * This default implementation simply trims whitespace from the input string.
-    * More complex implementations could potentially remove specific tags or formatting if needed.
-    * @param output - The raw string response from the synthesis LLM call.
-    * @returns A promise resolving to the cleaned, final response string.
-    */
+   * Parses the execution output (per todo item).
+   */
+  async parseExecutionOutput(output: string): Promise<ExecutionOutput> {
+      const result: ExecutionOutput = {};
+      let processedOutput = output;
+      const thoughtsList: string[] = [];
+
+      // Extract thoughts
+      const xmlMatcher = new XmlMatcher('think');
+      const chunks = xmlMatcher.final(output);
+
+      let nonThinkingContent = "";
+      chunks.forEach(chunk => {
+        if (chunk.matched) {
+          thoughtsList.push(chunk.data.trim());
+        } else {
+          nonThinkingContent += chunk.data;
+        }
+      });
+
+      if (thoughtsList.length > 0) {
+        result.thoughts = thoughtsList.join("\n\n---\n\n");
+      }
+      processedOutput = nonThinkingContent.trim();
+
+      // Try to parse as JSON first (if the prompt enforces JSON for execution)
+      // If the prompt asks for "text response" + "tool calls" as JSON block, handle that.
+      // Assuming a JSON structure for tool calls or updated plan.
+
+      // Look for a JSON block for tool calls
+      const jsonBlockMatch = processedOutput.match(/```json\s*([\s\S]*?)\s*```/);
+      if (jsonBlockMatch) {
+          try {
+              const jsonContent = JSON.parse(jsonBlockMatch[1]);
+
+              // Check for toolCalls
+              if (Array.isArray(jsonContent.toolCalls)) {
+                  const validation = toolCallsSchema.safeParse(jsonContent.toolCalls);
+                  if (validation.success) result.toolCalls = validation.data as ParsedToolCall[];
+              } else if (Array.isArray(jsonContent)) {
+                  // Sometimes tool calls are just the array
+                  const validation = toolCallsSchema.safeParse(jsonContent);
+                  if (validation.success) result.toolCalls = validation.data as ParsedToolCall[];
+              }
+
+              // Check for nextStepDecision or updatedPlan in JSON
+              if (jsonContent.nextStepDecision) result.nextStepDecision = jsonContent.nextStepDecision;
+              if (jsonContent.updatedPlan) result.updatedPlan = jsonContent.updatedPlan;
+
+              // Remove the JSON block from content if it was just metadata/tools
+              // But if the whole output is JSON, content is empty?
+              // Let's assume content is the text *outside* the JSON block, or a 'content' field in JSON.
+              if (jsonContent.content) {
+                  result.content = jsonContent.content;
+              } else {
+                  // If content was outside, we need to strip the JSON block
+                  result.content = processedOutput.replace(jsonBlockMatch[0], '').trim();
+              }
+          } catch (e) {
+              Logger.warn(`Failed to parse JSON block in execution output: ${e}`);
+              result.content = processedOutput; // Fallback
+          }
+      } else {
+          // No JSON block, treat everything as content
+          result.content = processedOutput;
+      }
+
+      return result;
+  }
+
   async parseSynthesisOutput(output: string): Promise<string> {
-    // Basic implementation: return the trimmed output.
-    // Future versions might parse more complex structures if needed.
     return output.trim();
   }
 }

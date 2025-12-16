@@ -24,24 +24,31 @@ This configuration is typically set once when a new conversation starts and rema
 
 ### AgentState
 
-`AgentState` represents the dynamic, evolving state of the agent for a specific thread. This serves as the agent's "memory" and can store:
+`AgentState` represents the dynamic, evolving state of the agent for a specific thread. This serves as the agent's "memory".
 
-- Conversation summaries
-- User preferences
-- Accumulated knowledge
-- Any other data the agent needs to remember across turns
+For the **PESAgent** (starting v0.3.9), the state is structured to support its Plan-and-Solve workflow:
 
-The `AgentState` interface is defined as:
+```typescript
+interface PESAgentStateData {
+    threadId: string;
+    intent: string;
+    title: string;
+    plan: string; // High level description
+    todoList: TodoItem[];
+    currentStepId: string | null;
+    isPaused: boolean;
+}
+```
+
+The generic `AgentState` interface wraps this data:
 
 ```typescript
 interface AgentState {
-  data: any;
+  data: PESAgentStateData | any; // Application specific data
   version?: number;
   [key: string]: any;
 }
 ```
-
-This flexible structure allows agents to store any JSON-serializable data they need.
 
 ### ThreadContext
 
@@ -72,6 +79,8 @@ The ART framework supports two state saving strategies that can be configured wh
 ### Explicit Strategy (Default)
 
 In this mode, the agent's state is only saved when you explicitly call `art.stateManager.setAgentState()`. This gives you full control but requires you to manage state saving manually within your agent's logic.
+
+**Note on PESAgent:** The `PESAgent` implementation internally handles explicit state saving at critical checkpoints (Plan creation, item start, item completion).
 
 ```typescript
 const config: ArtInstanceConfig = {
@@ -132,14 +141,11 @@ With the explicit strategy, you explicitly save state:
 ```typescript
 await art.stateManager.setAgentState(threadId, {
   data: {
-    conversationSummary: 'User is asking about state management',
-    preferences: { theme: 'dark' }
+    // Custom state data or PESAgentStateData
   },
   version: 1
 });
 ```
-
-With the implicit strategy, the state manager automatically detects changes and saves them at the end of the processing cycle.
 
 ### Modifying Thread Configuration
 

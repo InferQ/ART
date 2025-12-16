@@ -36,6 +36,9 @@ export { TypedSocket } from '@/systems/ui/typed-socket';
 export { A2ATaskSocket } from '@/systems/ui/a2a-task-socket';
 export type { UnsubscribeFunction } from '@/systems/ui/typed-socket';
 
+// --- PES Types ---
+export { TodoItemStatus, TodoItem, PESAgentStateData, ExecutionOutput } from './pes-types';
+
 // --- Zod Schemas for Validation ---
 export { ArtStandardPromptSchema, ArtStandardMessageSchema } from './schemas';
 
@@ -129,6 +132,10 @@ export enum ObservationType {
   FINAL_RESPONSE = 'FINAL_RESPONSE',
   /** Records changes made to the agent's persistent state. */
   STATE_UPDATE = 'STATE_UPDATE',
+  /** Records updates to the plan structure (intent, title, or list changes). */
+  PLAN_UPDATE = 'PLAN_UPDATE',
+  /** Records status changes of a specific todo item. */
+  ITEM_STATUS_CHANGE = 'ITEM_STATUS_CHANGE',
 
   // New types for streaming events
   /** Logged by Agent Core when LLM stream consumption begins. */
@@ -183,6 +190,12 @@ export interface Observation {
    * @property {string} threadId
    */
   threadId: string;
+  /**
+   * An optional identifier for the parent object (e.g., a TodoItem ID) to which this observation belongs.
+   * This allows differentiation between primary (user query) and secondary (sub-task) observations.
+   * @property {string} [parentId]
+   */
+  parentId?: string;
   /**
    * An optional identifier for tracing a request across multiple systems or components.
    * @property {string} [traceId]
