@@ -21,7 +21,7 @@ import { ARTError, ErrorCode } from '@/errors'; // Import ARTError and ErrorCode
 export interface GeminiAdapterOptions {
   /** Your Google AI API key (e.g., from Google AI Studio). Handle securely. */
   apiKey: string;
-  /** The default Gemini model ID to use (e.g., 'gemini-1.5-flash-latest', 'gemini-pro'). Defaults to 'gemini-1.5-flash-latest' if not provided. */
+  /** The default Gemini model ID to use (e.g., 'gemini-2.5-flash', 'gemini-pro'). Defaults to 'gemini-2.5-flash' if not provided. */
   model?: string;
   /** Optional: Override the base URL for the Google Generative AI API. */
   apiBaseUrl?: string; // Note: Not directly used by SDK basic setup
@@ -29,6 +29,79 @@ export interface GeminiAdapterOptions {
   apiVersion?: string; // Note: Not directly used by SDK basic setup
 }
 
+
+// Retry configuration
+const DEFAULT_MAX_RETRIES = 3;
+const DEFAULT_INITIAL_DELAY_MS = 1000;
+const DEFAULT_MAX_DELAY_MS = 30000;
+const RETRYABLE_STATUS_CODES = [503, 429, 500, 502, 504];
+
+/**
+ * Helper function to check if an error is retryable
+ */
+function isRetryableError(error: any): boolean {
+  // Check for status code in various error formats
+  const statusCode = error?.code || error?.status || error?.error?.code;
+  if (statusCode && RETRYABLE_STATUS_CODES.includes(Number(statusCode))) {
+    return true;
+  }
+  // Check for common retryable error messages
+  const message = String(error?.message || error?.error?.message || '').toLowerCase();
+  return message.includes('overloaded') ||
+         message.includes('rate limit') ||
+         message.includes('temporarily unavailable') ||
+         message.includes('503') ||
+         message.includes('429');
+}
+
+/**
+ * Executes a function with exponential backoff retry logic
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: {
+    maxRetries?: number;
+    initialDelayMs?: number;
+    maxDelayMs?: number;
+    onRetry?: (error: any, attempt: number, delayMs: number) => void;
+  } = {}
+): Promise<T> {
+  const maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
+  const initialDelayMs = options.initialDelayMs ?? DEFAULT_INITIAL_DELAY_MS;
+  const maxDelayMs = options.maxDelayMs ?? DEFAULT_MAX_DELAY_MS;
+
+  let lastError: any;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+
+      if (attempt === maxRetries || !isRetryableError(error)) {
+        throw error;
+      }
+
+      // Calculate delay with exponential backoff and jitter
+      const baseDelay = initialDelayMs * Math.pow(2, attempt);
+      const jitter = Math.random() * 0.3 * baseDelay; // 0-30% jitter
+      const delayMs = Math.min(baseDelay + jitter, maxDelayMs);
+
+      if (options.onRetry) {
+        options.onRetry(error, attempt + 1, delayMs);
+      }
+
+      Logger.warn(`Gemini API call failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${Math.round(delayMs)}ms...`, {
+        error: error?.message || error,
+        statusCode: error?.code || error?.status || error?.error?.code
+      });
+
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw lastError;
+}
 
 export class GeminiAdapter implements ProviderAdapter {
   readonly providerName = 'gemini';
@@ -47,7 +120,7 @@ export class GeminiAdapter implements ProviderAdapter {
       throw new Error('GeminiAdapter requires an apiKey in options.');
     }
     this.apiKey = options.apiKey;
-    this.defaultModel = options.model || 'gemini-1.5-flash-latest'; // Use a common default like flash
+    this.defaultModel = options.model || 'gemini-2.5-flash'; // Default to latest stable flash model
     // Initialize the SDK
     // Use correct constructor based on documentation
     this.genAI = new GoogleGenAI({ apiKey: this.apiKey });
@@ -119,9 +192,9 @@ export class GeminiAdapter implements ProviderAdapter {
     } catch (error: any) {
       Logger.error(`Error translating ArtStandardPrompt to Gemini format: ${error.message}`, { error, threadId, traceId });
       // Immediately yield error and end if translation fails
-      const generator = async function*(): AsyncIterable<StreamEvent> {
-          yield { type: 'ERROR', data: error instanceof Error ? error : new Error(String(error)), threadId, traceId, sessionId };
-          yield { type: 'END', data: null, threadId, traceId, sessionId };
+      const generator = async function* (): AsyncIterable<StreamEvent> {
+        yield { type: 'ERROR', data: error instanceof Error ? error : new Error(String(error)), threadId, traceId, sessionId };
+        yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
       return generator();
     }
@@ -136,8 +209,8 @@ export class GeminiAdapter implements ProviderAdapter {
     };
     // Remove undefined generationConfig parameters
     Object.keys(generationConfig).forEach(key =>
-        generationConfig[key as keyof GenerationConfig] === undefined &&
-        delete generationConfig[key as keyof GenerationConfig]
+      generationConfig[key as keyof GenerationConfig] === undefined &&
+      delete generationConfig[key as keyof GenerationConfig]
     );
     // Build optional thinking configuration from CallOptions (feature flag)
     // Expecting shape: options.gemini?.thinking?.{ includeThoughts?: boolean; thinkingBudget?: number }
@@ -146,12 +219,12 @@ export class GeminiAdapter implements ProviderAdapter {
     // Merge into a requestConfig that is leniently typed to allow SDK preview fields
     const requestConfig: any = includeThoughts
       ? {
-          ...generationConfig,
-          thinkingConfig: {
-            includeThoughts: true,
-            ...(thinkingBudget !== undefined ? { thinkingBudget } : {}),
-          },
-        }
+        ...generationConfig,
+        thinkingConfig: {
+          includeThoughts: true,
+          ...(thinkingBudget !== undefined ? { thinkingBudget } : {}),
+        },
+      }
       : { ...generationConfig };
     // --- End Format Payload ---
 
@@ -160,30 +233,37 @@ export class GeminiAdapter implements ProviderAdapter {
     // Capture 'this.genAI' for use inside the generator function
     const genAIInstance = this.genAI;
     // Use an async generator function
-    const generator = async function*(): AsyncIterable<StreamEvent> {
+    const generator = async function* (): AsyncIterable<StreamEvent> {
       const startTime = Date.now(); // Use const
       let timeToFirstTokenMs: number | undefined;
       let streamUsageMetadata: any = undefined; // Variable to hold aggregated usage metadata from stream
       let streamFinishReason: string | undefined; // Will hold finishReason from the LAST chunk
       let lastChunk: GenerateContentResponse | undefined = undefined; // Variable to store the last chunk
       // Removed unused aggregatedResponseText
- 
+
       try {
         // --- Handle Streaming Response using SDK ---
         if (stream) {
           // Let TypeScript infer the type of streamResult
-          // Use the new SDK pattern: genAI.models.generateContentStream
-          const streamResult = await genAIInstance.models.generateContentStream({ // Use captured instance
-            model: modelToUse, // Pass model name here
-            contents,
-            config: requestConfig, // Pass merged config including optional thinkingConfig
-          });
+          // Use the new SDK pattern: genAI.models.generateContentStream with retry logic
+          const streamResult = await withRetry(
+            () => genAIInstance.models.generateContentStream({
+              model: modelToUse,
+              contents,
+              config: requestConfig,
+            }),
+            {
+              onRetry: (error, attempt, delayMs) => {
+                Logger.info(`Retrying Gemini stream call (attempt ${attempt})`, { threadId, traceId, delayMs });
+              }
+            }
+          );
 
           // Process the stream by iterating directly over streamResult (based on docs)
           for await (const chunk of streamResult) {
             lastChunk = chunk; // Store the current chunk as the potential last one
             if (!timeToFirstTokenMs) {
-                timeToFirstTokenMs = Date.now() - startTime;
+              timeToFirstTokenMs = Date.now() - startTime;
             }
             // Prefer structured parts if available to differentiate thinking vs response
             const candidate = (chunk as any)?.candidates?.[0];
@@ -209,15 +289,15 @@ export class GeminiAdapter implements ProviderAdapter {
                 yield { type: 'TOKEN', data: textPart, threadId, traceId, sessionId, tokenType };
               }
             }
-             // Log potential usage metadata if available in chunks (less common)
-             // Capture usage metadata if present in chunks
-             if (chunk.usageMetadata) {
-                // Note: Based on testing, usageMetadata usually appears only in the *last* chunk,
-                // but we check here just in case the behavior changes or varies.
-                Logger.debug("Gemini stream chunk usageMetadata:", { usageMetadata: chunk.usageMetadata, threadId, traceId });
-                // Simple merge/overwrite for now, might need more sophisticated aggregation
-                streamUsageMetadata = { ...(streamUsageMetadata || {}), ...chunk.usageMetadata };
-             }
+            // Log potential usage metadata if available in chunks (less common)
+            // Capture usage metadata if present in chunks
+            if (chunk.usageMetadata) {
+              // Note: Based on testing, usageMetadata usually appears only in the *last* chunk,
+              // but we check here just in case the behavior changes or varies.
+              Logger.debug("Gemini stream chunk usageMetadata:", { usageMetadata: chunk.usageMetadata, threadId, traceId });
+              // Simple merge/overwrite for now, might need more sophisticated aggregation
+              streamUsageMetadata = { ...(streamUsageMetadata || {}), ...chunk.usageMetadata };
+            }
           }
 
           // NOTE: The new SDK stream example doesn't show accessing a final .response
@@ -230,37 +310,43 @@ export class GeminiAdapter implements ProviderAdapter {
           // TODO: Revisit how to get final metadata (stopReason, token counts) for streams if needed.
           // --- Extract metadata from the LAST chunk AFTER the loop ---
           if (lastChunk) {
-              streamFinishReason = lastChunk.candidates?.[0]?.finishReason;
-              streamUsageMetadata = lastChunk.usageMetadata; // Get metadata directly from last chunk
-              Logger.debug("Gemini stream - Extracted from last chunk:", { finishReason: streamFinishReason, usageMetadata: streamUsageMetadata, threadId, traceId });
+            streamFinishReason = lastChunk.candidates?.[0]?.finishReason;
+            streamUsageMetadata = lastChunk.usageMetadata; // Get metadata directly from last chunk
+            Logger.debug("Gemini stream - Extracted from last chunk:", { finishReason: streamFinishReason, usageMetadata: streamUsageMetadata, threadId, traceId });
           } else {
-              Logger.warn("Gemini stream - No last chunk found after loop.", { threadId, traceId });
+            Logger.warn("Gemini stream - No last chunk found after loop.", { threadId, traceId });
           }
           // --- End extraction from last chunk ---
- 
+
           // Yield final METADATA using values extracted from the last chunk
           const finalUsage = streamUsageMetadata || {}; // Use extracted metadata or empty object
           const metadata: LLMMetadata = {
-             stopReason: streamFinishReason, // Use finishReason from last chunk
-             inputTokens: finalUsage?.promptTokenCount,
-             outputTokens: finalUsage?.candidatesTokenCount, // Or totalTokenCount? Check SDK details
-             thinkingTokens: finalUsage?.thinkingTokenCount ?? finalUsage?.thoughtTokens,
-             timeToFirstTokenMs: timeToFirstTokenMs,
-             totalGenerationTimeMs: totalGenerationTimeMs,
-             providerRawUsage: finalUsage, // Use usage from last chunk
-             traceId: traceId,
-           };
-           yield { type: 'METADATA', data: metadata, threadId, traceId, sessionId };
- 
+            stopReason: streamFinishReason, // Use finishReason from last chunk
+            inputTokens: finalUsage?.promptTokenCount,
+            outputTokens: finalUsage?.candidatesTokenCount, // Or totalTokenCount? Check SDK details
+            thinkingTokens: finalUsage?.thinkingTokenCount ?? finalUsage?.thoughtTokens,
+            timeToFirstTokenMs: timeToFirstTokenMs,
+            totalGenerationTimeMs: totalGenerationTimeMs,
+            providerRawUsage: finalUsage, // Use usage from last chunk
+            traceId: traceId,
+          };
+          yield { type: 'METADATA', data: metadata, threadId, traceId, sessionId };
+
           // --- Handle Non-Streaming Response using SDK ---
         } else {
-          // Use the new SDK pattern: genAIInstance.models.generateContent
-          // Revert direct parameter passing
-          const result: GenerateContentResponse = await genAIInstance.models.generateContent({ // Use captured instance
-            model: modelToUse, // Pass model name here
-            contents,
-            config: requestConfig, // Use merged config including optional thinkingConfig
-          });
+          // Use the new SDK pattern: genAIInstance.models.generateContent with retry logic
+          const result: GenerateContentResponse = await withRetry(
+            () => genAIInstance.models.generateContent({
+              model: modelToUse,
+              contents,
+              config: requestConfig,
+            }),
+            {
+              onRetry: (error, attempt, delayMs) => {
+                Logger.info(`Retrying Gemini call (attempt ${attempt})`, { threadId, traceId, delayMs });
+              }
+            }
+          );
           // Removed incorrect line: const response = result.response;
           const firstCandidate = result.candidates?.[0]; // Access directly from result
           const responseText = result.text; // Access as a property
@@ -363,7 +449,7 @@ export class GeminiAdapter implements ProviderAdapter {
           if (typeof message.content === 'string') {
             systemPromptContent = message.content;
           } else {
-             Logger.warn(`GeminiAdapter: Ignoring non-string system prompt content.`, { content: message.content });
+            Logger.warn(`GeminiAdapter: Ignoring non-string system prompt content.`, { content: message.content });
           }
           continue; // Don't add a separate 'system' role message
 
@@ -378,8 +464,8 @@ export class GeminiAdapter implements ProviderAdapter {
           if (typeof message.content === 'string') {
             userContent += message.content;
           } else {
-             Logger.warn(`GeminiAdapter: Stringifying non-string user content.`, { content: message.content });
-             userContent += JSON.stringify(message.content);
+            Logger.warn(`GeminiAdapter: Stringifying non-string user content.`, { content: message.content });
+            userContent += JSON.stringify(message.content);
           }
           parts.push({ text: userContent });
           break;
@@ -402,23 +488,23 @@ export class GeminiAdapter implements ProviderAdapter {
                   }
                 });
               } else {
-                 Logger.warn(`GeminiAdapter: Skipping unsupported tool call type: ${toolCall.type}`);
+                Logger.warn(`GeminiAdapter: Skipping unsupported tool call type: ${toolCall.type}`);
               }
             });
           }
-           // If assistant message has neither content nor tool calls, add empty text part? Gemini might require it.
-           if (parts.length === 0) {
-             parts.push({ text: "" }); // Add empty text part if no content or tool calls
-           }
+          // If assistant message has neither content nor tool calls, add empty text part? Gemini might require it.
+          if (parts.length === 0) {
+            parts.push({ text: "" }); // Add empty text part if no content or tool calls
+          }
           break;
 
         case 'tool_result':
           role = 'user'; // Gemini expects tool results within a 'user' role message
           if (!message.tool_call_id || !message.name) {
-             throw new ARTError(
-               `GeminiAdapter: 'tool_result' message missing required 'tool_call_id' or 'name'.`,
-               ErrorCode.PROMPT_TRANSLATION_FAILED
-             );
+            throw new ARTError(
+              `GeminiAdapter: 'tool_result' message missing required 'tool_call_id' or 'name'.`,
+              ErrorCode.PROMPT_TRANSLATION_FAILED
+            );
           }
           parts.push({
             functionResponse: {
@@ -433,9 +519,9 @@ export class GeminiAdapter implements ProviderAdapter {
           break;
 
         case 'tool_request':
-           // This role is implicitly handled by 'tool_calls' in the preceding 'assistant' message.
-           Logger.debug(`GeminiAdapter: Skipping 'tool_request' role message as it's handled by assistant's tool_calls.`);
-           continue; // Skip this message
+          // This role is implicitly handled by 'tool_calls' in the preceding 'assistant' message.
+          Logger.debug(`GeminiAdapter: Skipping 'tool_request' role message as it's handled by assistant's tool_calls.`);
+          continue; // Skip this message
 
         default:
           Logger.warn(`GeminiAdapter: Skipping message with unhandled role: ${message.role}`);
@@ -445,11 +531,11 @@ export class GeminiAdapter implements ProviderAdapter {
       geminiContents.push({ role, parts });
     }
 
-     // Handle case where system prompt was provided but no user message followed
-     if (systemPromptContent) {
-         Logger.warn("GeminiAdapter: System prompt provided but no user message found to merge it into. Adding as a separate initial user message.");
-         geminiContents.unshift({ role: 'user', parts: [{ text: systemPromptContent }] });
-     }
+    // Handle case where system prompt was provided but no user message followed
+    if (systemPromptContent) {
+      Logger.warn("GeminiAdapter: System prompt provided but no user message found to merge it into. Adding as a separate initial user message.");
+      geminiContents.unshift({ role: 'user', parts: [{ text: systemPromptContent }] });
+    }
 
     // Gemini specific validation: Ensure conversation doesn't start with 'model'
     if (geminiContents.length > 0 && geminiContents[0].role === 'model') {

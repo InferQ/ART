@@ -138,9 +138,11 @@ export class ProviderManagerImpl implements IProviderManager {
         // 4. Create new instance
         let adapterInstance: ProviderAdapter;
         try {
-            const adapterOptions = { 
-                ...config.adapterOptions, 
-                providerName: config.providerName 
+            // Merge baseOptions from provider entry with runtime adapterOptions
+            const adapterOptions = {
+                ...providerEntry.baseOptions,
+                ...config.adapterOptions,
+                providerName: config.providerName
             };
             adapterInstance = new providerEntry.adapter(adapterOptions);
         } catch (error: any) {
