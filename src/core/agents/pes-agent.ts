@@ -73,11 +73,11 @@ export interface PESAgentDependencies {
 }
 
 const DEFAULT_PERSONA: AgentPersona = {
-  name: 'Zoi',
-  prompts: {
-    planning: 'You are a helpful AI assistant. Your primary goal is to understand a user\'s query, determine the intent, and create a clear plan to provide an accurate and helpful response. You can use tools to gather information if necessary.',
-    synthesis: 'You are a helpful AI assistant named Art. Your primary goal is to synthesize the information gathered from tools and planning into a final, user-friendly response. Be clear, concise, and helpful.'
-  }
+    name: 'Zoi',
+    prompts: {
+        planning: 'You are a helpful AI assistant. Your primary goal is to understand a user\'s query, determine the intent, and create a clear plan to provide an accurate and helpful response. You can use tools to gather information if necessary.',
+        synthesis: 'You are a helpful AI assistant named Art. Your primary goal is to synthesize the information gathered from tools, outcomes of each todo list task and planning into a final, user-friendly response. Be clear, concise, and helpful. If any ui components are defined, you should use those to display your outputs.'
+    }
 };
 
 /**
@@ -159,21 +159,21 @@ export class PESAgent implements IAgentCore {
                 phase = 'planning_refinement';
 
                 if (props.query && props.query.trim().length > 0) {
-                     // We know pesState is defined here because isFollowUp is true
-                     const refinementResult = await this._performPlanRefinement(
-                         props, planningSystemPrompt, history, pesState!, availableTools, runtimeProviderConfig, traceId
-                     );
-                     llmCalls++;
-                     if (refinementResult.metadata) aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...refinementResult.metadata };
+                    // We know pesState is defined here because isFollowUp is true
+                    const refinementResult = await this._performPlanRefinement(
+                        props, planningSystemPrompt, history, pesState!, availableTools, runtimeProviderConfig, traceId
+                    );
+                    llmCalls++;
+                    if (refinementResult.metadata) aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...refinementResult.metadata };
 
-                     if (refinementResult.output.todoList) {
-                         pesState!.intent = refinementResult.output.intent || pesState!.intent;
-                         pesState!.plan = refinementResult.output.plan || pesState!.plan;
-                         pesState!.todoList = refinementResult.output.todoList;
+                    if (refinementResult.output.todoList) {
+                        pesState!.intent = refinementResult.output.intent || pesState!.intent;
+                        pesState!.plan = refinementResult.output.plan || pesState!.plan;
+                        pesState!.todoList = refinementResult.output.todoList;
 
-                         await this._saveState(props.threadId, pesState!);
-                         await this._recordPlanObservations(props.threadId, traceId, refinementResult.output, refinementResult.rawText);
-                     }
+                        await this._saveState(props.threadId, pesState!);
+                        await this._recordPlanObservations(props.threadId, traceId, refinementResult.output, refinementResult.rawText);
+                    }
                 }
             }
 
@@ -193,7 +193,7 @@ export class PESAgent implements IAgentCore {
             const { finalResponseContent, synthesisMetadata, uiMetadata } = await this._performSynthesis(
                 props, synthesisSystemPrompt, history, pesState!, runtimeProviderConfig, traceId, finalPersona
             );
-             llmCalls++;
+            llmCalls++;
             if (synthesisMetadata) aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...synthesisMetadata };
 
             // Stage 6: Finalization
@@ -205,22 +205,22 @@ export class PESAgent implements IAgentCore {
                 ? error
                 : new ARTError(`An unexpected error occurred during agent processing: ${error.message}`, ErrorCode.UNKNOWN_ERROR, error);
 
-             artError.details = artError.details || {};
-             artError.details.phase = phase;
-             Logger.error(`[${traceId}] PESAgent process error in phase '${phase}':`, artError);
+            artError.details = artError.details || {};
+            artError.details.phase = phase;
+            Logger.error(`[${traceId}] PESAgent process error in phase '${phase}':`, artError);
 
-             status = 'error';
-             errorMessage = artError.message;
+            status = 'error';
+            errorMessage = artError.message;
 
-             await this.deps.observationManager.record({
+            await this.deps.observationManager.record({
                 threadId: props.threadId, traceId, type: ObservationType.ERROR,
                 content: { phase, error: artError.message, stack: artError.stack },
                 metadata: { timestamp: Date.now() }
             });
         } finally {
-             try {
+            try {
                 await this.deps.stateManager.saveStateIfModified(props.threadId);
-            } catch(saveError: any) {
+            } catch (saveError: any) {
                 Logger.error(`[${traceId}] Failed to save state during finalization:`, saveError);
             }
         }
@@ -239,7 +239,7 @@ export class PESAgent implements IAgentCore {
         };
 
         if (!finalAiMessage && status !== 'success') {
-             finalAiMessage = {
+            finalAiMessage = {
                 messageId: generateUUID(),
                 threadId: props.threadId,
                 role: MessageRole.AI,
@@ -249,7 +249,7 @@ export class PESAgent implements IAgentCore {
             };
         }
 
-         return {
+        return {
             response: finalAiMessage!,
             metadata: metadata,
         };
@@ -265,7 +265,7 @@ export class PESAgent implements IAgentCore {
         });
     }
 
-     private async _recordPlanObservations(threadId: string, traceId: string, planningOutput: any, rawText: string) {
+    private async _recordPlanObservations(threadId: string, traceId: string, planningOutput: any, rawText: string) {
         await this.deps.observationManager.record({
             threadId, traceId, type: ObservationType.INTENT,
             content: { intent: planningOutput.intent }, metadata: { timestamp: Date.now() }
@@ -286,7 +286,7 @@ export class PESAgent implements IAgentCore {
             metadata: { timestamp: Date.now() }
         });
         // Also emit initial plan update
-         await this.deps.observationManager.record({
+        await this.deps.observationManager.record({
             threadId, traceId, type: ObservationType.PLAN_UPDATE,
             content: { todoList: planningOutput.todoList },
             metadata: { timestamp: Date.now() }
@@ -304,7 +304,7 @@ export class PESAgent implements IAgentCore {
         Logger.debug(`[${traceId}] Stage 3: Planning`);
 
         const toolsJson = availableTools.map(t => ({
-             name: t.name, description: t.description, inputSchema: t.inputSchema
+            name: t.name, description: t.description, inputSchema: t.inputSchema
         }));
 
         const wrappedSystemPrompt = `You are a planning assistant.
@@ -313,11 +313,12 @@ ${systemPrompt}
 [END_CUSTOM_GUIDANCE]
 
 Your goal is to understand the user's query and create a structured plan (Todo List) to answer it.
+The todo list should be a logical, methodical, sensible list of steps that the agent should take to answer the user's query. Each step should progress gradually towards delivering a cmoprehensive, accurate, evidence driven, validated response.
 You MUST output a JSON object with the following structure:
 {
   "title": "Short title",
   "intent": "User intent summary",
-  "plan": "High level description of the plan",
+  "plan": "High level description of the plan with and overview and bullet points",
   "todoList": [
     { "id": "step_1", "description": "Description of step 1", "dependencies": [] },
     { "id": "step_2", "description": "Description of step 2", "dependencies": ["step_1"] }
@@ -342,12 +343,12 @@ You MUST output a JSON object with the following structure:
         runtimeProviderConfig: RuntimeProviderConfig,
         traceId: string
     ) {
-         Logger.debug(`[${traceId}] Stage 3: Plan Refinement`);
+        Logger.debug(`[${traceId}] Stage 3: Plan Refinement`);
 
-         const toolsJson = availableTools.map(t => ({
-             name: t.name, description: t.description, inputSchema: t.inputSchema
+        const toolsJson = availableTools.map(t => ({
+            name: t.name, description: t.description, inputSchema: t.inputSchema
         }));
-        
+
         const wrappedSystemPrompt = `You are a planning assistant.
 [BEGIN_CUSTOM_GUIDANCE]
 ${systemPrompt}
@@ -361,7 +362,7 @@ ${JSON.stringify(currentState.todoList, null, 2)}
 
 Output the updated JSON object (title, intent, plan, todoList). Ensure you preserve completed items and logically append or insert new items.
 `;
-         const planningPrompt: ArtStandardPrompt = [
+        const planningPrompt: ArtStandardPrompt = [
             { role: 'system', content: wrappedSystemPrompt },
             ...formattedHistory,
             { role: 'user', content: `User Query: ${props.query}\n\nAvailable Tools:\n${JSON.stringify(toolsJson, null, 2)}` }
@@ -376,7 +377,7 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
         runtimeProviderConfig: RuntimeProviderConfig,
         traceId: string
     ) {
-         const planningOptions: CallOptions = {
+        const planningOptions: CallOptions = {
             threadId: props.threadId, traceId, userId: props.userId, sessionId: props.sessionId,
             stream: true, callContext: 'AGENT_THOUGHT',
             requiredCapabilities: [ModelCapability.REASONING],
@@ -389,20 +390,20 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
         let streamError: Error | null = null;
 
         try {
-             await this.deps.observationManager.record({
+            await this.deps.observationManager.record({
                 threadId: props.threadId, traceId, type: ObservationType.PLAN,
                 content: { message: "Generating/Refining Plan..." }, metadata: { timestamp: Date.now() }
             });
 
-             const stream = await this.deps.reasoningEngine.call(prompt, planningOptions);
+            const stream = await this.deps.reasoningEngine.call(prompt, planningOptions);
 
-             await this.deps.observationManager.record({
+            await this.deps.observationManager.record({
                 threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_START,
                 content: { phase: 'planning' }, metadata: { timestamp: Date.now() }
             });
 
-             for await (const event of stream) {
-                  this.deps.uiSystem.getLLMStreamSocket().notify(event, {
+            for await (const event of stream) {
+                this.deps.uiSystem.getLLMStreamSocket().notify(event, {
                     targetThreadId: event.threadId, targetSessionId: event.sessionId
                 });
 
@@ -413,15 +414,15 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
                 } else if (event.type === 'ERROR') {
                     streamError = event.data;
                 }
-             }
+            }
 
-             if (streamError) throw streamError;
+            if (streamError) throw streamError;
 
-             const parsed = await this.deps.outputParser.parsePlanningOutput(outputText);
-             return { output: parsed, metadata, rawText: outputText };
+            const parsed = await this.deps.outputParser.parsePlanningOutput(outputText);
+            return { output: parsed, metadata, rawText: outputText };
 
         } catch (err: any) {
-             throw new ARTError(`Planning failed: ${err.message}`, ErrorCode.PLANNING_FAILED, err);
+            throw new ARTError(`Planning failed: ${err.message}`, ErrorCode.PLANNING_FAILED, err);
         }
     }
 
@@ -494,8 +495,8 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
                 } else if (itemResult.status === 'wait') {
                     pendingItem.status = TodoItemStatus.WAITING;
                 } else {
-                     pendingItem.status = TodoItemStatus.FAILED;
-                     loopContinue = false;
+                    pendingItem.status = TodoItemStatus.FAILED;
+                    loopContinue = false;
                 }
 
             } catch (err: any) {
@@ -506,10 +507,10 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
 
             pendingItem.updatedTimestamp = Date.now();
             await this._saveState(props.threadId, pesState);
-             await this.deps.observationManager.record({
+            await this.deps.observationManager.record({
                 threadId: props.threadId, traceId, type: ObservationType.ITEM_STATUS_CHANGE,
                 content: { itemId: pendingItem.id, status: pendingItem.status },
-                 parentId: pendingItem.id,
+                parentId: pendingItem.id,
                 metadata: { timestamp: Date.now() }
             });
         }
@@ -524,30 +525,30 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
         availableTools: any[],
         runtimeProviderConfig: RuntimeProviderConfig,
         traceId: string
-    ): Promise<{ status: 'success'|'fail'|'wait', output?: any, llmCalls: number, toolCalls: number, metadata?: LLMMetadata }> {
+    ): Promise<{ status: 'success' | 'fail' | 'wait', output?: any, llmCalls: number, toolCalls: number, metadata?: LLMMetadata }> {
 
         let llmCalls = 0;
         let toolCallsCount = 0;
         let accumulatedMetadata: LLMMetadata = {};
 
         const toolsJson = availableTools.map(t => ({
-             name: t.name, description: t.description, inputSchema: t.inputSchema
+            name: t.name, description: t.description, inputSchema: t.inputSchema
         }));
 
         // Add A2A delegation tool to execution context
         const delegationToolSchema = {
-             name: 'delegate_to_agent',
-             description: 'Delegates a specific task to another agent.',
-             inputSchema: {
-                 type: 'object',
-                 properties: {
-                     agentId: { type: 'string' },
-                     taskType: { type: 'string' },
-                     input: { type: 'object' },
-                     instructions: { type: 'string' }
-                 },
-                 required: ['agentId', 'taskType', 'input', 'instructions']
-             }
+            name: 'delegate_to_agent',
+            description: 'Delegates a specific task to another agent.',
+            inputSchema: {
+                type: 'object',
+                properties: {
+                    agentId: { type: 'string' },
+                    taskType: { type: 'string' },
+                    input: { type: 'object' },
+                    instructions: { type: 'string' }
+                },
+                required: ['agentId', 'taskType', 'input', 'instructions']
+            }
         };
         const executionTools = [...toolsJson, delegationToolSchema];
 
@@ -569,8 +570,8 @@ Instructions:
 `;
 
         const messages: ArtStandardPrompt = [
-             { role: 'system', content: systemPromptText },
-             { role: 'user', content: `Execute the task: ${item.description}\n\nAvailable Tools:\n${JSON.stringify(executionTools)}` }
+            { role: 'system', content: systemPromptText },
+            { role: 'user', content: `Execute the task: ${item.description}\n\nAvailable Tools:\n${JSON.stringify(executionTools)}` }
         ];
 
         const MAX_ITEM_ITERATIONS = 5;
@@ -594,108 +595,108 @@ Instructions:
             let streamError: Error | null = null;
             let currentMetadata: LLMMetadata | undefined;
 
-             await this.deps.observationManager.record({
+            await this.deps.observationManager.record({
                 threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_START,
                 content: { phase: `execution_item_${item.id}_iter_${iteration}` },
                 parentId: item.id,
                 metadata: { timestamp: Date.now() }
             });
 
-             const stream = await this.deps.reasoningEngine.call(messages, options);
-             llmCalls++;
+            const stream = await this.deps.reasoningEngine.call(messages, options);
+            llmCalls++;
 
-             for await (const event of stream) {
-                  this.deps.uiSystem.getLLMStreamSocket().notify(event, {
+            for await (const event of stream) {
+                this.deps.uiSystem.getLLMStreamSocket().notify(event, {
                     targetThreadId: event.threadId, targetSessionId: event.sessionId
                 });
 
                 if (event.type === 'TOKEN') {
                     outputText += event.data;
-                     if (event.tokenType && String(event.tokenType).includes('THINKING')) {
-                           await this.deps.observationManager.record({
-                                threadId: props.threadId,
-                                traceId,
-                                type: ObservationType.THOUGHTS,
-                                content: { text: event.data },
-                                parentId: item.id,
-                                metadata: { phase: 'execution', tokenType: event.tokenType, timestamp: Date.now() }
-                            }).catch(err => Logger.error(`[${traceId}] Failed to record THOUGHTS observation:`, err));
-                     }
+                    if (event.tokenType && String(event.tokenType).includes('THINKING')) {
+                        await this.deps.observationManager.record({
+                            threadId: props.threadId,
+                            traceId,
+                            type: ObservationType.THOUGHTS,
+                            content: { text: event.data },
+                            parentId: item.id,
+                            metadata: { phase: 'execution', tokenType: event.tokenType, timestamp: Date.now() }
+                        }).catch(err => Logger.error(`[${traceId}] Failed to record THOUGHTS observation:`, err));
+                    }
                 } else if (event.type === 'METADATA') {
                     currentMetadata = event.data;
                 } else if (event.type === 'ERROR') {
                     streamError = event.data;
                 }
-             }
+            }
 
-             if (streamError) throw streamError;
-             if (currentMetadata) accumulatedMetadata = { ...accumulatedMetadata, ...currentMetadata };
+            if (streamError) throw streamError;
+            if (currentMetadata) accumulatedMetadata = { ...accumulatedMetadata, ...currentMetadata };
 
-             const parsed = await this.deps.outputParser.parseExecutionOutput(outputText);
-             messages.push({ role: 'assistant', content: outputText });
+            const parsed = await this.deps.outputParser.parseExecutionOutput(outputText);
+            messages.push({ role: 'assistant', content: outputText });
 
-             // Check for Plan Updates
-             if (parsed.updatedPlan && parsed.updatedPlan.todoList) {
-                 Logger.info(`[${traceId}] Plan update received from execution step.`);
-                 state.todoList = parsed.updatedPlan.todoList;
-                 if(parsed.updatedPlan.intent) state.intent = parsed.updatedPlan.intent;
-                 if(parsed.updatedPlan.plan) state.plan = parsed.updatedPlan.plan;
+            // Check for Plan Updates
+            if (parsed.updatedPlan && parsed.updatedPlan.todoList) {
+                Logger.info(`[${traceId}] Plan update received from execution step.`);
+                state.todoList = parsed.updatedPlan.todoList;
+                if (parsed.updatedPlan.intent) state.intent = parsed.updatedPlan.intent;
+                if (parsed.updatedPlan.plan) state.plan = parsed.updatedPlan.plan;
 
-                 await this._saveState(props.threadId, state);
-                 await this.deps.observationManager.record({
+                await this._saveState(props.threadId, state);
+                await this.deps.observationManager.record({
                     threadId: props.threadId, traceId, type: ObservationType.PLAN_UPDATE,
                     content: { todoList: state.todoList },
                     metadata: { timestamp: Date.now() }
                 });
-             }
+            }
 
-             if (parsed.toolCalls && parsed.toolCalls.length > 0) {
-                 // Check for A2A delegation
-                 const a2aCalls = parsed.toolCalls.filter(tc => tc.toolName === 'delegate_to_agent');
-                 const localCalls = parsed.toolCalls.filter(tc => tc.toolName !== 'delegate_to_agent');
+            if (parsed.toolCalls && parsed.toolCalls.length > 0) {
+                // Check for A2A delegation
+                const a2aCalls = parsed.toolCalls.filter(tc => tc.toolName === 'delegate_to_agent');
+                const localCalls = parsed.toolCalls.filter(tc => tc.toolName !== 'delegate_to_agent');
 
-                 let a2aTasks: A2ATask[] = [];
+                let a2aTasks: A2ATask[] = [];
 
-                 if (a2aCalls.length > 0) {
-                     a2aTasks = await this._delegateA2ATasks({ toolCalls: a2aCalls }, props.threadId, traceId);
-                     // Wait for completion (blocking this item step)
-                     const completedTasks = await this._waitForA2ACompletion(a2aTasks, props.threadId, traceId);
+                if (a2aCalls.length > 0) {
+                    a2aTasks = await this._delegateA2ATasks({ toolCalls: a2aCalls }, props.threadId, traceId);
+                    // Wait for completion (blocking this item step)
+                    const completedTasks = await this._waitForA2ACompletion(a2aTasks, props.threadId, traceId);
 
-                     // Add results to messages
-                     completedTasks.forEach(task => {
-                          messages.push({
-                             role: 'tool_result',
-                             content: JSON.stringify(task.result || { error: 'Task failed' }),
-                             name: 'delegate_to_agent',
-                             tool_call_id: task.taskId // Assuming task ID maps to call ID
-                         });
-                     });
-                 }
+                    // Add results to messages
+                    completedTasks.forEach(task => {
+                        messages.push({
+                            role: 'tool_result',
+                            content: JSON.stringify(task.result || { error: 'Task failed' }),
+                            name: 'delegate_to_agent',
+                            tool_call_id: task.taskId // Assuming task ID maps to call ID
+                        });
+                    });
+                }
 
-                 if (localCalls.length > 0) {
-                     const toolResults = await this.deps.toolSystem.executeTools(localCalls, props.threadId, traceId);
-                     toolCallsCount += toolResults.length;
+                if (localCalls.length > 0) {
+                    const toolResults = await this.deps.toolSystem.executeTools(localCalls, props.threadId, traceId);
+                    toolCallsCount += toolResults.length;
 
-                      await this.deps.observationManager.record({
+                    await this.deps.observationManager.record({
                         threadId: props.threadId, traceId, type: ObservationType.TOOL_EXECUTION,
                         content: { toolResults },
                         parentId: item.id,
                         metadata: { timestamp: Date.now() }
                     });
 
-                     toolResults.forEach(res => {
-                         messages.push({
-                             role: 'tool_result',
-                             content: JSON.stringify(res.output || res.error),
-                             name: res.toolName,
-                             tool_call_id: res.callId
-                         });
-                     });
-                 }
-             } else {
-                 itemDone = true;
-                 finalOutput = parsed.content;
-             }
+                    toolResults.forEach(res => {
+                        messages.push({
+                            role: 'tool_result',
+                            content: JSON.stringify(res.output || res.error),
+                            name: res.toolName,
+                            tool_call_id: res.callId
+                        });
+                    });
+                }
+            } else {
+                itemDone = true;
+                finalOutput = parsed.content;
+            }
         }
 
         return {
@@ -716,12 +717,12 @@ Instructions:
         traceId: string,
         finalPersona: AgentPersona
     ) {
-         Logger.debug(`[${traceId}] Stage 6: Synthesis`);
+        Logger.debug(`[${traceId}] Stage 6: Synthesis`);
 
-         const completedItems = state.todoList.filter(i => i.status === TodoItemStatus.COMPLETED);
-         const failedItems = state.todoList.filter(i => i.status === TodoItemStatus.FAILED);
+        const completedItems = state.todoList.filter(i => i.status === TodoItemStatus.COMPLETED);
+        const failedItems = state.todoList.filter(i => i.status === TodoItemStatus.FAILED);
 
-         const summary = `
+        const summary = `
 Completed Tasks:
 ${completedItems.map(i => `- ${i.description}: ${JSON.stringify(i.result).substring(0, 200)}...`).join('\n')}
 
@@ -729,7 +730,7 @@ Failed Tasks:
 ${failedItems.map(i => `- ${i.description}`).join('\n')}
 `;
 
-         const wrappedSynthesisSystemPrompt = `You are ${finalPersona.name}.
+        const wrappedSynthesisSystemPrompt = `You are ${finalPersona.name}.
 [BEGIN_CUSTOM_GUIDANCE]
 ${systemPrompt}
 [END_CUSTOM_GUIDANCE]
@@ -737,13 +738,13 @@ ${systemPrompt}
 Synthesize the final answer based on the completed tasks.
 Format your response with <mainContent>...</mainContent> for the user message and <uiMetadata>...</uiMetadata> for metadata (JSON).
 `;
-         const synthesisPrompt: ArtStandardPrompt = [
-             { role: 'system', content: wrappedSynthesisSystemPrompt },
-             ...formattedHistory,
-             { role: 'user', content: `User Query: ${props.query}\n\nWork Summary:\n${summary}` }
-         ];
+        const synthesisPrompt: ArtStandardPrompt = [
+            { role: 'system', content: wrappedSynthesisSystemPrompt },
+            ...formattedHistory,
+            { role: 'user', content: `User Query: ${props.query}\n\nWork Summary:\n${summary}` }
+        ];
 
-          const synthesisOptions: CallOptions = {
+        const synthesisOptions: CallOptions = {
             threadId: props.threadId,
             traceId: traceId,
             userId: props.userId,
@@ -763,21 +764,21 @@ Format your response with <mainContent>...</mainContent> for the user message an
         const stream = await this.deps.reasoningEngine.call(synthesisPrompt, synthesisOptions);
 
         await this.deps.observationManager.record({
-             threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_START,
-             content: { phase: 'synthesis' }, metadata: { timestamp: Date.now() }
-         });
+            threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_START,
+            content: { phase: 'synthesis' }, metadata: { timestamp: Date.now() }
+        });
 
         for await (const event of stream) {
-             this.deps.uiSystem.getLLMStreamSocket().notify(event, {
-                    targetThreadId: event.threadId, targetSessionId: event.sessionId
+            this.deps.uiSystem.getLLMStreamSocket().notify(event, {
+                targetThreadId: event.threadId, targetSessionId: event.sessionId
             });
-             if (event.type === 'TOKEN') {
-                 if (event.tokenType === 'FINAL_SYNTHESIS_LLM_RESPONSE' || event.tokenType === 'LLM_RESPONSE') {
-                     finalResponseContent += event.data;
-                 }
-             } else if (event.type === 'METADATA') {
-                 synthesisMetadata = event.data;
-             }
+            if (event.type === 'TOKEN') {
+                if (event.tokenType === 'FINAL_SYNTHESIS_LLM_RESPONSE' || event.tokenType === 'LLM_RESPONSE') {
+                    finalResponseContent += event.data;
+                }
+            } else if (event.type === 'METADATA') {
+                synthesisMetadata = event.data;
+            }
         }
 
         // Parse metadata block (same as before)
@@ -786,8 +787,8 @@ Format your response with <mainContent>...</mainContent> for the user message an
         const metadataBlockRegex = /```json\s*([\s\S]*?)\s*```$/;
         const match = finalResponseContent.match(metadataBlockRegex);
         if (match && match[1]) {
-             mainContent = finalResponseContent.replace(metadataBlockRegex, '').trim();
-             try { uiMetadata = JSON.parse(match[1]); } catch {}
+            mainContent = finalResponseContent.replace(metadataBlockRegex, '').trim();
+            try { uiMetadata = JSON.parse(match[1]); } catch { }
         }
 
         return { finalResponseContent: mainContent, synthesisMetadata, uiMetadata };
@@ -797,7 +798,7 @@ Format your response with <mainContent>...</mainContent> for the user message an
         // ... (Same as original implementation) ...
         // To save tokens/lines in this overwite, assuming I keep the exact same logic.
         // For brevity in this tool call, I'll copy-paste the logic from the original file I read.
-         Logger.debug(`[${traceId}] Stage 1: Initiation & Config`);
+        Logger.debug(`[${traceId}] Stage 1: Initiation & Config`);
 
         const threadContext = await this.deps.stateManager.loadThreadContext(props.threadId, props.userId);
         if (!threadContext) {
@@ -832,7 +833,7 @@ Format your response with <mainContent>...</mainContent> for the user message an
             props.options?.providerConfig || threadContext.config.providerConfig;
 
         if (!runtimeProviderConfig) {
-             throw new ARTError(`RuntimeProviderConfig is missing in AgentProps.options or ThreadConfig for threadId: ${props.threadId}`, ErrorCode.INVALID_CONFIG);
+            throw new ARTError(`RuntimeProviderConfig is missing in AgentProps.options or ThreadConfig for threadId: ${props.threadId}`, ErrorCode.INVALID_CONFIG);
         }
 
         return {
@@ -846,7 +847,7 @@ Format your response with <mainContent>...</mainContent> for the user message an
 
     private async _gatherHistory(threadId: string, threadContext: any) {
         // Same as original
-         Logger.debug(`[${threadContext.threadId || threadId}] Stage 2: Gathering History`);
+        Logger.debug(`[${threadContext.threadId || threadId}] Stage 2: Gathering History`);
         const historyOptions = { limit: threadContext.config.historyLimit };
         const rawHistory = await this.deps.conversationManager.getMessages(threadId, historyOptions);
         return this.formatHistoryForPrompt(rawHistory);
@@ -854,7 +855,7 @@ Format your response with <mainContent>...</mainContent> for the user message an
 
     private async _gatherTools(threadId: string) {
         // Same as original
-         Logger.debug(`[${threadId}] Stage 2: Gathering Tools`);
+        Logger.debug(`[${threadId}] Stage 2: Gathering Tools`);
         return await this.deps.toolRegistry.getAvailableTools({ enabledForThreadId: threadId });
     }
 
@@ -940,14 +941,14 @@ Format your response with <mainContent>...</mainContent> for the user message an
         }
 
         Logger.debug(`[${traceId}] Waiting for ${a2aTasks.length} A2A task(s) to complete (timeout: ${maxWaitTimeMs}ms)`);
-        
+
         const startTime = Date.now();
         const updatedTasks: A2ATask[] = [...a2aTasks];
-        
+
         try {
             while ((Date.now() - startTime) < maxWaitTimeMs) {
-                const incompleteTasks = updatedTasks.filter(task => 
-                    task.status !== A2ATaskStatus.COMPLETED && 
+                const incompleteTasks = updatedTasks.filter(task =>
+                    task.status !== A2ATaskStatus.COMPLETED &&
                     task.status !== A2ATaskStatus.FAILED &&
                     task.status !== A2ATaskStatus.CANCELLED
                 );
@@ -961,8 +962,8 @@ Format your response with <mainContent>...</mainContent> for the user message an
 
                 for (let i = 0; i < updatedTasks.length; i++) {
                     const task = updatedTasks[i];
-                    
-                    if (task.status === A2ATaskStatus.COMPLETED || 
+
+                    if (task.status === A2ATaskStatus.COMPLETED ||
                         task.status === A2ATaskStatus.FAILED ||
                         task.status === A2ATaskStatus.CANCELLED) {
                         continue;
@@ -990,7 +991,7 @@ Format your response with <mainContent>...</mainContent> for the user message an
     }
 
 
-     private async _finalize(props: AgentProps, finalResponseContent: string, traceId: string, uiMetadata?: object): Promise<ConversationMessage> {
+    private async _finalize(props: AgentProps, finalResponseContent: string, traceId: string, uiMetadata?: object): Promise<ConversationMessage> {
         // Same as original
         Logger.debug(`[${traceId}] Stage 7: Finalization`);
         const finalTimestamp = Date.now();

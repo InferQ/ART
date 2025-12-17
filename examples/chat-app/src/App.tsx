@@ -58,7 +58,7 @@ const App = () => {
       const threadConfig: ThreadConfig = {
         providerConfig: {
           providerName: 'gemini',
-          modelId: 'gemini-2.5-flash',
+          modelId: 'gemini-2.5-pro',
           adapterOptions: { apiKey }
         },
         enabledTools: [],
@@ -143,7 +143,7 @@ const App = () => {
       options: {
         providerConfig: {
           providerName: 'gemini',
-          modelId: 'gemini-2.5-flash',
+          modelId: 'gemini-2.5-pro',
           adapterOptions: {}
         },
         // Enable Gemini thinking/reasoning output
