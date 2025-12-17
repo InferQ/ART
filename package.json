@@ -11,7 +11,23 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./*": {
+       "types": "./dist/*.d.ts",
+       "import": "./dist/*.js",
+       "require": "./dist/*.cjs"
+    },
+    "./dist/*": {
+       "types": "./dist/*.d.ts",
+       "import": "./dist/*.js",
+       "require": "./dist/*.cjs"
+    },
+    "./dist/core/agent-factory": "./dist/core/agent-factory.js",
+    "./dist/core/agents/pes-agent": "./dist/core/agents/pes-agent.js",
+    "./dist/integrations/storage/indexedDB": "./dist/integrations/storage/indexedDB.js",
+    "./dist/integrations/reasoning/gemini": "./dist/integrations/reasoning/gemini.js",
+    "./dist/systems/ui/ui-system": "./dist/systems/ui/ui-system.js",
+    "./dist/types": "./dist/types/index.js"
   },
   "files": [
     "dist",
