@@ -2,133 +2,143 @@
 
 ## Overview
 
-The PES (Plan-Execute-Synthesize) Agent is a core component of the ART framework that implements a structured, stateful approach to AI agent orchestration. Refactored in v0.3.9, it now uses a **Plan-and-Solve** architecture where queries are decomposed into a persisted `TodoList`. This allows for granular execution, pause/resume functionality, and dynamic plan refinement, making it highly robust for complex, multi-step tasks.
+The **PES (Plan-Execute-Synthesize)** Agent is the flagship orchestration engine within the ART framework. It is designed to handle complex, multi-step queries by breaking them down into a persistent, structured plan (`TodoList`), executing that plan step-by-step with state recovery, and synthesizing a final response.
 
-## Key Components and Their Roles
+Unlike simple ReAct agents that might loop indefinitely or lose context, the PES Agent uses a **"Plan-and-Solve"** architecture. This ensures that even long-running tasks are robust, observable, and resumable.
 
-### 1. PESAgent Class
-The main orchestrator that implements the IAgentCore interface. It coordinates all phases of the agent execution cycle, managing transitions between planning, execution, and synthesis.
+## Core Concepts & Scope
 
-### 2. Dependencies
-The PESAgent relies on several key dependencies that are injected at initialization:
-- **StateManager**: Manages thread configuration and persists the agent's `PESAgentStateData`.
-- **ConversationManager**: Handles conversation history.
-- **ToolRegistry**: Manages available tools.
-- **ReasoningEngine**: Interfaces with LLM providers.
-- **OutputParser**: Parses LLM responses into structured plans and execution results.
-- **ObservationManager**: Records execution events, now supporting hierarchical observations.
-- **ToolSystem**: Orchestrates tool execution.
-- **UISystem**: Provides UI communication sockets.
-- **A2ATaskRepository**: Manages Agent-to-Agent tasks.
-- **AgentDiscoveryService**: Discovers remote agents (optional).
-- **TaskDelegationService**: Delegates tasks to remote agents (optional).
-- **SystemPromptResolver**: Resolves system prompt hierarchy.
-- **Persona**: Optional agent persona defining name and stage-specific prompts.
+### 1. Plan-and-Solve Architecture
+The fundamental philosophy of the PES Agent is that **planning is distinct from execution**.
+- **Planning:** The agent first thinks holistically about the user's request, decomposing it into a discrete list of dependencies (`TodoList`).
+- **Execution:** The agent works through this list one item at a time. Each item is its own "micro-task" that can involve multiple tool calls or thoughts.
+- **Synthesis:** Once all necessary steps are done, the agent compiles the findings into a cohesive answer.
 
-### 3. PESAgentStateData
-A structured state object persisted by the `StateManager` that tracks the agent's progress:
-```typescript
-interface PESAgentStateData {
-    threadId: string;
-    intent: string;
-    title: string;
-    plan: string; // High level description
-    todoList: TodoItem[];
-    currentStepId: string | null;
-    isPaused: boolean;
-}
-```
+### 2. State Persistence & Resilience
+Every significant change in the agent's lifecycle (plan creation, item start, item completion) is persisted to the `StateManager`.
+- **Resumability:** If the server crashes or the process is killed mid-task, the next request to the same `threadId` will automatically load the saved state and resume execution from the `PENDING` item.
+- **State Object (`PESAgentStateData`):**
+  ```typescript
+  interface PESAgentStateData {
+      threadId: string;
+      intent: string;      // High-level user intent
+      title: string;       // Conversation title
+      plan: string;        // Textual summary of the plan
+      todoList: TodoItem[]; // The structured tasks
+      currentStepId: string | null;
+      isPaused: boolean;
+  }
+  ```
 
-## Workflow of the PES Agent
+### 3. Agent-to-Agent (A2A) Delegation
+The PES Agent is a native participant in the A2A system. It can act as an orchestrator that delegates specific sub-tasks to specialized agents (e.g., a "Coding Agent" or "Research Agent") and waits for their asynchronous completion.
 
-The PES agent follows a stateful workflow:
+---
 
-### Phase 1: Configuration & State Loading
-- Loads thread context and configuration.
-- Checks for existing `PESAgentStateData`.
-- **If no state exists (New Query):** Proceed to Planning Phase.
-- **If state exists (Follow-up):** Proceed to Plan Refinement Phase.
+## Architecture & Execution Flow
 
-### Phase 2: Planning / Refinement
-**Initial Planning:**
-- Constructs a prompt with the user query and available tools.
-- Calls the LLM to generate a structured `TodoList` along with `intent` and `title`.
-- **Persists** the initial state.
-- Records `INTENT`, `TITLE`, `PLAN`, and `PLAN_UPDATE` observations.
+The PES Agent's lifecycle is divided into **6 distinct stages**:
 
-**Plan Refinement:**
-- If the user provides a follow-up query while a plan is active, the agent prompts the LLM to *update* the existing `TodoList` (e.g., add new steps, modify existing ones).
-- Updates and persists the state.
+### Stage 1: Configuration
+- Loads `ThreadContext` and user/thread-specific personas.
+- Resolves the **System Prompt** hierarchy (Base Persona + Thread Instructions + Call-specific Instructions).
 
-### Phase 3: Execution Loop (Todo List)
-The agent iterates through the `TodoList` items until all are completed or a stop condition is met.
+### Stage 2: Context Gathering
+- Fetches conversation history (standardized to `ArtStandardPrompt` format).
+- Loads available tools from the `ToolRegistry`.
 
-**For each loop iteration:**
-1. **Item Selection:** Finds the next `PENDING` item whose dependencies are met.
-2. **Status Update:** Marks item as `IN_PROGRESS` and persists state. Records `ITEM_STATUS_CHANGE`.
-3. **Item Execution:**
-   - Constructs a prompt focused *only* on the current item, including context from previous completed items.
-   - **Inner Loop (ReAct):** The agent can think and use tools multiple times (max 5) to complete the single item.
-   - **Tool Execution:** Executes local tools or delegates to A2A agents.
-   - **A2A Support:** If `delegate_to_agent` is used, the agent waits for the remote task to complete before proceeding.
-   - **Dynamic Updates:** The execution step can return an `updatedPlan`, allowing the agent to modify future steps based on current findings.
-4. **Completion:** Marks item as `COMPLETED` (or `FAILED`) and persists state. Records `ITEM_STATUS_CHANGE`.
+### Stage 3: Planning (or Refinement)
+This is the "Brain" of the agent.
+- **New Query:** If no active plan exists, the agent generates a `TodoList`.
+    - *Observation:* `INTENT`, `TITLE`, `PLAN`, `PLAN_UPDATE`.
+- **Follow-up Query:** If a plan exists, the agent performs **Plan Refinement**. It updates the existing `TodoList` (e.g., adding new steps) to accommodate the new user request.
 
-### Phase 4: Synthesis
-- Constructs a synthesis prompt with the user query and a **summary of all completed and failed tasks**.
-- Calls the LLM to generate a final response.
-- Parses the response for main content and UI metadata (sources, suggestions).
-- Records `SYNTHESIS` and `FINAL_RESPONSE` observations.
+### Stage 4: Execution Loop
+This is the "Engine" of the agent. It iterates through the `TodoList` until all items are `COMPLETED` or `FAILED`.
 
-### Phase 5: Finalization
-- Saves the final AI message to conversation history.
-- Ensures final state is persisted.
+#### The Outer Loop (Task Management)
+1. **Selection:** Finds the next `PENDING` item whose dependencies are met.
+2. **Persistence:** Marks item as `IN_PROGRESS` and saves state.
+3. **Execution:** Calls the inner "Process Item" handler.
+4. **Result:** Updates item status to `COMPLETED` (with result) or `FAILED` and saves state.
 
-## Developer Usage & Features
+#### The Inner Loop (ReAct per Item)
+For *each* Todo item, the agent enters a mini-ReAct loop (max 5 iterations):
+1. **Context Construction:** The agent sees the *current item description* and the *results of previous completed items*.
+2. **Thought/Tool:** It can think, call local tools, or delegate to other agents.
+3. **Dynamic Updates:** The execution step can return an `updatedPlan`, allowing the agent to modify *future* steps based on *current* findings (e.g., "I found a file I didn't expect, I need to add a step to read it").
 
-### 1. Granular Observability
-The PES agent records detailed observations. New in this version is the `parentId` field, which links observations (like thoughts or tool calls) to the specific `TodoItem` being executed.
+### Stage 5: Synthesis
+- Activated when all tasks are done.
+- The agent is presented with a summary of **Completed Tasks** (and their results) and **Failed Tasks**.
+- It generates a final user-facing response, separating "Main Content" from "UI Metadata" (e.g., citations, suggested next questions).
 
-- **Primary Observations:** `INTENT`, `TITLE`, `PLAN`, `PLAN_UPDATE`, `FINAL_RESPONSE`.
-- **Secondary Observations (Item-level):** `THOUGHTS`, `TOOL_CALL`, `TOOL_EXECUTION`, `ITEM_STATUS_CHANGE`. These will have `parentId` set to the `itemId`.
+### Stage 6: Finalization
+- Saves the final AI message to history.
+- Records the `FINAL_RESPONSE` observation.
 
-### 2. State Persistence & Resumability
-Because `PESAgentStateData` is saved after every status change and plan update, the agent is resilient. If the process is interrupted (e.g., server restart), the next request to the same thread will detect the existing state and resume execution from the next pending item.
+---
+
+## Key Features & Capabilities
+
+### 1. Robust Observability
+The PES Agent emits a rich stream of observations via the `ObservationManager`. This allows UIs to render a "Thinking..." state that is granular and accurate.
+- **Hierarchical IDs:** Execution observations (`TOOL_CALL`, `THOUGHTS`) are linked to the specific `todoItemId` via the `parentId` field. This allows UIs to show *exactly* which step is generating a log.
+- **Stream Events:** `LLM_STREAM_START` events signal exactly which phase (Planning, Execution Item #X, Synthesis) is generating tokens.
+
+### 2. A2A Delegation Details
+The `delegate_to_agent` tool is automatically injected into the execution context.
+- **Mechanism:**
+    1. Agent calls `delegate_to_agent(agentId, taskType, input)`.
+    2. PES Agent creates an `A2ATask` in the repository.
+    3. Uses `TaskDelegationService` to notify the target agent.
+    4. **BLOCKS** the execution of the current Todo item.
+    5. Polling loop checks `A2ATask` status until `COMPLETED`.
+    6. Result is fed back to the PES Agent as a standard tool result.
 
 ### 3. Dynamic Plan Refinement
-The agent is not locked into its initial plan.
-- **User Driven:** Users can change direction in follow-up messages, causing the agent to refine the plan.
-- **Agent Driven:** During execution of a step, if the agent discovers new information, it can output an `updatedPlan` to modify the remaining TodoList.
+The plan is not static.
+- **User-Driven:** "Actually, can you also check X?" triggers a re-plan.
+- **Agent-Driven:** If a tool output reveals new work is needed, the agent can self-correct by emitting an `updatedPlan` structure during execution.
 
-### 4. A2A (Agent-to-Agent) Task System
-The execution loop fully supports the A2A system. When a Todo item requires delegation:
-1. The agent calls the `delegate_to_agent` tool.
-2. The `PESAgent` creates and delegates the task.
-3. The execution of that specific item *waits* (blocks) until the remote agent completes the task.
-4. The result is fed back into the item's context.
+---
 
-## Workflow Flowchart
+## System Prompts & Personas
 
-```mermaid
-flowchart TD
-    A[Start: User Query] --> B[Load Config & State]
-    B --> C{State Exists?}
-    C -->|No| D[Planning Phase]
-    C -->|Yes| E[Refinement Phase]
-    D --> F[Create & Save TodoList]
-    E --> F
-    F --> G[Execution Loop]
-    G --> H{Pending Items?}
-    H -->|Yes| I[Select Next Item]
-    I --> J[Mark IN_PROGRESS & Save]
-    J --> K[Execute Item (ReAct)]
-    K --> L{Tools / A2A?}
-    L -->|Yes| M[Execute/Delegate & Wait]
-    M --> K
-    L -->|No| N[Item Complete]
-    N --> O[Mark COMPLETED & Save]
-    O --> G
-    H -->|No| P[Synthesis Phase]
-    P --> Q[Finalize & Save History]
-    Q --> R[End]
+The PES Agent uses a sophisticated prompt composition system:
+
+1. **Base Persona:** Defined in code (default "Zoi") or injected at instantiation. Includes high-level goals.
+2. **Prompt Templates:**
+    - **Planning:** "You are a planning assistant... Create a structured plan..."
+    - **Execution:** "You are executing step X... Previous results are Y..."
+    - **Synthesis:** "Synthesize a final answer..."
+3. **Custom Guidance:** All prompts support a `[BEGIN_CUSTOM_GUIDANCE]` block where thread-specific or user-specific instructions are injected.
+
+---
+
+## Developer Usage
+
+### Initialization
+```typescript
+const pesAgent = new PESAgent({
+    stateManager,
+    conversationManager,
+    toolRegistry,
+    // ... other dependencies
+});
+```
+
+### Processing a Request
+```typescript
+const response = await pesAgent.process({
+    threadId: "thread-123",
+    query: "Research the history of Rome and write a summary.",
+    userId: "user-456"
+});
+```
+
+### Accessing State (e.g., for UI)
+```typescript
+const state = await stateManager.getAgentState(threadId);
+const todoList = state.data.todoList; // Render this list to show progress
 ```
