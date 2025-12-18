@@ -12,12 +12,12 @@ import type { ArtStandardPrompt, CallOptions, RuntimeProviderConfig, StreamEvent
 const ANTHROPIC_API_KEY_LOCAL = 'Your-Anthropic-API-Key-Here';
 const ANTHROPIC_API_KEY = (ANTHROPIC_API_KEY_LOCAL || process.env.ANTHROPIC_API_KEY?.trim() || '');
 // Use a model that supports current Anthropic Messages API and reasoning/thinking capability
-const ANTHROPIC_MODEL = 'claude-sonnet-4-20250514';
+const ANTHROPIC_MODEL = 'claude-4.5-sonnet';
 const THINKING_BUDGET = 1024; // Anthropic minimum
 const MAX_TOKENS = 2048;      // Must be > THINKING_BUDGET
 
 // Skip test if no API key is available
-const maybeDescribe = ANTHROPIC_API_KEY.length > 0 ? describe : describe.skip;
+const maybeDescribe = ANTHROPIC_API_KEY.length > 0 && ANTHROPIC_API_KEY !== 'Your-Anthropic-API-Key-Here' ? describe : describe.skip;
 
 maybeDescribe('AnthropicAdapter thinking tokens (integration)', () => {
   it(

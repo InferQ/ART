@@ -21,7 +21,7 @@ import { ARTError, ErrorCode } from '@/errors'; // Import ARTError and ErrorCode
 export interface GeminiAdapterOptions {
   /** Your Google AI API key (e.g., from Google AI Studio). Handle securely. */
   apiKey: string;
-  /** The default Gemini model ID to use (e.g., 'gemini-2.5-flash', 'gemini-pro'). Defaults to 'gemini-2.5-flash' if not provided. */
+  /** The default Gemini model ID to use (e.g., 'gemini-3-flash', 'gemini-pro'). Defaults to 'gemini-3-flash' if not provided. */
   model?: string;
   /** Optional: Override the base URL for the Google Generative AI API. */
   apiBaseUrl?: string; // Note: Not directly used by SDK basic setup
@@ -48,10 +48,10 @@ function isRetryableError(error: any): boolean {
   // Check for common retryable error messages
   const message = String(error?.message || error?.error?.message || '').toLowerCase();
   return message.includes('overloaded') ||
-         message.includes('rate limit') ||
-         message.includes('temporarily unavailable') ||
-         message.includes('503') ||
-         message.includes('429');
+    message.includes('rate limit') ||
+    message.includes('temporarily unavailable') ||
+    message.includes('503') ||
+    message.includes('429');
 }
 
 /**
@@ -120,7 +120,7 @@ export class GeminiAdapter implements ProviderAdapter {
       throw new Error('GeminiAdapter requires an apiKey in options.');
     }
     this.apiKey = options.apiKey;
-    this.defaultModel = options.model || 'gemini-2.5-flash'; // Default to latest stable flash model
+    this.defaultModel = options.model || 'gemini-3-flash'; // Default to latest stable flash model
     // Initialize the SDK
     // Use correct constructor based on documentation
     this.genAI = new GoogleGenAI({ apiKey: this.apiKey });
@@ -138,10 +138,11 @@ export class GeminiAdapter implements ProviderAdapter {
    * Handles both streaming and non-streaming requests based on `options.stream`.
    *
    * Thinking tokens (Gemini):
-   * - On supported Gemini models (e.g., `gemini-2.5-*`), you can enable thought output via `config.thinkingConfig`.
+   * - On supported Gemini models (e.g., `gemini-3-*`), you can enable thought output via `config.thinkingConfig`.
    * - This adapter reads provider-specific flags from the call options:
    *   - `options.gemini.thinking.includeThoughts: boolean` — when `true`, requests thought (reasoning) output.
    *   - `options.gemini.thinking.thinkingBudget?: number` — optional token budget for thinking.
+   *   - `options.gemini.thinking.thinkingLevel?: 'low' | 'minimal' | 'medium' | 'high'` — optional thinking level (Gemini 3+).
    * - When enabled and supported, the adapter will attempt to differentiate thought vs response parts and set
    *   `StreamEvent.tokenType` accordingly:
    *   - For planning calls (`callContext === 'AGENT_THOUGHT'`): `AGENT_THOUGHT_LLM_THINKING` or `AGENT_THOUGHT_LLM_RESPONSE`.
@@ -187,8 +188,11 @@ export class GeminiAdapter implements ProviderAdapter {
 
     // --- Format Payload for SDK ---
     let contents: Content[];
+    let systemInstruction: string | undefined;
     try {
-      contents = this.translateToGemini(prompt); // Use the new translation function
+      const translation = this.translateToGemini(prompt);
+      contents = translation.contents;
+      systemInstruction = translation.systemInstruction;
     } catch (error: any) {
       Logger.error(`Error translating ArtStandardPrompt to Gemini format: ${error.message}`, { error, threadId, traceId });
       // Immediately yield error and end if translation fails
@@ -213,9 +217,12 @@ export class GeminiAdapter implements ProviderAdapter {
       delete generationConfig[key as keyof GenerationConfig]
     );
     // Build optional thinking configuration from CallOptions (feature flag)
-    // Expecting shape: options.gemini?.thinking?.{ includeThoughts?: boolean; thinkingBudget?: number }
-    const includeThoughts: boolean = !!(options as any)?.gemini?.thinking?.includeThoughts;
-    const thinkingBudget: number | undefined = (options as any)?.gemini?.thinking?.thinkingBudget;
+    // Expecting shape: options.gemini?.thinking?.{ includeThoughts?: boolean; thinkingBudget?: number; thinkingLevel?: string }
+    const geminiThinking = (options as any)?.gemini?.thinking;
+    const includeThoughts: boolean = !!geminiThinking?.includeThoughts;
+    const thinkingBudget: number | undefined = geminiThinking?.thinkingBudget;
+    const thinkingLevel: string | undefined = geminiThinking?.thinkingLevel;
+
     // Merge into a requestConfig that is leniently typed to allow SDK preview fields
     const requestConfig: any = includeThoughts
       ? {
@@ -223,9 +230,20 @@ export class GeminiAdapter implements ProviderAdapter {
         thinkingConfig: {
           includeThoughts: true,
           ...(thinkingBudget !== undefined ? { thinkingBudget } : {}),
+          ...(thinkingLevel !== undefined ? { thinkingLevel } : {}),
         },
       }
       : { ...generationConfig };
+
+    // Support systemInstruction in the newer SDK pattern
+    const callConfig: any = {
+      model: modelToUse,
+      contents,
+      config: requestConfig,
+    };
+    if (systemInstruction) {
+      callConfig.systemInstruction = systemInstruction;
+    }
     // --- End Format Payload ---
 
     Logger.debug(`Calling Gemini SDK with model ${modelToUse}, stream: ${!!stream}`, { threadId, traceId });
@@ -247,11 +265,7 @@ export class GeminiAdapter implements ProviderAdapter {
           // Let TypeScript infer the type of streamResult
           // Use the new SDK pattern: genAI.models.generateContentStream with retry logic
           const streamResult = await withRetry(
-            () => genAIInstance.models.generateContentStream({
-              model: modelToUse,
-              contents,
-              config: requestConfig,
-            }),
+            () => genAIInstance.models.generateContentStream(callConfig),
             {
               onRetry: (error, attempt, delayMs) => {
                 Logger.info(`Retrying Gemini stream call (attempt ${attempt})`, { threadId, traceId, delayMs });
@@ -336,11 +350,7 @@ export class GeminiAdapter implements ProviderAdapter {
         } else {
           // Use the new SDK pattern: genAIInstance.models.generateContent with retry logic
           const result: GenerateContentResponse = await withRetry(
-            () => genAIInstance.models.generateContent({
-              model: modelToUse,
-              contents,
-              config: requestConfig,
-            }),
+            () => genAIInstance.models.generateContent(callConfig),
             {
               onRetry: (error, attempt, delayMs) => {
                 Logger.info(`Retrying Gemini call (attempt ${attempt})`, { threadId, traceId, delayMs });
@@ -414,30 +424,24 @@ export class GeminiAdapter implements ProviderAdapter {
   }
 
   /**
-   * Translates the provider-agnostic `ArtStandardPrompt` into the Gemini API's `Content[]` format.
+   * Translates the provider-agnostic `ArtStandardPrompt` into the Gemini API's `Content[]` format
+   * and extracts any system instructions.
    *
    * Key translations:
-   * - `system` role: Merged into the first `user` message.
+   * - `system` role: Extracted to `systemInstruction`.
    * - `user` role: Maps to Gemini's `user` role.
    * - `assistant` role: Maps to Gemini's `model` role. Handles text content and `tool_calls` (mapped to `functionCall`).
    * - `tool_result` role: Maps to Gemini's `user` role with a `functionResponse` part.
    * - `tool_request` role: Skipped (implicitly handled by `assistant`'s `tool_calls`).
    *
-   * Adds validation to ensure the conversation doesn't start with a 'model' role.
-   *
    * @private
    * @param {ArtStandardPrompt} artPrompt - The input `ArtStandardPrompt` array.
-   * @returns {Content[]} The `Content[]` array formatted for the Gemini API.
-   * @throws {ARTError} If translation encounters an issue, such as a `tool_result` missing required fields (ErrorCode.PROMPT_TRANSLATION_FAILED).
-   * @see https://ai.google.dev/api/rest/v1beta/Content
+   * @returns {{ contents: Content[], systemInstruction?: string }} The Gemini formatted payload.
+   * @throws {ARTError} If translation encounters an issue.
    */
-  private translateToGemini(artPrompt: ArtStandardPrompt): Content[] {
-    const geminiContents: Content[] = [];
-
-    // System prompt handling: Gemini prefers system instructions via specific parameters or
-    // potentially as the first part of the first 'user' message. For simplicity,
-    // we'll merge the system prompt content into the first user message if present.
-    let systemPromptContent: string | null = null;
+  private translateToGemini(artPrompt: ArtStandardPrompt): { contents: Content[], systemInstruction?: string } {
+    const contents: Content[] = [];
+    let systemInstruction: string | undefined;
 
     for (const message of artPrompt) {
       let role: 'user' | 'model';
@@ -445,31 +449,25 @@ export class GeminiAdapter implements ProviderAdapter {
 
       switch (message.role) {
         case 'system':
-          // Store system prompt content to potentially merge later.
           if (typeof message.content === 'string') {
-            systemPromptContent = message.content;
+            systemInstruction = (systemInstruction ? systemInstruction + "\n\n" : "") + message.content;
           } else {
             Logger.warn(`GeminiAdapter: Ignoring non-string system prompt content.`, { content: message.content });
           }
-          continue; // Don't add a separate 'system' role message
+          continue;
 
-        case 'user': { // Added braces to fix ESLint error
+        case 'user': {
           role = 'user';
           let userContent = '';
-          // Prepend system prompt if this is the first user message
-          if (systemPromptContent) {
-            userContent += systemPromptContent + "\n\n";
-            systemPromptContent = null; // Clear after merging
-          }
           if (typeof message.content === 'string') {
-            userContent += message.content;
+            userContent = message.content;
           } else {
             Logger.warn(`GeminiAdapter: Stringifying non-string user content.`, { content: message.content });
-            userContent += JSON.stringify(message.content);
+            userContent = JSON.stringify(message.content);
           }
           parts.push({ text: userContent });
           break;
-        } // Added braces
+        }
 
         case 'assistant':
           role = 'model';
@@ -528,21 +526,15 @@ export class GeminiAdapter implements ProviderAdapter {
           continue;
       }
 
-      geminiContents.push({ role, parts });
-    }
-
-    // Handle case where system prompt was provided but no user message followed
-    if (systemPromptContent) {
-      Logger.warn("GeminiAdapter: System prompt provided but no user message found to merge it into. Adding as a separate initial user message.");
-      geminiContents.unshift({ role: 'user', parts: [{ text: systemPromptContent }] });
+      contents.push({ role, parts });
     }
 
     // Gemini specific validation: Ensure conversation doesn't start with 'model'
-    if (geminiContents.length > 0 && geminiContents[0].role === 'model') {
-      Logger.warn("Gemini conversation history starts with 'model' role. Prepending a dummy 'user' turn.", { firstRole: geminiContents[0].role });
-      geminiContents.unshift({ role: 'user', parts: [{ text: "(Initial context)" }] }); // Prepend a generic user turn
+    if (contents.length > 0 && contents[0].role === 'model') {
+      Logger.warn("Gemini conversation history starts with 'model' role. Prepending a dummy 'user' turn.", { firstRole: contents[0].role });
+      contents.unshift({ role: 'user', parts: [{ text: "(Initial context)" }] }); // Prepend a generic user turn
     }
 
-    return geminiContents;
+    return { contents, systemInstruction };
   }
 }

@@ -12,7 +12,7 @@ import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
 
 // Default model configuration
-const OPENAI_DEFAULT_MODEL_ID = 'gpt-4o';
+const OPENAI_DEFAULT_MODEL_ID = 'gpt-5.2-instant';
 const OPENAI_DEFAULT_MAX_TOKENS = 4096;
 const OPENAI_DEFAULT_TEMPERATURE = 0.7;
 
@@ -22,7 +22,7 @@ const OPENAI_DEFAULT_TEMPERATURE = 0.7;
 export interface OpenAIAdapterOptions {
   /** Your OpenAI API key. Handle securely. */
   apiKey: string;
-  /** The default OpenAI model ID to use (e.g., 'gpt-4o', 'gpt-5', 'gpt-5-mini'). */
+  /** The default OpenAI model ID to use (e.g., 'gpt-5.2-instant', 'gpt-5.2-thinking', 'gpt-5.2-pro'). */
   model?: string;
   /** Optional: Override the base URL for the OpenAI API (e.g., for Azure OpenAI or custom proxies). */
   apiBaseUrl?: string;
@@ -161,7 +161,7 @@ export class OpenAIAdapter implements ProviderAdapter {
     const openaiApiParams = providerConfig?.adapterOptions || {};
     const maxTokens = openaiApiParams.max_tokens || openaiApiParams.maxTokens || options.max_tokens || options.maxOutputTokens || this.defaultMaxTokens;
     const temperature = openaiApiParams.temperature ?? options.temperature ?? this.defaultTemperature;
-    
+
     // Extract reasoning configuration from options
     const openaiOptions = (options as any).openai || {};
     const reasoningEffort = openaiOptions.reasoning?.effort || 'medium';
@@ -217,7 +217,7 @@ export class OpenAIAdapter implements ProviderAdapter {
       try {
         const startTime = Date.now();
         let timeToFirstTokenMs: number | undefined;
-        
+
         if (stream) {
           // Use the OpenAI SDK's responses.create method for streaming
           const streamInstance = await (this.client as any).responses.create({
@@ -388,7 +388,7 @@ export class OpenAIAdapter implements ProviderAdapter {
       } catch (error: any) {
         Logger.error(`Error during OpenAI Responses API call: ${error.message}`, { error, threadId, traceId });
         const artError = error instanceof ARTError ? error :
-          (error instanceof Error && error.message.includes('OpenAI') ? 
+          (error instanceof Error && error.message.includes('OpenAI') ?
             new ARTError(`OpenAI API Error: ${error.message}`, ErrorCode.LLM_PROVIDER_ERROR, error) :
             new ARTError(error.message || 'Unknown OpenAI adapter error', ErrorCode.LLM_PROVIDER_ERROR, error));
         yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
@@ -455,7 +455,7 @@ export class OpenAIAdapter implements ProviderAdapter {
       case 'tool_result': {
         // Both user and tool_result messages become 'user' role in Responses API
         const content: Array<{ type: 'input_text'; text: string }> = [];
-        
+
         if (artMsg.role === 'tool_result') {
           // Format tool result with context
           const toolResultText = `Tool result for ${artMsg.name || 'unknown tool'}: ${String(artMsg.content)}`;
@@ -471,7 +471,7 @@ export class OpenAIAdapter implements ProviderAdapter {
 
       case 'assistant': {
         const content: Array<{ type: 'output_text'; text: string }> = [];
-        
+
         // Handle text content
         if (typeof artMsg.content === 'string' && artMsg.content.trim() !== '') {
           content.push({ type: 'output_text', text: artMsg.content });
@@ -490,7 +490,7 @@ export class OpenAIAdapter implements ProviderAdapter {
               );
             }
           }).join('\n');
-          
+
           if (content.length > 0) {
             content[0].text += '\n\n' + toolCallsText;
           } else {

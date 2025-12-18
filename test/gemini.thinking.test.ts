@@ -5,9 +5,9 @@ import type { ArtStandardPrompt, CallOptions, RuntimeProviderConfig, StreamEvent
 // Simple streaming test for Gemini thinking tokens capture.
 // Requires environment variable GEMINI_API_KEY to be set.
 
-const GEMINI_API_KEY = 'add-the-api-key-here';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // Use a model that supports thinking
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3-flash';
 
 // Skip test if no API key is available
 const maybeDescribe = GEMINI_API_KEY ? describe : describe.skip;
