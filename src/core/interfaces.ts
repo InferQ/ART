@@ -20,7 +20,8 @@ import {
   AgentState,
   // --- Import new types (Refactor Phase 1) ---
   ArtStandardPrompt,
-  // PromptContext, // Removed - No longer used by PromptManager interface
+  TodoItem,
+  ExecutionOutput
 } from '@/types';
 
 // Re-export types that might be needed by implementers of these core interfaces
@@ -44,7 +45,9 @@ export type {
   AgentState,
   ArtStandardPrompt,
   StreamEvent, // Also re-export StreamEvent as it's used in ReasoningEngine
-  LLMMetadata  // Also re-export LLMMetadata
+  LLMMetadata,  // Also re-export LLMMetadata
+  TodoItem,
+  ExecutionOutput
 } from '@/types';
 
 
@@ -83,48 +86,6 @@ export interface ReasoningEngine {
   call(prompt: import('@/types').FormattedPrompt, options: CallOptions): Promise<AsyncIterable<import("@/types").StreamEvent>>;
 }
 
-// --- PromptManager Interface (Refactor Phase 1) ---
-/**
- * Interface for the stateless prompt assembler.
- * Uses a blueprint (template) and context provided by Agent Logic
- * to create a standardized prompt format (`ArtStandardPrompt`).
- */
-export interface PromptManager {
-    /**
-     * Retrieves a named prompt fragment (e.g., a piece of instruction text).
-     * Optionally allows for simple variable substitution if the fragment is a basic template.
-     *
-     * @param name - The unique identifier for the fragment.
-     * @param context - Optional data for simple variable substitution within the fragment.
-     * @returns The processed prompt fragment string.
-     * @throws {ARTError} If the fragment is not found.
-     */
-    getFragment(name: string, context?: Record<string, any>): string; // Keep sync for now, assuming loaded at init
-
-    /**
-     * Validates a constructed prompt object against the standard schema.
-     *
-     * @param prompt - The ArtStandardPrompt object constructed by the agent.
-     * @returns The validated prompt object (potentially after normalization if the schema does that).
-     * @throws {ZodError} If validation fails (can be caught and wrapped in ARTError).
-     */
-    validatePrompt(prompt: ArtStandardPrompt): ArtStandardPrompt;
-
-    /**
-     * Assembles a prompt using a Mustache template (blueprint) and context data.
-     * Renders the template with the provided context and parses the result as an ArtStandardPrompt.
-     *
-     * @param blueprint - The Mustache template containing the prompt structure.
-     * @param context - The context data to inject into the template.
-     * @returns A promise resolving to the assembled ArtStandardPrompt.
-     * @throws {ARTError} If template rendering or JSON parsing fails.
-     */
-    assemblePrompt(blueprint: import('@/types').PromptBlueprint, context: import('@/types').PromptContext): Promise<ArtStandardPrompt>;
-
-    // Future methods could include:
-    // - loadFragmentsFromDir(directoryPath: string): Promise<void>;
-    // - registerFragment(name: string, content: string): void;
-}
 // --- SystemPromptResolver Interface ---
 /**
  * Resolves the final system prompt from base + instance/thread/call overrides
@@ -174,7 +135,15 @@ export interface OutputParser {
     plan?: string;
     toolCalls?: ParsedToolCall[];
     thoughts?: string;
+    todoList?: TodoItem[];
   }>;
+
+  /**
+   * Parses the raw string output from the execution LLM call (per todo item).
+   * @param output - The raw string response from the execution LLM call.
+   * @returns A promise resolving to the structured execution output.
+   */
+  parseExecutionOutput(output: string): Promise<ExecutionOutput>;
 
   /**
    * Parses the raw string output from the synthesis LLM call to extract the final, user-facing response content.

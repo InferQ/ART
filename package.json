@@ -1,6 +1,6 @@
 {
   "name": "art-framework",
-  "version": "0.3.8",
+  "version": "0.4.0",
   "description": "Agent Runtine (ART) Framework - A browser-first JavaScript/TypeScript framework for building LLM-powered Agentic AI applications that supports MCP and A2A protocols natively",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,7 +11,23 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "require": "./dist/*.cjs"
+    },
+    "./dist/*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "require": "./dist/*.cjs"
+    },
+    "./dist/core/agent-factory": "./dist/core/agent-factory.js",
+    "./dist/core/agents/pes-agent": "./dist/core/agents/pes-agent.js",
+    "./dist/integrations/storage/indexedDB": "./dist/integrations/storage/indexedDB.js",
+    "./dist/integrations/reasoning/gemini": "./dist/integrations/reasoning/gemini.js",
+    "./dist/systems/ui/ui-system": "./dist/systems/ui/ui-system.js",
+    "./dist/types": "./dist/types/index.js"
   },
   "files": [
     "dist",
@@ -25,7 +41,7 @@
     "lint": "eslint . --ext .ts",
     "format": "prettier --write 'src/**/*.ts'",
     "type-check": "tsc --noEmit",
-    "prepare": "npm run build",
+    "prepare": "pnpm build",
     "test:e2e": "playwright test",
     "docs:api": "typedoc",
     "docs:site": "typedoc --options typedoc.html.json"
@@ -80,5 +96,6 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "packageManager": "pnpm@10.17.1+sha512.17c560fca4867ae9473a3899ad84a88334914f379be46d455cbf92e5cf4b39d34985d452d2583baf19967fa76cb5c17bc9e245529d0b98745721aa7200ecaf7a"
 }

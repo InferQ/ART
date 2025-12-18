@@ -1,7 +1,6 @@
 // src/systems/reasoning/SystemPromptResolver.ts
 import { SystemPromptResolver as ISystemPromptResolver } from '@/core/interfaces';
 import { SystemPromptsRegistry, SystemPromptOverride, SystemPromptMergeStrategy } from '@/types';
-import { PromptManager } from './PromptManager';
 import { Logger } from '@/utils/logger';
 
 function applyStrategy(base: string, addition: string, strategy: SystemPromptMergeStrategy | undefined): string {
@@ -30,10 +29,8 @@ function normalizeOverride(input?: string | SystemPromptOverride): SystemPromptO
  */
 export class SystemPromptResolver implements ISystemPromptResolver {
   private readonly registry?: SystemPromptsRegistry;
-  private readonly promptManager: PromptManager;
 
-  constructor(promptManager: PromptManager, registry?: SystemPromptsRegistry) {
-    this.promptManager = promptManager;
+  constructor(registry?: SystemPromptsRegistry) {
     this.registry = registry;
   }
 
@@ -72,20 +69,10 @@ export class SystemPromptResolver implements ISystemPromptResolver {
   }
 
   private renderTemplate(template: string, variables: Record<string, any>): string {
-    // Replace fragments first: {{fragment:name}}
-    const withFragments = template.replace(/\{\{\s*fragment:([^}]+)\s*\}\}/g, (_m, name) => {
-      try {
-        return this.promptManager.getFragment(String(name).trim());
-      } catch {
-        return '';
-      }
-    });
     // Replace simple variables: {{var}}
-    return withFragments.replace(/\{\{\s*([^}:]+)\s*\}\}/g, (_m, key) => {
+    return template.replace(/\{\{\s*([^}:]+)\s*\}\}/g, (_m, key) => {
       const v = variables[String(key).trim()];
       return v !== undefined ? String(v) : '';
     });
   }
 }
-
-

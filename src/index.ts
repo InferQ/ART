@@ -52,7 +52,7 @@
  * @returns {Promise<ArtInstance>} A promise that resolves to a ready-to-use ART instance.
  * @see {@link ArtInstanceConfig} for configuration options.
  */
-export { createArtInstance } from '@/core/agent-factory';
+export { createArtInstance, AgentFactory } from '@/core/agent-factory';
 
 // --- 2. Primary Interfaces & Types ---
 

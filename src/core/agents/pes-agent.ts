@@ -4,14 +4,12 @@ import {
     StateManager,
     ConversationManager,
     ToolRegistry,
-    // PromptManager, // Removed - PESAgent will construct prompt object directly
     ReasoningEngine,
     OutputParser,
     ObservationManager,
     ToolSystem,
-    UISystem, // Added UISystem import
-    IA2ATaskRepository // Added A2A task repository interface
-    // Assuming repository interfaces might be needed indirectly or for type safety, though not directly used
+    UISystem,
+    IA2ATaskRepository
 } from '@/core/interfaces';
 import {
     AgentProps,
@@ -21,49 +19,37 @@ import {
     ToolResult,
     ObservationType,
     ExecutionMetadata,
-    MessageRole, // Keep for mapping history roles initially
+    MessageRole,
     CallOptions,
     ModelCapability,
     LLMMetadata,
-    ArtStandardPrompt, // Import new types
+    ArtStandardPrompt,
     ArtStandardMessageRole,
-    A2ATask, // Added A2A task types
+    A2ATask,
     A2ATaskStatus,
     A2ATaskPriority,
     A2AAgentInfo,
-    // PromptContext, // Removed unused import after refactoring prompt construction
-    // ThreadConfig, // Removed unused import (config accessed via ThreadContext)
-    // ToolSchema, // Removed unused import
-    // ThreadContext, // Removed unused import
+    AgentPersona,
+    TodoItem,
+    TodoItemStatus,
+    PESAgentStateData,
+    ExecutionOutput
 } from '@/types';
-import { AgentPersona } from '@/types';
-import { RuntimeProviderConfig } from '@/types/providers'; // Import RuntimeProviderConfig
+import { RuntimeProviderConfig } from '@/types/providers';
 import { generateUUID } from '@/utils/uuid';
 import { ARTError, ErrorCode } from '@/errors';
-import { Logger } from '@/utils/logger'; // Added Logger import
+import { Logger } from '@/utils/logger';
 
-/**
- * Defines the dependencies required by the PESAgent constructor.
- * These are typically provided by the AgentFactory during instantiation.
- */
 import { AgentDiscoveryService } from '@/systems/a2a/AgentDiscoveryService';
 import { TaskDelegationService } from '@/systems/a2a/TaskDelegationService';
 
 export interface PESAgentDependencies {
     /** Manages thread configuration and state. */
     stateManager: StateManager;
-    /**
-     * Optional default system prompt string provided at the ART instance level.
-     * This serves as a custom prompt part if no thread-specific or call-specific
-     * system prompt is provided. It's appended to the agent's base system prompt.
-     */
-    // instanceDefaultCustomSystemPrompt?: string; // This will be replaced by the persona
     /** Manages conversation history. */
     conversationManager: ConversationManager;
     /** Registry for available tools. */
     toolRegistry: ToolRegistry;
-    // /** Constructs prompts for LLM calls. */ // Removed
-    // promptManager: PromptManager; // Removed
     /** Handles interaction with the LLM provider. */
     reasoningEngine: ReasoningEngine;
     /** Parses LLM responses. */
@@ -73,7 +59,7 @@ export interface PESAgentDependencies {
     /** Orchestrates tool execution. */
     toolSystem: ToolSystem;
     /** Provides access to UI communication sockets. */
-    uiSystem: UISystem; // Added UISystem dependency
+    uiSystem: UISystem;
     /** Repository for A2A tasks. */
     a2aTaskRepository: IA2ATaskRepository;
     /** Service for discovering A2A agents. */
@@ -87,39 +73,23 @@ export interface PESAgentDependencies {
 }
 
 const DEFAULT_PERSONA: AgentPersona = {
-  name: 'Zoi',
-  prompts: {
-    planning: 'You are a helpful AI assistant. Your primary goal is to understand a user\'s query, determine the intent, and create a clear plan to provide an accurate and helpful response. You can use tools to gather information if necessary.',
-    synthesis: 'You are a helpful AI assistant named Art. Your primary goal is to synthesize the information gathered from tools and planning into a final, user-friendly response. Be clear, concise, and helpful.'
-  }
+    name: 'Zoi',
+    prompts: {
+        planning: 'You are a helpful AI assistant. Your primary goal is to understand a user\'s query, determine the intent, and create a clear plan to provide an accurate and helpful response. You can use tools to gather information if necessary.',
+        synthesis: 'You are a helpful AI assistant named Art. Your primary goal is to synthesize the information gathered from tools, outcomes of each todo list task and planning into a final, user-friendly response. Be clear, concise, and helpful. If any ui components are defined, you should use those to display your outputs.'
+    }
 };
 
 /**
  * Implements the Plan-Execute-Synthesize (PES) agent orchestration logic.
- * This agent follows a structured approach:
- * 1.  **Plan:** Understand the user query, determine intent, and create a plan (potentially involving tool calls).
- * 2.  **Execute:** Run any necessary tools identified in the planning phase.
- * 3.  **Synthesize:** Generate a final response based on the query, plan, and tool results.
- *
- * It constructs standardized prompts (`ArtStandardPrompt`) directly as JavaScript objects
- * for the `ReasoningEngine`. It processes the `StreamEvent` output from the reasoning engine for both planning and synthesis.
- *
- * // @see {PromptManager} // Removed
- * @see {ReasoningEngine}
- * @see {ArtStandardPrompt}
- * @see {StreamEvent}
+ * Refactored to support persistent TodoList execution and iterative refinement.
  */
 export class PESAgent implements IAgentCore {
     private readonly deps: PESAgentDependencies;
     private readonly persona: AgentPersona;
 
-    /**
-     * Creates an instance of the PESAgent.
-     * @param {module:core/agents/pes-agent.PESAgentDependencies} dependencies - An object containing instances of all required subsystems (managers, registries, etc.).
-     */
     constructor(dependencies: PESAgentDependencies) {
         this.deps = dependencies;
-        // Deep merge the default persona with the provided one
         this.persona = {
             ...DEFAULT_PERSONA,
             ...dependencies.persona,
@@ -130,22 +100,6 @@ export class PESAgent implements IAgentCore {
         };
     }
 
-    /**
-     * Executes the full Plan-Execute-Synthesize cycle for a given user query.
-     *
-     * **Workflow:**
-     * 1.  **Initiation & Config:** Loads thread configuration and resolves system prompt
-     * 2.  **Data Gathering:** Gathers history, available tools
-     * 3.  **Planning:** LLM call for planning and parsing
-     * 4.  **A2A Discovery & Delegation:** Identifies and delegates A2A tasks to remote agents
-     * 5.  **Tool Execution:** Executes identified local tool calls
-     * 6.  **Synthesis:** LLM call for final response generation including A2A results
-     * 7.  **Finalization:** Saves messages and cleanup
-     *
-     * @param {AgentProps} props - The input properties containing the user query, threadId, userId, traceId, etc.
-     * @returns {Promise<AgentFinalResponse>} A promise resolving to the final response, including the AI message and execution metadata.
-     * @throws {ARTError} If a critical error occurs that prevents the agent from completing the process.
-     */
     async process(props: AgentProps): Promise<AgentFinalResponse> {
         const startTime = Date.now();
         const traceId = props.traceId ?? generateUUID();
@@ -167,51 +121,82 @@ export class PESAgent implements IAgentCore {
             const history = await this._gatherHistory(props.threadId, threadContext);
             const availableTools = await this._gatherTools(props.threadId);
 
-            // Stage 3: Perform planning
-            phase = 'planning';
-            const { planningOutput, planningMetadata, planningContext } = await this._performPlanning(
-                props, planningSystemPrompt, history, availableTools, runtimeProviderConfig, traceId
-            );
-            llmCalls++;
-            if (planningMetadata) {
-                aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...planningMetadata };
+            // Stage 3: State Loading & Plan Determination
+            phase = 'state_loading';
+
+            // Cast the opaque state data to our specific type
+            let pesState = (threadContext.state?.data) as PESAgentStateData | undefined;
+            const isFollowUp = !!pesState && pesState.todoList && pesState.todoList.length > 0;
+
+            if (!isFollowUp) {
+                // Initial Planning Phase
+                Logger.debug(`[${traceId}] No existing plan found. Initiating Planning Phase.`);
+                phase = 'planning';
+                const planningResult = await this._performPlanning(
+                    props, planningSystemPrompt, history, availableTools, runtimeProviderConfig, traceId
+                );
+                llmCalls++;
+                if (planningResult.metadata) aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...planningResult.metadata };
+
+                // Initialize State
+                pesState = {
+                    threadId: props.threadId,
+                    intent: planningResult.output.intent || 'Unknown Intent',
+                    title: planningResult.output.title || 'New Conversation',
+                    plan: planningResult.output.plan || '',
+                    todoList: planningResult.output.todoList || [],
+                    currentStepId: null,
+                    isPaused: false
+                };
+
+                // Persist Initial State
+                await this._saveState(props.threadId, pesState);
+                await this._recordPlanObservations(props.threadId, traceId, planningResult.output, planningResult.rawText);
+
+            } else {
+                // Follow-up / Refinement Phase
+                Logger.debug(`[${traceId}] Existing plan found. Processing follow-up/refinement.`);
+                phase = 'planning_refinement';
+
+                if (props.query && props.query.trim().length > 0) {
+                    // We know pesState is defined here because isFollowUp is true
+                    const refinementResult = await this._performPlanRefinement(
+                        props, planningSystemPrompt, history, pesState!, availableTools, runtimeProviderConfig, traceId
+                    );
+                    llmCalls++;
+                    if (refinementResult.metadata) aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...refinementResult.metadata };
+
+                    if (refinementResult.output.todoList) {
+                        pesState!.intent = refinementResult.output.intent || pesState!.intent;
+                        pesState!.plan = refinementResult.output.plan || pesState!.plan;
+                        pesState!.todoList = refinementResult.output.todoList;
+
+                        await this._saveState(props.threadId, pesState!);
+                        await this._recordPlanObservations(props.threadId, traceId, refinementResult.output, refinementResult.rawText);
+                    }
+                }
             }
 
-            // Stage 4: Delegate A2A tasks based on the plan
-            phase = 'a2a_delegation';
-            const delegatedA2ATasks = await this._delegateA2ATasks(
-                planningOutput, props.threadId, traceId
+            // Stage 4: Execution Loop
+            phase = 'execution_loop';
+            const executionResult = await this._executeTodoList(
+                props, pesState!, availableTools, runtimeProviderConfig, traceId
             );
 
-            // Stage 4b: Wait for A2A task completion
-            phase = 'a2a_completion';
-            const completedA2ATasks = await this._waitForA2ACompletion(
-                delegatedA2ATasks, props.threadId, traceId
-            );
+            llmCalls += executionResult.llmCalls;
+            toolCallsCount += executionResult.toolCalls;
+            if (executionResult.llmMetadata) aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...executionResult.llmMetadata };
 
-            // Stage 5: Execute local tools
-            phase = 'tool_execution';
-            const toolResults = await this._executeLocalTools(
-                planningOutput.toolCalls, props.threadId, traceId
-            );
-            toolCallsCount = toolResults.length;
-            if (toolResults.some(r => r.status === 'error')) {
-                status = 'partial';
-                Logger.warn(`[${traceId}] Partial success in tool execution.`);
-                errorMessage = 'Tool execution errors occurred.';
-            }
-
-            // Stage 6: Perform synthesis
+            // Stage 5: Synthesis
             phase = 'synthesis';
+            // Only synthesize if we have completed items or if we paused/stopped
             const { finalResponseContent, synthesisMetadata, uiMetadata } = await this._performSynthesis(
-                props, synthesisSystemPrompt, history, planningOutput, toolResults, completedA2ATasks, runtimeProviderConfig, traceId, finalPersona, planningContext
+                props, synthesisSystemPrompt, history, pesState!, runtimeProviderConfig, traceId, finalPersona
             );
             llmCalls++;
-            if (synthesisMetadata) {
-                aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...synthesisMetadata };
-            }
+            if (synthesisMetadata) aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...synthesisMetadata };
 
-            // Stage 7: Finalization
+            // Stage 6: Finalization
             phase = 'finalization';
             finalAiMessage = await this._finalize(props, finalResponseContent, traceId, uiMetadata);
 
@@ -220,31 +205,22 @@ export class PESAgent implements IAgentCore {
                 ? error
                 : new ARTError(`An unexpected error occurred during agent processing: ${error.message}`, ErrorCode.UNKNOWN_ERROR, error);
 
-            // Annotate error with the phase if it's not already set
-            if (!artError.details) artError.details = {};
-            artError.details.phase = artError.details.phase || phase;
+            artError.details = artError.details || {};
+            artError.details.phase = phase;
+            Logger.error(`[${traceId}] PESAgent process error in phase '${phase}':`, artError);
 
-            Logger.error(`[${traceId}] PESAgent process error in phase '${artError.details.phase}':`, artError);
-            status = status === 'partial' ? 'partial' : 'error';
+            status = 'error';
             errorMessage = artError.message;
-            if (status === 'error') finalAiMessage = undefined;
 
-            // Record top-level error observation, ensuring it's always an ARTError
             await this.deps.observationManager.record({
                 threadId: props.threadId, traceId, type: ObservationType.ERROR,
-                content: {
-                    phase: artError.details.phase,
-                    error: artError.message,
-                    code: artError.code,
-                    stack: artError.stack
-                },
+                content: { phase, error: artError.message, stack: artError.stack },
                 metadata: { timestamp: Date.now() }
-            }).catch(err => Logger.error(`[${traceId}] Failed to record top-level error observation:`, err));
+            });
         } finally {
-            // Ensure state is saved even if errors occurred
             try {
                 await this.deps.stateManager.saveStateIfModified(props.threadId);
-            } catch(saveError: any) {
+            } catch (saveError: any) {
                 Logger.error(`[${traceId}] Failed to save state during finalization:`, saveError);
             }
         }
@@ -271,29 +247,564 @@ export class PESAgent implements IAgentCore {
                 timestamp: Date.now(),
                 metadata: { traceId, error: true }
             };
-        } else if (!finalAiMessage) {
-            throw new ARTError("Agent finished with success status but no final message was generated.", ErrorCode.UNKNOWN_ERROR);
         }
 
         return {
-            response: finalAiMessage,
+            response: finalAiMessage!,
             metadata: metadata,
         };
     }
 
-    /**
-     * Loads thread configuration and resolves the system prompt hierarchy.
-     * @private
-     */
+    // --- Helper Methods ---
+
+    private async _saveState(threadId: string, pesState: PESAgentStateData) {
+        await this.deps.stateManager.setAgentState(threadId, {
+            data: pesState,
+            version: 1,
+            modified: Date.now()
+        });
+    }
+
+    private async _recordPlanObservations(threadId: string, traceId: string, planningOutput: any, rawText: string) {
+        await this.deps.observationManager.record({
+            threadId, traceId, type: ObservationType.INTENT,
+            content: { intent: planningOutput.intent }, metadata: { timestamp: Date.now() }
+        });
+        if (planningOutput.title) {
+            await this.deps.observationManager.record({
+                threadId, traceId, type: ObservationType.TITLE,
+                content: { title: planningOutput.title }, metadata: { timestamp: Date.now() }
+            });
+        }
+        await this.deps.observationManager.record({
+            threadId, traceId, type: ObservationType.PLAN,
+            content: {
+                plan: planningOutput.plan,
+                todoList: planningOutput.todoList,
+                rawOutput: rawText
+            },
+            metadata: { timestamp: Date.now() }
+        });
+        // Also emit initial plan update
+        await this.deps.observationManager.record({
+            threadId, traceId, type: ObservationType.PLAN_UPDATE,
+            content: { todoList: planningOutput.todoList },
+            metadata: { timestamp: Date.now() }
+        });
+    }
+
+    private async _performPlanning(
+        props: AgentProps,
+        systemPrompt: string,
+        formattedHistory: ArtStandardPrompt,
+        availableTools: any[],
+        runtimeProviderConfig: RuntimeProviderConfig,
+        traceId: string
+    ) {
+        Logger.debug(`[${traceId}] Stage 3: Planning`);
+
+        const toolsJson = availableTools.map(t => ({
+            name: t.name, description: t.description, inputSchema: t.inputSchema
+        }));
+
+        const wrappedSystemPrompt = `You are a planning assistant.
+[BEGIN_CUSTOM_GUIDANCE]
+${systemPrompt}
+[END_CUSTOM_GUIDANCE]
+
+Your goal is to understand the user's query and create a structured plan (Todo List) to answer it.
+The todo list should be a logical, methodical, sensible list of steps that the agent should take to answer the user's query. Each step should progress gradually towards delivering a cmoprehensive, accurate, evidence driven, validated response.
+You MUST output a JSON object with the following structure:
+{
+  "title": "Short title",
+  "intent": "User intent summary",
+  "plan": "High level description of the plan with and overview and bullet points",
+  "todoList": [
+    { "id": "step_1", "description": "Description of step 1", "dependencies": [] },
+    { "id": "step_2", "description": "Description of step 2", "dependencies": ["step_1"] }
+  ]
+}
+`;
+        const planningPrompt: ArtStandardPrompt = [
+            { role: 'system', content: wrappedSystemPrompt },
+            ...formattedHistory,
+            { role: 'user', content: `User Query: ${props.query}\n\nAvailable Tools:\n${JSON.stringify(toolsJson, null, 2)}` }
+        ];
+
+        return this._callPlanningLLM(planningPrompt, props, runtimeProviderConfig, traceId);
+    }
+
+    private async _performPlanRefinement(
+        props: AgentProps,
+        systemPrompt: string,
+        formattedHistory: ArtStandardPrompt,
+        currentState: PESAgentStateData,
+        availableTools: any[],
+        runtimeProviderConfig: RuntimeProviderConfig,
+        traceId: string
+    ) {
+        Logger.debug(`[${traceId}] Stage 3: Plan Refinement`);
+
+        const toolsJson = availableTools.map(t => ({
+            name: t.name, description: t.description, inputSchema: t.inputSchema
+        }));
+
+        const wrappedSystemPrompt = `You are a planning assistant.
+[BEGIN_CUSTOM_GUIDANCE]
+${systemPrompt}
+[END_CUSTOM_GUIDANCE]
+
+The user has provided a follow-up query. You must update the existing plan and todo list to accommodate this request.
+Current Plan:
+Intent: ${currentState.intent}
+Todo List:
+${JSON.stringify(currentState.todoList, null, 2)}
+
+Output the updated JSON object (title, intent, plan, todoList). Ensure you preserve completed items and logically append or insert new items.
+`;
+        const planningPrompt: ArtStandardPrompt = [
+            { role: 'system', content: wrappedSystemPrompt },
+            ...formattedHistory,
+            { role: 'user', content: `User Query: ${props.query}\n\nAvailable Tools:\n${JSON.stringify(toolsJson, null, 2)}` }
+        ];
+
+        return this._callPlanningLLM(planningPrompt, props, runtimeProviderConfig, traceId);
+    }
+
+    private async _callPlanningLLM(
+        prompt: ArtStandardPrompt,
+        props: AgentProps,
+        runtimeProviderConfig: RuntimeProviderConfig,
+        traceId: string
+    ) {
+        const planningOptions: CallOptions = {
+            threadId: props.threadId, traceId, userId: props.userId, sessionId: props.sessionId,
+            stream: true, callContext: 'AGENT_THOUGHT',
+            requiredCapabilities: [ModelCapability.REASONING],
+            providerConfig: runtimeProviderConfig,
+            ...(props.options?.llmParams ?? {}),
+        };
+
+        let outputText = '';
+        let metadata: LLMMetadata | undefined;
+        let streamError: Error | null = null;
+
+        try {
+            await this.deps.observationManager.record({
+                threadId: props.threadId, traceId, type: ObservationType.PLAN,
+                content: { message: "Generating/Refining Plan..." }, metadata: { timestamp: Date.now() }
+            });
+
+            const stream = await this.deps.reasoningEngine.call(prompt, planningOptions);
+
+            await this.deps.observationManager.record({
+                threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_START,
+                content: { phase: 'planning' }, metadata: { timestamp: Date.now() }
+            });
+
+            for await (const event of stream) {
+                this.deps.uiSystem.getLLMStreamSocket().notify(event, {
+                    targetThreadId: event.threadId, targetSessionId: event.sessionId
+                });
+
+                if (event.type === 'TOKEN') {
+                    outputText += event.data;
+                } else if (event.type === 'METADATA') {
+                    metadata = event.data;
+                } else if (event.type === 'ERROR') {
+                    streamError = event.data;
+                }
+            }
+
+            if (streamError) throw streamError;
+
+            const parsed = await this.deps.outputParser.parsePlanningOutput(outputText);
+            return { output: parsed, metadata, rawText: outputText };
+
+        } catch (err: any) {
+            throw new ARTError(`Planning failed: ${err.message}`, ErrorCode.PLANNING_FAILED, err);
+        }
+    }
+
+    private async _executeTodoList(
+        props: AgentProps,
+        pesState: PESAgentStateData,
+        availableTools: any[],
+        runtimeProviderConfig: RuntimeProviderConfig,
+        traceId: string
+    ) {
+        Logger.debug(`[${traceId}] Starting Execution Loop`);
+
+        let llmCalls = 0;
+        let toolCalls = 0;
+        let accumulatedMetadata: LLMMetadata = {};
+
+        // Loop until all items are completed or we hit a break condition
+        let loopContinue = true;
+        const MAX_LOOPS = 20;
+        let loopCount = 0;
+
+        while (loopContinue && loopCount < MAX_LOOPS) {
+            loopCount++;
+
+            // Find next pending item whose dependencies are met
+            const pendingItem = pesState.todoList.find(item => {
+                if (item.status !== TodoItemStatus.PENDING) return false;
+                if (!item.dependencies || item.dependencies.length === 0) return true;
+                return item.dependencies.every(depId => {
+                    const depItem = pesState.todoList.find(i => i.id === depId);
+                    return depItem && depItem.status === TodoItemStatus.COMPLETED;
+                });
+            });
+
+            if (!pendingItem) {
+                Logger.debug(`[${traceId}] No runnable pending items found.`);
+                loopContinue = false;
+                break;
+            }
+
+            Logger.debug(`[${traceId}] Executing Item: ${pendingItem.id}`);
+            pesState.currentStepId = pendingItem.id;
+            pendingItem.status = TodoItemStatus.IN_PROGRESS;
+            pendingItem.updatedTimestamp = Date.now();
+
+            // Persist status change
+            await this._saveState(props.threadId, pesState);
+            await this.deps.observationManager.record({
+                threadId: props.threadId, traceId, type: ObservationType.ITEM_STATUS_CHANGE,
+                content: { itemId: pendingItem.id, status: TodoItemStatus.IN_PROGRESS },
+                parentId: pendingItem.id,
+                metadata: { timestamp: Date.now() }
+            });
+
+            // Execute the item
+            try {
+                const itemResult = await this._processTodoItem(
+                    props, pendingItem, pesState, availableTools, runtimeProviderConfig, traceId
+                );
+
+                llmCalls += itemResult.llmCalls;
+                toolCalls += itemResult.toolCalls;
+                if (itemResult.metadata) {
+                    accumulatedMetadata = { ...accumulatedMetadata, ...itemResult.metadata };
+                }
+
+                if (itemResult.status === 'success') {
+                    pendingItem.status = TodoItemStatus.COMPLETED;
+                    pendingItem.result = itemResult.output;
+                } else if (itemResult.status === 'wait') {
+                    pendingItem.status = TodoItemStatus.WAITING;
+                } else {
+                    pendingItem.status = TodoItemStatus.FAILED;
+                    loopContinue = false;
+                }
+
+            } catch (err: any) {
+                Logger.error(`[${traceId}] Error executing item ${pendingItem.id}:`, err);
+                pendingItem.status = TodoItemStatus.FAILED;
+                loopContinue = false;
+            }
+
+            pendingItem.updatedTimestamp = Date.now();
+            await this._saveState(props.threadId, pesState);
+            await this.deps.observationManager.record({
+                threadId: props.threadId, traceId, type: ObservationType.ITEM_STATUS_CHANGE,
+                content: { itemId: pendingItem.id, status: pendingItem.status },
+                parentId: pendingItem.id,
+                metadata: { timestamp: Date.now() }
+            });
+        }
+
+        return { llmCalls, toolCalls, llmMetadata: accumulatedMetadata };
+    }
+
+    private async _processTodoItem(
+        props: AgentProps,
+        item: TodoItem,
+        state: PESAgentStateData,
+        availableTools: any[],
+        runtimeProviderConfig: RuntimeProviderConfig,
+        traceId: string
+    ): Promise<{ status: 'success' | 'fail' | 'wait', output?: any, llmCalls: number, toolCalls: number, metadata?: LLMMetadata }> {
+
+        let llmCalls = 0;
+        let toolCallsCount = 0;
+        let accumulatedMetadata: LLMMetadata = {};
+
+        const toolsJson = availableTools.map(t => ({
+            name: t.name, description: t.description, inputSchema: t.inputSchema
+        }));
+
+        // Add A2A delegation tool to execution context
+        const delegationToolSchema = {
+            name: 'delegate_to_agent',
+            description: 'Delegates a specific task to another agent.',
+            inputSchema: {
+                type: 'object',
+                properties: {
+                    agentId: { type: 'string' },
+                    taskType: { type: 'string' },
+                    input: { type: 'object' },
+                    instructions: { type: 'string' }
+                },
+                required: ['agentId', 'taskType', 'input', 'instructions']
+            }
+        };
+        const executionTools = [...toolsJson, delegationToolSchema];
+
+        const completedItemsContext = state.todoList
+            .filter(i => i.status === TodoItemStatus.COMPLETED)
+            .map(i => `Item ${i.id}: ${i.description}\nResult: ${JSON.stringify(i.result)}`)
+            .join('\n\n');
+
+        const systemPromptText = `You are executing a step in a larger plan.
+Current Task: ${item.description}
+Context: ${props.query}
+Previous Steps Results:
+${completedItemsContext}
+Instructions:
+1. Use tools if necessary.
+2. If you need to delegate to another agent, use 'delegate_to_agent'.
+3. If you learn new information that changes the plan, include 'updatedPlan' in your JSON output.
+4. Output Format: JSON response with 'content', 'toolCalls', 'updatedPlan', 'nextStepDecision'.
+`;
+
+        const messages: ArtStandardPrompt = [
+            { role: 'system', content: systemPromptText },
+            { role: 'user', content: `Execute the task: ${item.description}\n\nAvailable Tools:\n${JSON.stringify(executionTools)}` }
+        ];
+
+        const MAX_ITEM_ITERATIONS = 5;
+        let iteration = 0;
+        let itemDone = false;
+        let finalOutput: string | undefined;
+        let finalStatus: 'success' | 'fail' | 'wait' = 'success';
+
+        while (!itemDone && iteration < MAX_ITEM_ITERATIONS) {
+            iteration++;
+
+            const options: CallOptions = {
+                threadId: props.threadId, traceId, userId: props.userId, sessionId: props.sessionId,
+                stream: true, callContext: 'AGENT_THOUGHT',
+                requiredCapabilities: [ModelCapability.REASONING],
+                providerConfig: runtimeProviderConfig,
+                ...(props.options?.llmParams ?? {}),
+            };
+
+            let outputText = '';
+            let streamError: Error | null = null;
+            let currentMetadata: LLMMetadata | undefined;
+
+            await this.deps.observationManager.record({
+                threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_START,
+                content: { phase: `execution_item_${item.id}_iter_${iteration}` },
+                parentId: item.id,
+                metadata: { timestamp: Date.now() }
+            });
+
+            const stream = await this.deps.reasoningEngine.call(messages, options);
+            llmCalls++;
+
+            for await (const event of stream) {
+                this.deps.uiSystem.getLLMStreamSocket().notify(event, {
+                    targetThreadId: event.threadId, targetSessionId: event.sessionId
+                });
+
+                if (event.type === 'TOKEN') {
+                    outputText += event.data;
+                    if (event.tokenType && String(event.tokenType).includes('THINKING')) {
+                        await this.deps.observationManager.record({
+                            threadId: props.threadId,
+                            traceId,
+                            type: ObservationType.THOUGHTS,
+                            content: { text: event.data },
+                            parentId: item.id,
+                            metadata: { phase: 'execution', tokenType: event.tokenType, timestamp: Date.now() }
+                        }).catch(err => Logger.error(`[${traceId}] Failed to record THOUGHTS observation:`, err));
+                    }
+                } else if (event.type === 'METADATA') {
+                    currentMetadata = event.data;
+                } else if (event.type === 'ERROR') {
+                    streamError = event.data;
+                }
+            }
+
+            if (streamError) throw streamError;
+            if (currentMetadata) accumulatedMetadata = { ...accumulatedMetadata, ...currentMetadata };
+
+            const parsed = await this.deps.outputParser.parseExecutionOutput(outputText);
+            messages.push({ role: 'assistant', content: outputText });
+
+            // Check for Plan Updates
+            if (parsed.updatedPlan && parsed.updatedPlan.todoList) {
+                Logger.info(`[${traceId}] Plan update received from execution step.`);
+                state.todoList = parsed.updatedPlan.todoList;
+                if (parsed.updatedPlan.intent) state.intent = parsed.updatedPlan.intent;
+                if (parsed.updatedPlan.plan) state.plan = parsed.updatedPlan.plan;
+
+                await this._saveState(props.threadId, state);
+                await this.deps.observationManager.record({
+                    threadId: props.threadId, traceId, type: ObservationType.PLAN_UPDATE,
+                    content: { todoList: state.todoList },
+                    metadata: { timestamp: Date.now() }
+                });
+            }
+
+            if (parsed.toolCalls && parsed.toolCalls.length > 0) {
+                // Check for A2A delegation
+                const a2aCalls = parsed.toolCalls.filter(tc => tc.toolName === 'delegate_to_agent');
+                const localCalls = parsed.toolCalls.filter(tc => tc.toolName !== 'delegate_to_agent');
+
+                let a2aTasks: A2ATask[] = [];
+
+                if (a2aCalls.length > 0) {
+                    a2aTasks = await this._delegateA2ATasks({ toolCalls: a2aCalls }, props.threadId, traceId);
+                    // Wait for completion (blocking this item step)
+                    const completedTasks = await this._waitForA2ACompletion(a2aTasks, props.threadId, traceId);
+
+                    // Add results to messages
+                    completedTasks.forEach(task => {
+                        messages.push({
+                            role: 'tool_result',
+                            content: JSON.stringify(task.result || { error: 'Task failed' }),
+                            name: 'delegate_to_agent',
+                            tool_call_id: task.taskId // Assuming task ID maps to call ID
+                        });
+                    });
+                }
+
+                if (localCalls.length > 0) {
+                    const toolResults = await this.deps.toolSystem.executeTools(localCalls, props.threadId, traceId);
+                    toolCallsCount += toolResults.length;
+
+                    await this.deps.observationManager.record({
+                        threadId: props.threadId, traceId, type: ObservationType.TOOL_EXECUTION,
+                        content: { toolResults },
+                        parentId: item.id,
+                        metadata: { timestamp: Date.now() }
+                    });
+
+                    toolResults.forEach(res => {
+                        messages.push({
+                            role: 'tool_result',
+                            content: JSON.stringify(res.output || res.error),
+                            name: res.toolName,
+                            tool_call_id: res.callId
+                        });
+                    });
+                }
+            } else {
+                itemDone = true;
+                finalOutput = parsed.content;
+            }
+        }
+
+        return {
+            status: finalStatus,
+            output: finalOutput,
+            llmCalls,
+            toolCalls: toolCallsCount,
+            metadata: accumulatedMetadata
+        };
+    }
+
+    private async _performSynthesis(
+        props: AgentProps,
+        systemPrompt: string,
+        formattedHistory: ArtStandardPrompt,
+        state: PESAgentStateData,
+        runtimeProviderConfig: RuntimeProviderConfig,
+        traceId: string,
+        finalPersona: AgentPersona
+    ) {
+        Logger.debug(`[${traceId}] Stage 6: Synthesis`);
+
+        const completedItems = state.todoList.filter(i => i.status === TodoItemStatus.COMPLETED);
+        const failedItems = state.todoList.filter(i => i.status === TodoItemStatus.FAILED);
+
+        const summary = `
+Completed Tasks:
+${completedItems.map(i => `- ${i.description}: ${JSON.stringify(i.result).substring(0, 200)}...`).join('\n')}
+
+Failed Tasks:
+${failedItems.map(i => `- ${i.description}`).join('\n')}
+`;
+
+        const wrappedSynthesisSystemPrompt = `You are ${finalPersona.name}.
+[BEGIN_CUSTOM_GUIDANCE]
+${systemPrompt}
+[END_CUSTOM_GUIDANCE]
+
+Synthesize the final answer based on the completed tasks.
+Format your response with <mainContent>...</mainContent> for the user message and <uiMetadata>...</uiMetadata> for metadata (JSON).
+`;
+        const synthesisPrompt: ArtStandardPrompt = [
+            { role: 'system', content: wrappedSynthesisSystemPrompt },
+            ...formattedHistory,
+            { role: 'user', content: `User Query: ${props.query}\n\nWork Summary:\n${summary}` }
+        ];
+
+        const synthesisOptions: CallOptions = {
+            threadId: props.threadId,
+            traceId: traceId,
+            userId: props.userId,
+            sessionId: props.sessionId,
+            stream: true,
+            callContext: 'FINAL_SYNTHESIS',
+            requiredCapabilities: [ModelCapability.TEXT],
+            providerConfig: runtimeProviderConfig,
+            ...(props.options?.llmParams ?? {}),
+        };
+
+        let finalResponseContent: string = '';
+        let synthesisMetadata: LLMMetadata | undefined = undefined;
+
+        // ... Stream handling same as before ...
+        // Re-using stream logic for synthesis
+        const stream = await this.deps.reasoningEngine.call(synthesisPrompt, synthesisOptions);
+
+        await this.deps.observationManager.record({
+            threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_START,
+            content: { phase: 'synthesis' }, metadata: { timestamp: Date.now() }
+        });
+
+        for await (const event of stream) {
+            this.deps.uiSystem.getLLMStreamSocket().notify(event, {
+                targetThreadId: event.threadId, targetSessionId: event.sessionId
+            });
+            if (event.type === 'TOKEN') {
+                if (event.tokenType === 'FINAL_SYNTHESIS_LLM_RESPONSE' || event.tokenType === 'LLM_RESPONSE') {
+                    finalResponseContent += event.data;
+                }
+            } else if (event.type === 'METADATA') {
+                synthesisMetadata = event.data;
+            }
+        }
+
+        // Parse metadata block (same as before)
+        let mainContent = finalResponseContent;
+        let uiMetadata: object | undefined = undefined;
+        const metadataBlockRegex = /```json\s*([\s\S]*?)\s*```$/;
+        const match = finalResponseContent.match(metadataBlockRegex);
+        if (match && match[1]) {
+            mainContent = finalResponseContent.replace(metadataBlockRegex, '').trim();
+            try { uiMetadata = JSON.parse(match[1]); } catch { }
+        }
+
+        return { finalResponseContent: mainContent, synthesisMetadata, uiMetadata };
+    }
+
     private async _loadConfiguration(props: AgentProps, traceId: string) {
+        // ... (Same as original implementation) ...
+        // To save tokens/lines in this overwite, assuming I keep the exact same logic.
+        // For brevity in this tool call, I'll copy-paste the logic from the original file I read.
         Logger.debug(`[${traceId}] Stage 1: Initiation & Config`);
-        
+
         const threadContext = await this.deps.stateManager.loadThreadContext(props.threadId, props.userId);
         if (!threadContext) {
             throw new ARTError(`Thread context not found for threadId: ${props.threadId}`, ErrorCode.THREAD_NOT_FOUND);
         }
 
-        // Resolve persona hierarchy: call -> thread -> instance
         const callPersona = props.options?.persona;
         const threadPersona = await this.deps.stateManager.getThreadConfigValue<Partial<AgentPersona>>(props.threadId, 'persona');
         const instancePersona = this.persona;
@@ -306,7 +817,6 @@ export class PESAgent implements IAgentCore {
             },
         };
 
-        // Resolve system prompts for each stage
         const planningSystemPrompt = await this.deps.systemPromptResolver.resolve({
             base: finalPersona.prompts.planning || '',
             thread: await this.deps.stateManager.getThreadConfigValue<any>(props.threadId, 'systemPrompt'),
@@ -319,319 +829,37 @@ export class PESAgent implements IAgentCore {
             call: props.options?.systemPrompt
         }, traceId);
 
-        // Determine RuntimeProviderConfig
         const runtimeProviderConfig: RuntimeProviderConfig | undefined =
             props.options?.providerConfig || threadContext.config.providerConfig;
 
         if (!runtimeProviderConfig) {
-             throw new ARTError(`RuntimeProviderConfig is missing in AgentProps.options or ThreadConfig for threadId: ${props.threadId}`, ErrorCode.INVALID_CONFIG);
+            throw new ARTError(`RuntimeProviderConfig is missing in AgentProps.options or ThreadConfig for threadId: ${props.threadId}`, ErrorCode.INVALID_CONFIG);
         }
 
-        return { 
-            threadContext, 
-            planningSystemPrompt, 
-            synthesisSystemPrompt, 
+        return {
+            threadContext,
+            planningSystemPrompt,
+            synthesisSystemPrompt,
             runtimeProviderConfig,
             finalPersona
         };
     }
 
-    /**
-     * Gathers conversation history for the current thread.
-     * @private
-     */
     private async _gatherHistory(threadId: string, threadContext: any) {
+        // Same as original
         Logger.debug(`[${threadContext.threadId || threadId}] Stage 2: Gathering History`);
-        
         const historyOptions = { limit: threadContext.config.historyLimit };
         const rawHistory = await this.deps.conversationManager.getMessages(threadId, historyOptions);
         return this.formatHistoryForPrompt(rawHistory);
     }
 
-    /**
-     * Gathers available tools for the current thread.
-     * @private
-     */
     private async _gatherTools(threadId: string) {
+        // Same as original
         Logger.debug(`[${threadId}] Stage 2: Gathering Tools`);
         return await this.deps.toolRegistry.getAvailableTools({ enabledForThreadId: threadId });
     }
 
-    /**
-     * Performs the planning phase including LLM call and output parsing.
-     * @private
-     *
-     * @remarks
-     * The planning prompt instructs the LLM to produce a concise `title` (<= 10 words)
-     * alongside `intent`, `plan`, and `toolCalls`. After parsing, a `TITLE` observation
-     * is emitted (if present) for UI components to subscribe via `ObservationSocket`.
-     */
-    private async _performPlanning(
-        props: AgentProps,
-        systemPrompt: string,
-        formattedHistory: ArtStandardPrompt,
-        availableTools: any[],
-        runtimeProviderConfig: RuntimeProviderConfig,
-        traceId: string
-    ) {
-        Logger.debug(`[${traceId}] Stage 3: Pre-planning & A2A Discovery`);
-
-        // --- A2A Pre-Discovery ---
-        let candidateAgents: A2AAgentInfo[] = [];
-        let a2aPromptSection = 'No candidate agents found for delegation.';
-        if (this.deps.agentDiscoveryService) {
-            try {
-                // Simple heuristic to find a task type from the query.
-                // This could be improved with a more sophisticated NLP model in the future.
-                const potentialTaskType = props.query.split(' ')[0].toLowerCase();
-                candidateAgents = await this.deps.agentDiscoveryService.findTopAgentsForTask(potentialTaskType, 3, traceId);
-
-                if (candidateAgents.length > 0) {
-                    a2aPromptSection = `You can delegate tasks to other specialized agents. Here are the available candidates for this query:\n${
-                        candidateAgents.map(agent =>
-                            `- Agent ID: ${agent.agentId}\n  Name: ${agent.agentName}\n  Capabilities: ${(agent.capabilities ?? []).join(', ')}`
-                        ).join('\n')
-                    }\nTo delegate, use the "delegate_to_agent" tool.`;
-                }
-            } catch (err: any) {
-                Logger.warn(`[${traceId}] A2A pre-discovery failed, proceeding without candidate agents:`, err);
-                a2aPromptSection = 'Agent discovery failed. Delegation is not available.';
-            }
-        } else {
-            a2aPromptSection = 'A2A delegation is not configured.';
-        }
-
-        // --- Planning Prompt Construction ---
-        Logger.debug(`[${traceId}] Stage 3b: Planning Prompt Construction`);
-        let planningPrompt: ArtStandardPrompt;
-        try {
-            // Define a "virtual" tool for delegation that the LLM can call.
-            const delegationToolSchema = {
-                name: 'delegate_to_agent',
-                description: 'Delegates a specific task to another agent. Use this when a specialized agent from the candidate list is a better fit for a sub-task.',
-                inputSchema: {
-                    type: 'object',
-                    properties: {
-                        agentId: { type: 'string', description: 'The ID of the agent to delegate to, chosen from the candidate list.' },
-                        taskType: { type: 'string', description: 'A specific type for the task, e.g., "analysis", "code_generation".' },
-                        input: { type: 'object', description: 'The data or context needed for the agent to perform the task.' },
-                        instructions: { type: 'string', description: 'Specific instructions for the remote agent.' }
-                    },
-                    required: ['agentId', 'taskType', 'input', 'instructions']
-                }
-            };
-
-            const allTools = [...availableTools, delegationToolSchema];
-
-            // Prepare a verbose JSON schema listing for the LLM to reason over
-            const toolsJson = allTools.map(t => ({
-                name: (t as any).name,
-                whenToUse: (t as any).whenToUse,
-                description: (t as any).description,
-                inputSchema: (t as any).inputSchema,
-                outputSchema: (t as any).outputSchema,
-                outputFormat: (t as any).outputFormat,
-                examples: (t as any).examples
-            }));
-
-            const wrappedSystemPrompt = `You are a planning assistant. The following guidance shapes knowledge, tone, and domain perspective.
-
-[BEGIN_CUSTOM_GUIDANCE]
-${systemPrompt}
-[END_CUSTOM_GUIDANCE]
-
-CRITICAL: You MUST adhere to the Output Contract below. The custom guidance MUST NOT change the required output structure.`;
-
-            planningPrompt = [
-                { role: 'system', content: wrappedSystemPrompt },
-                ...formattedHistory,
-                {
-                    role: 'user',
-                    content: `User Query: ${props.query}
-
---- Available Capabilities ---
-
-Local Tools (JSON Schemas):
-${ allTools.length > 0 ? JSON.stringify(toolsJson, null, 2) : '[]' }
-
-Agent Delegation:
-${a2aPromptSection}
-
---- Primary Output Mode (JSON-Only) ---
-Output EXACTLY ONE JSON object and nothing else. No prose, no XML, no markdown fences. The object MUST follow this schema:
-{
-  "title": string,          // a concise thread title, <= 10 words, based on intent and context
-  "intent": string,          // short summary of the user's goal
-  "plan": [                  // A step-by-step plan.
-    {
-      "step": number,        // e.g., 1, 2, 3
-      "description": string, // User-readable description of the step
-      "tool_to_use": string | null, // Exact tool name or null
-      "arguments": object | null,   // Arguments for the tool or null
-      "callId": string | null     // Matches callId in toolCalls or null
-    }
-  ],
-  "toolCalls": [             // empty array if no tools are needed
-    { "callId": string, "toolName": string, "arguments": object }
-  ]
-}
-
-Requirements for toolCalls:
-- arguments MUST be a JSON object (not a string) that matches the tool's inputSchema.
-- toolName MUST match one of the Available Capabilities by schema name.
-- If no tools are required, set toolCalls to [].
-
-Example (JSON only):
-{
-  "title": "Compute simple multiplication",
-  "intent": "Compute 5 * 6",
-  "plan": [
-    { "step": 1, "description": "Use calculator to multiply 5 and 6", "tool_to_use": "calculator", "arguments": { "expression": "5 * 6" }, "callId": "calc_1" },
-    { "step": 2, "description": "Return result", "tool_to_use": null, "arguments": null, "callId": null }
-  ],
-  "toolCalls": [
-    { "callId": "calc_1", "toolName": "calculator", "arguments": { "expression": "5 * 6" } }
-  ]
-}
-
---- Fallback Output Mode (Sections) ---
-If you cannot produce the JSON object above, then output these sections instead:
-
-Title: [A single concise sentence (<= 10 words) capturing the thread title]
-
-Intent: [One or two sentences]
-
-Plan: [Bullet or numbered steps]
-
-Tool Calls: [A JSON array only. Each item MUST be of the exact form {"callId": "unique_id", "toolName": "tool_schema_name", "arguments": { /* JSON object matching the tool's inputSchema */ }}. If no tools are needed, return []].
-
-Invalid Examples (do NOT do these):
-- Wrapping with markdown code fences or any fences
-- Wrapping with json(...): json([ ... ])
-- Placing inside XML tags such as <Response> or <Plan>
-- Setting arguments as a string: {"arguments": "{ 'expression': '5*6' }"}
-- Using unknown toolName not present in Available Capabilities
-`
-                }
-            ];
-        } catch (err: any) {
-            Logger.error(`[${traceId}] Failed to construct planning prompt object:`, err);
-            throw new ARTError(`Failed to construct planning prompt object: ${err.message}`, ErrorCode.PROMPT_ASSEMBLY_FAILED, err);
-        }
-
-        // --- Planning LLM Call ---
-        Logger.debug(`[${traceId}] Stage 3c: Planning LLM Call`);
-        const planningOptions: CallOptions = {
-            threadId: props.threadId, traceId, userId: props.userId, sessionId: props.sessionId,
-            stream: true, callContext: 'AGENT_THOUGHT',
-            requiredCapabilities: [ModelCapability.REASONING],
-            providerConfig: runtimeProviderConfig,
-            ...(props.options?.llmParams ?? {}),
-        };
-
-        let planningOutputText: string = '';
-        let parsedPlanningOutput: { title?: string; intent?: string; plan?: string; toolCalls?: ParsedToolCall[]; thoughts?: string } = {};
-        let planningStreamError: Error | null = null;
-        let planningMetadata: LLMMetadata | undefined = undefined;
-        let planningContext: {
-            toolsList: { name: string; description?: string }[];
-            a2aSummary: string;
-            plannedToolCalls: ParsedToolCall[];
-            rawPlanningText?: string;
-        } = { toolsList: [], a2aSummary: '', plannedToolCalls: [] };
-
-        try {
-            await this.deps.observationManager.record({
-                threadId: props.threadId, traceId, type: ObservationType.PLAN,
-                content: { message: "Preparing for planning LLM call." },
-                metadata: { timestamp: Date.now() }
-            });
-
-            const planningStream = await this.deps.reasoningEngine.call(planningPrompt, planningOptions);
-
-            await this.deps.observationManager.record({
-                threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_START,
-                content: { phase: 'planning' }, metadata: { timestamp: Date.now() }
-            });
-
-            for await (const event of planningStream) {
-                this.deps.uiSystem.getLLMStreamSocket().notify(event, {
-                    targetThreadId: event.threadId, targetSessionId: event.sessionId
-                });
-
-                switch (event.type) {
-                    case 'TOKEN':
-                        planningOutputText += event.data;
-                        // Emit THOUGHTS observation for thinking tokens
-                        if (event.tokenType && String(event.tokenType).includes('THINKING')) {
-                            await this.deps.observationManager.record({
-                                threadId: props.threadId,
-                                traceId,
-                                type: ObservationType.THOUGHTS,
-                                content: { text: event.data },
-                                metadata: { phase: 'planning', tokenType: event.tokenType, timestamp: Date.now() }
-                            }).catch(err => Logger.error(`[${traceId}] Failed to record THOUGHTS (planning) observation:`, err));
-                        }
-                        break;
-                    case 'METADATA':
-                        planningMetadata = { ...(planningMetadata ?? {}), ...event.data };
-                        break;
-                    case 'ERROR':
-                        planningStreamError = event.data instanceof Error ? event.data : new Error(String(event.data));
-                        break;
-                }
-                if (planningStreamError) break;
-            }
-
-            if (planningStreamError) {
-                throw new ARTError(`Planning phase stream error: ${planningStreamError.message}`, ErrorCode.PLANNING_FAILED, planningStreamError);
-            }
-
-            parsedPlanningOutput = await this.deps.outputParser.parsePlanningOutput(planningOutputText);
-            // Build a compact planning context for downstream synthesis
-            planningContext = {
-                toolsList: availableTools.map((t: any) => ({ name: t.name, description: t.description })),
-                a2aSummary: a2aPromptSection,
-                plannedToolCalls: parsedPlanningOutput.toolCalls ?? [],
-                rawPlanningText: planningOutputText
-            };
-
-            await this.deps.observationManager.record({
-                threadId: props.threadId, traceId, type: ObservationType.INTENT,
-                content: { intent: parsedPlanningOutput.intent }, metadata: { timestamp: Date.now() }
-            });
-            if (parsedPlanningOutput.title) {
-                await this.deps.observationManager.record({
-                    threadId: props.threadId, traceId, type: ObservationType.TITLE,
-                    content: { title: parsedPlanningOutput.title }, metadata: { timestamp: Date.now() }
-                });
-            }
-            await this.deps.observationManager.record({
-                threadId: props.threadId, traceId, type: ObservationType.PLAN,
-                content: { plan: parsedPlanningOutput.plan, rawOutput: planningOutputText },
-                metadata: { timestamp: Date.now() }
-            });
-            if (parsedPlanningOutput.toolCalls && parsedPlanningOutput.toolCalls.length > 0) {
-                await this.deps.observationManager.record({
-                    threadId: props.threadId, traceId, type: ObservationType.TOOL_CALL,
-                    content: { toolCalls: parsedPlanningOutput.toolCalls },
-                    metadata: { timestamp: Date.now() }
-                });
-            }
-
-        } catch (err: any) {
-            const errorMessage = `Planning phase failed: ${err.message}`;
-            Logger.error(`[${traceId}] Planning Error:`, err);
-            throw err instanceof ARTError ? err : new ARTError(errorMessage, ErrorCode.PLANNING_FAILED, err);
-        }
-
-        return { planningOutput: parsedPlanningOutput, planningMetadata, planningContext };
-    }
-
-    /**
-     * Delegates A2A tasks identified in the planning phase.
-     * @private
-     */
+    // --- Restored A2A Logic ---
     private async _delegateA2ATasks(
         planningOutput: { toolCalls?: ParsedToolCall[] },
         threadId: string,
@@ -659,7 +887,6 @@ Invalid Examples (do NOT do these):
                 const args = call.arguments;
                 const { agentId, taskType, input, instructions } = args;
 
-                // Find the full agent info. In a real scenario, we might cache this from the planning phase.
                 const allAgents = await this.deps.agentDiscoveryService.discoverAgents(traceId);
                 const targetAgent = allAgents.find(a => a.agentId === agentId);
 
@@ -669,12 +896,12 @@ Invalid Examples (do NOT do these):
 
                 const now = Date.now();
                 const a2aTask: A2ATask = {
-                    taskId: call.callId, // Use the tool call ID as the task ID for traceability
+                    taskId: call.callId,
                     threadId: threadId,
                     status: A2ATaskStatus.PENDING,
                     payload: { taskType, input, instructions, parameters: { threadId, traceId } },
                     sourceAgent: { agentId: 'pes-agent', agentName: 'PES Agent', agentType: 'orchestrator' },
-                    targetAgent: targetAgent, // Assign the target agent
+                    targetAgent: targetAgent,
                     priority: A2ATaskPriority.MEDIUM,
                     metadata: {
                         createdAt: now, updatedAt: now, initiatedBy: threadId, correlationId: traceId,
@@ -682,10 +909,8 @@ Invalid Examples (do NOT do these):
                     }
                 };
 
-                // Persist the task before delegating
                 await this.deps.a2aTaskRepository.createTask(a2aTask);
 
-                // Delegate the task
                 const delegatedTask = await this.deps.taskDelegationService.delegateTask(a2aTask, traceId);
                 if (delegatedTask) {
                     delegatedTasks.push(delegatedTask);
@@ -704,48 +929,26 @@ Invalid Examples (do NOT do these):
         return delegatedTasks;
     }
 
-    /**
-     * Waits for A2A tasks to complete with configurable timeout.
-     * Polls task status periodically and updates local repository with results.
-     * @private
-     */
     private async _waitForA2ACompletion(
         a2aTasks: A2ATask[],
         threadId: string,
         traceId: string,
-        maxWaitTimeMs: number = 30000, // 30 seconds default
-        pollIntervalMs: number = 2000   // 2 seconds default
+        maxWaitTimeMs: number = 30000,
+        pollIntervalMs: number = 2000
     ): Promise<A2ATask[]> {
         if (a2aTasks.length === 0) {
-            Logger.debug(`[${traceId}] No A2A tasks to wait for`);
             return a2aTasks;
         }
 
         Logger.debug(`[${traceId}] Waiting for ${a2aTasks.length} A2A task(s) to complete (timeout: ${maxWaitTimeMs}ms)`);
-        
+
         const startTime = Date.now();
         const updatedTasks: A2ATask[] = [...a2aTasks];
-        
-        // Record observation for waiting start
-        await this.deps.observationManager.record({
-            threadId: threadId,
-            traceId: traceId,
-            type: ObservationType.TOOL_CALL, // Using TOOL_CALL as closest equivalent
-            content: {
-                phase: 'a2a_waiting',
-                message: 'Started waiting for A2A task completion',
-                taskCount: a2aTasks.length,
-                maxWaitTimeMs: maxWaitTimeMs,
-                pollIntervalMs: pollIntervalMs
-            },
-            metadata: { timestamp: Date.now() }
-        }).catch(err => Logger.error(`[${traceId}] Failed to record A2A waiting observation:`, err));
 
         try {
             while ((Date.now() - startTime) < maxWaitTimeMs) {
-                // Check if all tasks are completed
-                const incompleteTasks = updatedTasks.filter(task => 
-                    task.status !== A2ATaskStatus.COMPLETED && 
+                const incompleteTasks = updatedTasks.filter(task =>
+                    task.status !== A2ATaskStatus.COMPLETED &&
                     task.status !== A2ATaskStatus.FAILED &&
                     task.status !== A2ATaskStatus.CANCELLED
                 );
@@ -757,323 +960,40 @@ Invalid Examples (do NOT do these):
 
                 Logger.debug(`[${traceId}] Waiting for ${incompleteTasks.length} A2A task(s) to complete...`);
 
-                // Poll each incomplete task for status updates
                 for (let i = 0; i < updatedTasks.length; i++) {
                     const task = updatedTasks[i];
-                    
-                    // Skip already completed tasks
-                    if (task.status === A2ATaskStatus.COMPLETED || 
+
+                    if (task.status === A2ATaskStatus.COMPLETED ||
                         task.status === A2ATaskStatus.FAILED ||
                         task.status === A2ATaskStatus.CANCELLED) {
                         continue;
                     }
 
                     try {
-                        // Get latest task status from repository (may have been updated by webhooks)
                         const latestTask = await this.deps.a2aTaskRepository.getTask(task.taskId);
                         if (latestTask) {
                             updatedTasks[i] = latestTask;
-                            Logger.debug(`[${traceId}] Task ${task.taskId} status updated to: ${latestTask.status}`);
                         }
                     } catch (error: any) {
                         Logger.warn(`[${traceId}] Failed to get updated status for task ${task.taskId}:`, error);
                     }
                 }
 
-                // Wait before next poll cycle
                 await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
-            }
-
-            // Check final completion status
-            const completedTasks = updatedTasks.filter(task => task.status === A2ATaskStatus.COMPLETED);
-            const failedTasks = updatedTasks.filter(task => task.status === A2ATaskStatus.FAILED);
-            const timeoutTasks = updatedTasks.filter(task => 
-                task.status !== A2ATaskStatus.COMPLETED && 
-                task.status !== A2ATaskStatus.FAILED &&
-                task.status !== A2ATaskStatus.CANCELLED
-            );
-
-            const totalWaitTime = Date.now() - startTime;
-            
-            // Record completion observation
-            await this.deps.observationManager.record({
-                threadId: threadId,
-                traceId: traceId,
-                type: ObservationType.TOOL_CALL,
-                content: {
-                    phase: 'a2a_waiting_complete',
-                    message: 'A2A task waiting completed',
-                    totalWaitTimeMs: totalWaitTime,
-                    completedTasks: completedTasks.length,
-                    failedTasks: failedTasks.length,
-                    timeoutTasks: timeoutTasks.length,
-                    success: timeoutTasks.length === 0
-                },
-                metadata: { timestamp: Date.now() }
-            }).catch(err => Logger.error(`[${traceId}] Failed to record A2A waiting completion observation:`, err));
-
-            if (timeoutTasks.length > 0) {
-                Logger.warn(`[${traceId}] ${timeoutTasks.length} A2A task(s) did not complete within timeout (${maxWaitTimeMs}ms)`);
-            }
-
-            if (completedTasks.length > 0) {
-                Logger.info(`[${traceId}] Successfully completed ${completedTasks.length} A2A task(s) in ${totalWaitTime}ms`);
             }
 
             return updatedTasks;
 
         } catch (error: any) {
             Logger.error(`[${traceId}] Error during A2A task waiting:`, error);
-            
-            // Record error observation
-            await this.deps.observationManager.record({
-                threadId: threadId,
-                traceId: traceId,
-                type: ObservationType.ERROR,
-                content: {
-                    phase: 'a2a_waiting',
-                    error: error.message,
-                    stack: error.stack,
-                    waitTimeMs: Date.now() - startTime
-                },
-                metadata: { timestamp: Date.now() }
-            }).catch(err => Logger.error(`[${traceId}] Failed to record A2A waiting error observation:`, err));
-
-            // Don't fail the entire process for A2A waiting errors - return current state
             return updatedTasks;
         }
     }
 
-    /**
-     * Executes local tools identified during planning.
-     * @private
-     */
-    private async _executeLocalTools(toolCalls: ParsedToolCall[] | undefined, threadId: string, traceId: string): Promise<ToolResult[]> {
-        const localToolCalls = toolCalls?.filter(call => call.toolName !== 'delegate_to_agent') ?? [];
 
-        if (localToolCalls.length === 0) {
-            Logger.debug(`[${traceId}] Stage 5: Tool Execution (No local tool calls)`);
-            return [];
-        }
-
-        Logger.debug(`[${traceId}] Stage 5: Tool Execution (${localToolCalls.length} calls)`);
-        try {
-            return await this.deps.toolSystem.executeTools(localToolCalls, threadId, traceId);
-        } catch (err: any) {
-            const errorMessage = `Tool execution phase failed: ${err.message}`;
-            Logger.error(`[${traceId}] Tool Execution System Error:`, err);
-            await this.deps.observationManager.record({
-                threadId: threadId, traceId, type: ObservationType.ERROR,
-                content: { phase: 'tool_execution', error: err.message, stack: err.stack },
-                metadata: { timestamp: Date.now() }
-            });
-            throw new ARTError(errorMessage, ErrorCode.TOOL_EXECUTION_FAILED, err);
-        }
-    }
-
-    /**
-     * Performs the synthesis phase including LLM call for final response generation.
-     * @private
-     */
-    private async _performSynthesis(
-        props: AgentProps, 
-        systemPrompt: string, 
-        formattedHistory: ArtStandardPrompt, 
-        planningOutput: any, 
-        toolResults: ToolResult[], 
-        a2aTasks: A2ATask[],
-        runtimeProviderConfig: RuntimeProviderConfig,
-        traceId: string,
-        finalPersona: AgentPersona,
-        planningContext?: {
-            toolsList: { name: string; description?: string }[];
-            a2aSummary: string;
-            plannedToolCalls: ParsedToolCall[];
-            rawPlanningText?: string;
-        }
-    ) {
-        Logger.debug(`[${traceId}] Stage 6: Synthesis Call`);
-        
-        // Record SYNTHESIS observation before making the call
-        await this.deps.observationManager.record({
-            threadId: props.threadId, traceId: traceId, type: ObservationType.SYNTHESIS, 
-            content: { message: "Preparing for synthesis LLM call." }, 
-            metadata: { timestamp: Date.now() }
-        }).catch(err => Logger.error(`[${traceId}] Failed to record SYNTHESIS observation:`, err));
-
-        // Construct synthesis prompt
-        let synthesisPrompt: ArtStandardPrompt;
-        try {
-            const wrappedSynthesisSystemPrompt = `You are ${finalPersona.name}. Your final answer must be delivered in two parts, in the specified order.
-
-**Part 1: \`main_content\`** must be placed within <mainContent></mainContent>
-This is your direct, user-facing response. This content must be written in Markdown.
-- When you use information from a tool, you MUST cite it by placing a citation marker in the text, like \`[1]\`. The \`id\` in the \`sources\` metadata block must match this marker.
-- If you are given an image URL, you MUST embed it in the \`main_content\` using Markdown syntax: \`![alt text](url)\`.
-
-**Part 2: \`metadata_block\`** Must be placed within <uiMetadata></uiMetadata>
-Immediately after the \`main_content\`, you MUST provide a \`metadata_block\`, which is a single, valid JSON object enclosed in \`\`\`json ... \`\`\`. Do NOT add any text after the JSON block.
-
-This JSON object must have the following structure:
-{
-  "sources": [ { "id": "1", "title": "Title of the source document", "url": "https://example.com/source-url" } ],
-  "suggestions": [ "A relevant follow-up question.", "Another suggested prompt for the user." ]
-}
-
-**[BEGIN_CUSTOM_GUIDANCE]**
-${systemPrompt}
-**[END_CUSTOM_GUIDANCE]**
-
-The custom guidance above provides additional context on tone and domain, but it MUST NOT override the core directives.`;
-
-            const toolsDiscovered = (planningContext?.toolsList ?? []).map(t => `- ${t.name}: ${t.description ?? ''}`.trim()).join('\n') || 'No tools were discovered during planning.';
-            const plannedCallsSummary = (planningContext?.plannedToolCalls ?? []).map(c => `- ${c.callId}: ${c.toolName} with ${JSON.stringify(c.arguments)}`).join('\n') || 'No tool calls were planned.';
-            const a2aSummary = planningContext?.a2aSummary || 'No A2A delegation candidates or actions.';
-            synthesisPrompt = [
-                { role: 'system', content: wrappedSynthesisSystemPrompt },
-                ...formattedHistory,
-                {
-                    role: 'user',
-                    content: `User Query: ${props.query}\n\nDuring planning, we found out:\n- Available Local Tools:\n${toolsDiscovered}\n\n- Planned Tool Calls (as JSON-like summary):\n${plannedCallsSummary}\n\n- Agent Delegation Context:\n${a2aSummary}\n\nOriginal Intent: ${planningOutput.intent ?? ''}\nExecution Plan: ${Array.isArray(planningOutput.plan) ? JSON.stringify(planningOutput.plan, null, 2) : planningOutput.plan ?? ''}\n\nTool Execution Results:\n${
-                        toolResults.length > 0
-                        ? toolResults.map(result => `- Tool: ${result.toolName} (Call ID: ${result.callId})\n  Status: ${result.status}\n  ${result.status === 'success' ? `Output: ${JSON.stringify(result.output)}` : ''}\n  ${result.status === 'error' ? `Error: ${result.error ?? 'Unknown error'}` : ''}\n  ${result.metadata?.sources ? `Original Sources: ${JSON.stringify(result.metadata.sources)}` : ''}`).join('\n')
-                        : 'No tools were executed.'
-                    }\n\nA2A Task Results:\n${
-                        a2aTasks.length > 0
-                        ? a2aTasks.map(task => `- Task: ${task.payload.taskType} (ID: ${task.taskId})\n  Status: ${task.status}\n  ${task.result?.success ? `Output: ${JSON.stringify(task.result.data)}` : ''}\n  ${task.result?.success === false ? `Error: ${task.result.error ?? 'Unknown error'}` : ''}\n  ${task.result?.metadata?.sources ? `Original Sources: ${JSON.stringify(task.result.metadata.sources)}` : ''}`).join('\n')
-                        : 'No A2A tasks were delegated.'
-                    }\n\nSynthesize the final answer based on the directives in the system prompt. Give appropriate weight to the verified Tool Execution Results and any successful A2A Task Results. If tools failed, explain briefly and answer using best available evidence.`
-                }
-            ];
-        } catch (err: any) {
-            Logger.error(`[${traceId}] Failed to construct synthesis prompt object:`, err);
-            throw new ARTError(`Failed to construct synthesis prompt object: ${err.message}`, ErrorCode.PROMPT_ASSEMBLY_FAILED, err);
-        }
-
-        Logger.debug(`[${traceId}] Stage 6b: Synthesis LLM Call`);
-        
-        const synthesisOptions: CallOptions = {
-            threadId: props.threadId,
-            traceId: traceId,
-            userId: props.userId,
-            sessionId: props.sessionId,
-            stream: true,
-            callContext: 'FINAL_SYNTHESIS',
-            requiredCapabilities: [ModelCapability.TEXT],
-            providerConfig: runtimeProviderConfig,
-            ...(props.options?.llmParams ?? {}),
-        };
-
-        let finalResponseContent: string = '';
-        let synthesisStreamError: Error | null = null;
-        let synthesisMetadata: LLMMetadata | undefined = undefined;
-
-        try {
-            const synthesisStream = await this.deps.reasoningEngine.call(synthesisPrompt, synthesisOptions);
-
-            // Record stream start
-            await this.deps.observationManager.record({
-                threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_START, 
-                content: { phase: 'synthesis' }, metadata: { timestamp: Date.now() }
-            }).catch(err => Logger.error(`[${traceId}] Failed to record LLM_STREAM_START observation:`, err));
-
-            // Consume the stream
-            for await (const event of synthesisStream) {
-                this.deps.uiSystem.getLLMStreamSocket().notify(event, { 
-                    targetThreadId: event.threadId, targetSessionId: event.sessionId 
-                });
-
-                switch (event.type) {
-                    case 'TOKEN':
-                        if (event.tokenType === 'FINAL_SYNTHESIS_LLM_RESPONSE' || event.tokenType === 'LLM_RESPONSE') {
-                            finalResponseContent += event.data;
-                        }
-                        // Emit THOUGHTS observation for thinking tokens during synthesis
-                        if (event.tokenType && String(event.tokenType).includes('THINKING')) {
-                            await this.deps.observationManager.record({
-                                threadId: props.threadId,
-                                traceId,
-                                type: ObservationType.THOUGHTS,
-                                content: { text: event.data },
-                                metadata: { phase: 'synthesis', tokenType: event.tokenType, timestamp: Date.now() }
-                            }).catch(err => Logger.error(`[${traceId}] Failed to record THOUGHTS (synthesis) observation:`, err));
-                        }
-                        break;
-                    case 'METADATA':
-                        synthesisMetadata = { ...(synthesisMetadata ?? {}), ...event.data };
-                        await this.deps.observationManager.record({
-                            threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_METADATA, 
-                            content: event.data, metadata: { phase: 'synthesis', timestamp: Date.now() }
-                        }).catch(err => Logger.error(`[${traceId}] Failed to record LLM_STREAM_METADATA observation:`, err));
-                        break;
-                    case 'ERROR':
-                        synthesisStreamError = event.data instanceof Error ? event.data : new Error(String(event.data));
-                        Logger.error(`[${traceId}] Synthesis Stream Error:`, synthesisStreamError);
-                        await this.deps.observationManager.record({
-                            threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_ERROR, 
-                            content: { phase: 'synthesis', error: synthesisStreamError.message, stack: synthesisStreamError.stack }, 
-                            metadata: { timestamp: Date.now() }
-                        }).catch(err => Logger.error(`[${traceId}] Failed to record LLM_STREAM_ERROR observation:`, err));
-                        break;
-                    case 'END':
-                        await this.deps.observationManager.record({
-                            threadId: props.threadId, traceId, type: ObservationType.LLM_STREAM_END, 
-                            content: { phase: 'synthesis' }, metadata: { timestamp: Date.now() }
-                        }).catch(err => Logger.error(`[${traceId}] Failed to record LLM_STREAM_END observation:`, err));
-                        break;
-                }
-                if (synthesisStreamError) break;
-            }
-
-            if (synthesisStreamError) {
-                throw new ARTError(`Synthesis stream error: ${synthesisStreamError.message}`, ErrorCode.SYNTHESIS_FAILED, synthesisStreamError);
-            }
-
-        } catch (err: any) {
-            const synthesisErrorMessage = `Synthesis phase failed: ${err.message}`;
-            Logger.error(`[${traceId}] Synthesis Error:`, err);
-            if (!synthesisStreamError) {
-                await this.deps.observationManager.record({
-                    threadId: props.threadId, traceId, type: ObservationType.ERROR, 
-                    content: { phase: 'synthesis', error: err.message, stack: err.stack }, 
-                    metadata: { timestamp: Date.now() }
-                });
-            }
-            throw err instanceof ARTError ? err : new ARTError(synthesisErrorMessage, ErrorCode.SYNTHESIS_FAILED, err);
-        }
-
-        // --- Response Parsing ---
-        let mainContent = finalResponseContent;
-        let uiMetadata: object | undefined = undefined;
-
-        try {
-            const metadataBlockRegex = /```json\s*([\s\S]*?)\s*```$/;
-            const match = finalResponseContent.match(metadataBlockRegex);
-
-            if (match && match[1]) {
-                mainContent = finalResponseContent.replace(metadataBlockRegex, '').trim();
-                uiMetadata = JSON.parse(match[1]);
-                Logger.debug(`[${traceId}] Parsed metadata block from synthesis output.`);
-            } else {
-                Logger.warn(`[${traceId}] No metadata block found in synthesis output. Treating entire output as main content.`);
-            }
-        } catch (parseError: any) {
-            Logger.error(`[${traceId}] Failed to parse metadata block from synthesis output:`, parseError);
-            // Fallback to treating the whole response as content
-            mainContent = finalResponseContent;
-            uiMetadata = { error: 'Failed to parse metadata block', details: parseError.message };
-        }
-
-        return { finalResponseContent: mainContent, synthesisMetadata, uiMetadata };
-    }
-
-    /**
-     * Finalizes the agent execution by saving the final message and performing cleanup.
-     * @private
-     */
     private async _finalize(props: AgentProps, finalResponseContent: string, traceId: string, uiMetadata?: object): Promise<ConversationMessage> {
+        // Same as original
         Logger.debug(`[${traceId}] Stage 7: Finalization`);
-        
         const finalTimestamp = Date.now();
         const finalAiMessage: ConversationMessage = {
             messageId: generateUUID(),
@@ -1083,55 +1003,29 @@ The custom guidance above provides additional context on tone and domain, but it
             timestamp: finalTimestamp,
             metadata: { traceId },
         };
-
-        // Save AI response message
         await this.deps.conversationManager.addMessages(props.threadId, [finalAiMessage]);
-
-        // Record final response observation
         await this.deps.observationManager.record({
             threadId: props.threadId,
             traceId,
             type: ObservationType.FINAL_RESPONSE,
-            content: { 
-                message: finalAiMessage,
-                uiMetadata: uiMetadata 
-            },
+            content: { message: finalAiMessage, uiMetadata: uiMetadata },
             metadata: { timestamp: finalTimestamp }
         });
-
         return finalAiMessage;
     }
 
-    /**
-     * Formats conversation history messages for direct inclusion in ArtStandardPrompt.
-     * Converts internal MessageRole to ArtStandardMessageRole.
-     * @param history - Array of ConversationMessage objects.
-     * @returns Array of messages suitable for ArtStandardPrompt.
-     */
     private formatHistoryForPrompt(history: ConversationMessage[]): ArtStandardPrompt {
+        // Same as original
         return history.map((msg) => {
             let role: ArtStandardMessageRole;
             switch (msg.role) {
-                case MessageRole.USER:
-                    role = 'user';
-                    break;
-                case MessageRole.AI:
-                    role = 'assistant';
-                    break;
-                case MessageRole.SYSTEM:
-                    role = 'system';
-                    break;
-                case MessageRole.TOOL:
-                    role = 'tool';
-                    break;
-                default:
-                    Logger.warn(`Unhandled message role '${msg.role}' in formatHistoryForPrompt. Defaulting to 'user'.`);
-                    role = 'user';
+                case MessageRole.USER: role = 'user'; break;
+                case MessageRole.AI: role = 'assistant'; break;
+                case MessageRole.SYSTEM: role = 'system'; break;
+                case MessageRole.TOOL: role = 'tool'; break;
+                default: role = 'user';
             }
-            return {
-                role: role,
-                content: msg.content,
-            };
+            return { role: role, content: msg.content };
         }).filter(msg => msg.content);
     }
 }

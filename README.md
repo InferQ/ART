@@ -1,9 +1,12 @@
 ﻿
 
-# ✨ ART: Agentic Runtime Framework <img src="https://img.shields.io/badge/Version-v0.3.8-blue" alt="Version 0.3.8">
+# ✨ ART: Agentic Runtime Framework (beta) <img src="https://img.shields.io/badge/Version-v0.4.0-blue" alt="Version 0.4.0">
 
 <p align="center">
   <img src="docs/art-logo.jpeg" alt="ART Framework Logo" width="200"/>
+</p>
+<p align="center">
+  <img src="docs/art-banner.png" alt="ART Framework Overview" width="100%"/>
 </p>
 
 **ART is a powerful, modular, and browser-first TypeScript framework for building sophisticated LLM-powered agents capable of complex reasoning, planning, and tool usage.**
