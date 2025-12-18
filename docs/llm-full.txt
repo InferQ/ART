@@ -8,10 +8,11 @@ The ART Framework is a modular, extensible, and browser-first TypeScript library
 
 **Key Features at a Glance:**
 *   **Secure & Flexible LLM Configuration:** A two-tiered system separates instance-level provider declarations from thread-level configuration, keeping API keys secure and enabling multi-provider, multi-model conversations from a single instance.
+*   **Native Reasoning Support:** Built-in integration for deep reasoning and "thinking" tokens across Gemini 3, GPT-5, and Claude 4.5 model families.
 *   **Advanced Agent Orchestration:** A built-in Plan-Execute-Synthesize (`PESAgent`) core provides robust, multi-step reasoning for complex tasks.
 *   **Extensible Tool System:** Equip agents with custom capabilities to interact with any API or data source through a clear, schema-driven interface.
 *   **Dynamic Tool Loading (MCP):** Discover and use tools from remote servers at runtime via the Model Context Protocol.
-*   **Agent-to-Agent (A2A) Communication:** Build complex systems where agents can delegate tasks to specialized peers.
+*   **Agent-to-Agent (A2A) Communication:** Build complex systems where agents can delegate tasks to specialized peers via `AgentDiscoveryService` and `TaskDelegationService`.
 *   **Pluggable Persistence:** Store agent memory and conversation history in-browser (`IndexedDB`), in the cloud (`Supabase`), or using a custom storage adapter.
 *   **First-Class Observability:** Deeply inspect an agent's thought process through a structured `Observation` system.
 *   **Real-time UI Integration:** A dedicated `UISystem` with event sockets for streaming tokens, thoughts, and messages to any front-end framework.
@@ -22,8 +23,8 @@ The ART Framework is a modular, extensible, and browser-first TypeScript library
 *   **Separation of Concerns:** Each component has a single, well-defined responsibility. The `StateManager` handles state, the `ToolSystem` handles tools, and `ProviderAdapters` handle LLM communication. This makes the system predictable and easy to debug.
 *   **Instance vs. Thread:** The `ArtInstance` is the long-lived application object that defines *potential capabilities* (available tools, providers). A `Thread` is a single conversation with a *specific configuration* (the exact model, API key, and enabled tools). This is the cornerstone of the framework's security and flexibility.
 *   **Standardized Interfaces:** The framework relies on a set of core interfaces (`IAgentCore`, `IToolExecutor`, `StorageAdapter`, `ProviderAdapter`). This allows developers to replace any part of the system with a custom implementation without breaking the rest of the framework.
-*   **Explicit State Management:** Configuration and state are managed through explicit API calls (e.g., `art.stateManager.setThreadConfig`). This creates a clear, predictable data flow and prevents race conditions.
-*   **Observability by Default:** Every significant action an agent takes—forming a plan, calling a tool, receiving an LLM response—is recorded as a structured `Observation`. This is a core feature for debugging, analysis, and building transparent AI systems.
+*   **Explicit State Management:** Configuration and state are managed through explicit API calls (e.g., `art.stateManager.setThreadConfig`). This creates a clear, predictable data flow and prevents race conditions. For a deep dive, see the [State Management Concept](file:///Users/hashanw/Developer/InferQ/ART/Docs/concepts/state-management.md).
+*   **Observability by Default:** Every significant action an agent takes—forming a plan, calling a tool, receiving an LLM response—is recorded as a structured `Observation`. For a full list of types, see the [Observation System Concept](file:///Users/hashanw/Developer/InferQ/ART/Docs/concepts/observations.md).
 
 ## 3. High-Level Architecture & Data Flow
 
@@ -223,8 +224,8 @@ function ChatComponent({ threadId }) {
     // Subscribe to LLM token stream for the final answer
     const unsubscribeStream = art.uiSystem.getLLMStreamSocket().subscribe(
       (event) => {
-        if (event.type === 'TOKEN' && event.tokenType === 'RESPONSE') {
-          setStreamingResponse((prev) => prev + event.payload);
+        if (event.type === 'TOKEN' && event.tokenType === 'FINAL_SYNTHESIS_LLM_RESPONSE') {
+          setStreamingResponse((prev) => prev + event.data);
         }
         if (event.type === 'END') {
           // Stream finished, save the full message to your state
@@ -274,10 +275,11 @@ MCP allows your agent to dynamically expand its capabilities without requiring a
 
 #### **Agent Orchestration & Reasoning**
 *   **`IAgentCore` / `PESAgent`**: **(Interface/Class)** The agent's central reasoning logic. `PESAgent` is the default implementation that orchestrates the Plan-Execute-Synthesize cycle.
-*   **`ReasoningEngine`**: **(Class)** The service that directly interacts with LLM providers via adapters.
-*   **`ProviderAdapter`**: **(Interface)** The contract for a specific LLM provider (e.g., `OpenAIAdapter`). Translates between ART's standard format and the provider's API.
-*   **`ProviderManager`**: **(Class)** Manages the lifecycle and pooling of `ProviderAdapter` instances.
-*   **`StreamEvent`**: **(Interface)** A standardized object representing a chunk of data from an LLM stream (`TOKEN`, `METADATA`, `ERROR`, `END`).
+*   **`ReasoningEngine`**: **(Class)** The service that directly interacts with LLM providers via adapters. Supports native thinking token extraction.
+*   **`ProviderAdapter`**: **(Interface)** The contract for a specific LLM provider. Translates between ART's standard format and the provider's API.
+*   **`ModelCapability`**: **(Enum)** Describes what a model can do (`TEXT`, `VISION`, `STREAMING`, `TOOL_USE`, `RAG`, `CODE`, `REASONING`).
+*   **`StreamEvent`**: **(Interface)** Represents a chunk of data from an LLM stream. Includes `tokenType` for granular classification.
+*   **`LLMMetadata`**: **(Interface)** Contains execution metrics, now including `thinkingTokens` for reasoning models.
 
 #### **Tools**
 *   **`IToolExecutor`**: **(Interface)** The contract that all tools must implement, requiring a `schema` and an `execute` method.
@@ -325,10 +327,13 @@ Welcome to the comprehensive guide for building intelligent, web-based chatbots 
 7.  [Definitive Guide to Tools and the Tool System](#7-definitive-guide-to-tools-and-the-tool-system)
 8.  [Definitive Guide to System Prompt Customization](#8-definitive-guide-to-system-prompt-customization)
 9.  [Building a User Interface with Sockets](#9-building-a-user-interface-with-sockets)
-10. [Advanced Features](#10-advanced-features)
+10. [Reasoning & Thinking Models](#10-reasoning-thinking-models)
+11. [Advanced Features](#11-advanced-features)
     *   [MCP (Model Context Protocol)](#mcp-model-context-protocol)
     *   [A2A (Agent-to-Agent Communication)](#a2a-agent-to-agent-communication)
-11. [The `ArtInstance` Object: API Reference](#11-the-artinstance-object-api-reference)
+12. [Authentication Strategies](#12-authentication-strategies)
+13. [PES Agent & Structured Reasoning](#13-pes-agent-structured-reasoning)
+14. [The `ArtInstance` Object: API Reference](#14-the-artinstance-object-api-reference)
 
 ---
 
@@ -473,7 +478,37 @@ This object is set on a per-thread basis to configure the specific LLM to use.
 | :--- | :--- | :--- |
 | `providerName` | `String` | Required. The name of the provider to use. Must match a `name` from `availableProviders`. |
 | `modelId` | `String` | Required. The specific model identifier (e.g., `'gpt-4o'`). |
-| `adapterOptions` | `Object` | Required. An object containing provider-specific options. **This is where the API key goes.** |
+| `adapterOptions` | `Object` | Required. An object containing provider-specific options. |
+
+#### **Provider-Specific `adapterOptions`**
+
+Each provider has its own set of options. Below are the most common ones, including new reasoning-specific parameters:
+
+**OpenAI (`OpenAIAdapter`)**
+*   `apiKey`: (Required) Your OpenAI API key.
+*   `reasoning`: (Optional) Object for GPT-5 family models.
+    *   `effort`: `'low' | 'medium' | 'high'`. Defaults to `'medium'`.
+    *   `summary`: `'auto' | 'none'`. Defaults to `'auto'`.
+*   `store`: (Optional) Boolean for conversation continuity.
+
+**Gemini (`GeminiAdapter`)**
+*   `apiKey`: (Required) Your Google AI Studio API key.
+*   `gemini.thinking`: (Optional) Object for Gemini 3 models.
+    *   `includeThoughts`: (Boolean) Enable thinking token extraction.
+    *   `thinkingBudget`: (Number) Max tokens devoted to reasoning.
+    *   `thinkingLevel`: (String) e.g., `'comprehensive'`.
+*   `systemInstruction`: (Optional) Direct string override for the system prompt.
+
+**Anthropic (`AnthropicAdapter`)**
+*   `apiKey`: (Required) Your Anthropic API key.
+*   `thinking`: (Optional) Thinking budget for Claude 4.5 models.
+
+**OpenRouter (`OpenRouterAdapter`)**
+*   `apiKey`: (Required) Your OpenRouter API key.
+*   `reasoning`: (Optional) Object to control reasoning output.
+    *   `exclude`: (Boolean) Filter out reasoning tokens.
+    *   `effort`: `'low' | 'medium' | 'high'`.
+*   `include_reasoning`: (Optional) Legacy boolean toggle.
 
 ## 5. Definitive Guide to Storage
 
@@ -742,8 +777,8 @@ const unsubConversation = art.uiSystem.getConversationSocket().subscribe(
 let currentResponse = '';
 const unsubStream = art.uiSystem.getLLMStreamSocket().subscribe(
   (event) => {
-    if (event.type === 'TOKEN' && event.tokenType === 'RESPONSE') {
-      currentResponse += event.payload;
+    if (event.type === 'TOKEN' && event.tokenType === 'FINAL_SYNTHESIS_LLM_RESPONSE') {
+      currentResponse += event.data;
       // Update the UI with the streaming response
     } else if (event.type === 'END') {
       console.log('Stream finished.');
@@ -759,48 +794,142 @@ const unsubStream = art.uiSystem.getLLMStreamSocket().subscribe(
 // unsubStream();
 ```
 
-## 10. Advanced Features
+## 10. Reasoning & Thinking Models
+
+The ART Framework provides native support for models with internal reasoning capabilities (e.g., Gemini 3, GPT-5, Claude 4.5). These models produce "thinking tokens" that describe their internal process before giving a final response.
+
+### Native Thinking Token Extraction
+
+When using a reasoning-capable model, the framework automatically extracts thinking tokens and classifies them.
+
+*   **`tokenType`**: Stream events for these models use specialized token types:
+    *   `LLM_THINKING`: Generic thinking tokens.
+    *   `AGENT_THOUGHT_LLM_THINKING`: Thinking tokens produced during the agent's internal planning phase.
+    *   `FINAL_SYNTHESIS_LLM_THINKING`: Thinking tokens produced while generating the final user-facing response.
+*   **Metadata**: The `LLMMetadata` returned at the end of a call includes a `thinkingTokens` count.
+
+### Provider Configuration Examples
+
+#### **Gemini 3 (`GeminiAdapter`)**
+Gemini 3 models (like `gemini-3-flash`) support native `systemInstruction` and a configurable `thinkingConfig`.
+
+```typescript
+const config: ThreadConfig = {
+  providerConfig: {
+    providerName: 'gemini',
+    modelId: 'gemini-3-flash',
+    adapterOptions: {
+      apiKey: '...',
+      gemini: {
+        thinking: {
+          includeThoughts: true,
+          thinkingBudget: 1024,
+          thinkingLevel: 'comprehensive'
+        }
+      }
+    }
+  }
+};
+```
+
+#### **OpenAI (`OpenAIAdapter`)**
+For GPT-5 family models, use the `reasoning` parameter to control deliberation effort.
+
+```typescript
+const config: ThreadConfig = {
+  providerConfig: {
+    providerName: 'openai',
+    modelId: 'gpt-5-preview',
+    adapterOptions: {
+      apiKey: '...',
+      reasoning: {
+        effort: 'high',
+        summary: 'auto'
+      }
+    }
+  }
+};
+```
+
+## 11. Advanced Features
 
 ### MCP (Model Context Protocol)
 
 MCP allows an agent to dynamically discover and use tools from external servers without needing to bundle the tool logic in your application.
 
-*   **How it works**: The `McpManager` discovers tools from a central directory, creating local `McpProxyTool` instances. When the agent uses one of these tools, the proxy handles the communication with the remote MCP server.
-*   **How to use**: Simply enable it in your `ArtInstanceConfig`. The framework handles the rest.
+*   **Dynamic Discovery**: The `McpManager` connects to MCP servers, fetches a manifest of available tools, and creates local `McpProxyTool` instances.
+*   **Seamless Integration**: disocovered tools behave exactly like local tools and can be enabled/disabled via `ThreadConfig`.
+*   **Protocol Support**: ART supports full JSON-RPC communication with MCP servers, including tool list updates and resource discovery.
 
 ```typescript
 const artConfig: ArtInstanceConfig = {
-  // ...
   mcpConfig: {
     enabled: true,
-    // Optional: URL of a custom discovery service
-    // discoveryEndpoint: 'https://my-mcp-directory.com/api'
-  },
-  // ...
+    servers: [
+      { id: 'internal-data', url: 'https://mcp.internal.company.com/rpc' }
+    ]
+  }
 };
 ```
-Discovered tools are then enabled for a thread just like any other tool.
 
 ### A2A (Agent-to-Agent Communication)
 
-A2A enables an agent to delegate complex or specialized tasks to other independent agents.
+A2A enables a multi-agent ecosystem where an "orchestrator" agent can delegate complex sub-tasks to specialized "worker" agents.
 
-*   **How it works**: The agent autonomously uses the `AgentDiscoveryService` to find suitable agents from a directory and the `TaskDelegationService` to assign the work. The developer's role is to enable and configure the system.
-*   **How to use**: Provide the `a2aConfig` in your `ArtInstanceConfig`.
+*   **Agent Discovery**: The `AgentDiscoveryService` allows agents to find peers based on capabilities, model performance, or cost.
+*   **Task Delegation**: The `TaskDelegationService` manages the lifecycle of a delegated task (creation, assignment, execution, and result retrieval).
+*   **Asynchronous Workflow**: Managers can poll for task status or receive callbacks via the `A2ATaskSocket`.
 
 ```typescript
 const artConfig: ArtInstanceConfig = {
-  // ...
   a2aConfig: {
     discoveryEndpoint: 'https://api.zyntopia.com/a2a/discover',
-    // A public URL where your app can receive status updates
     callbackUrl: 'https://my-app.com/api/a2a-callback'
-  },
-  // ...
+  }
 };
 ```
 
-## 11. The `ArtInstance` Object: API Reference
+## 12. Authentication Strategies
+
+For tools that require user authentication (e.g., Google Calendar, Slack), ART provides a built-in `AuthManager`.
+
+### PKCE & OAuth 2.0
+
+ART supports secure OAuth flows directly in the browser using the Proof Key for Code Exchange (PKCE) extension.
+
+*   **Zyntopia OAuth**: Native integration with the Zyntopia auth provider for seamless agent-level authentication.
+*   **Custom Strategies**: Implement the `IAuthStrategy` interface to support any provider.
+
+```typescript
+const art = await createArtInstance({
+  auth: {
+    strategies: [
+      { name: 'google', type: 'oauth2', clientId: '...', ... }
+    ]
+  }
+});
+```
+
+## 13. PES Agent & Structured Reasoning
+
+The **Plan-Execute-Synthesize (PES)** model is the default orchestration strategy in ART. It ensures that agents reason deeply before taking action and provide accurate summaries of their work. For a detailed breakdown of the execution stages, see the [PES Agent Concept](file:///Users/hashanw/Developer/InferQ/ART/Docs/concepts/pes-agent.md).
+
+### The Lifecycle
+
+1.  **Plan**: The agent analyzes the user's intent and lists the necessary steps and tools.
+2.  **Execute (The Loop)**:
+    *   **Outer Loop**: Manages the `TodoList`, selecting the next pending task whose dependencies are met.
+    *   **Inner Loop**: Performs a mini-ReAct cycle for each task, allowing the agent to think and use tools to complete the specific step.
+3.  **Synthesize**: All observations and tool results are consolidated into a final, coherent response for the user.
+
+### Structured Observations
+
+Every step of the PES cycle is recorded as an `Observation`. This allows for:
+*   **Transparency**: Your UI can show exactly what the agent is thinking at any moment.
+*   **Debugging**: Developers can trace the "reasoning chain" to understand why an agent made a specific decision.
+*   **Resilience**: The agent can use past observations in the same turn to recover from errors.
+
+## 14. The `ArtInstance` Object: API Reference
 
 The `art` object returned by `createArtInstance` is your main gateway to the framework's capabilities.
 

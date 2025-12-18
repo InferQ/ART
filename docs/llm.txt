@@ -8,10 +8,11 @@ The ART Framework is a modular, extensible, and browser-first TypeScript library
 
 **Key Features at a Glance:**
 *   **Secure & Flexible LLM Configuration:** A two-tiered system separates instance-level provider declarations from thread-level configuration, keeping API keys secure and enabling multi-provider, multi-model conversations from a single instance.
+*   **Native Reasoning Support:** Built-in integration for deep reasoning and "thinking" tokens across Gemini 3, GPT-5, and Claude 4.5 model families.
 *   **Advanced Agent Orchestration:** A built-in Plan-Execute-Synthesize (`PESAgent`) core provides robust, multi-step reasoning for complex tasks.
 *   **Extensible Tool System:** Equip agents with custom capabilities to interact with any API or data source through a clear, schema-driven interface.
 *   **Dynamic Tool Loading (MCP):** Discover and use tools from remote servers at runtime via the Model Context Protocol.
-*   **Agent-to-Agent (A2A) Communication:** Build complex systems where agents can delegate tasks to specialized peers.
+*   **Agent-to-Agent (A2A) Communication:** Build complex systems where agents can delegate tasks to specialized peers via `AgentDiscoveryService` and `TaskDelegationService`.
 *   **Pluggable Persistence:** Store agent memory and conversation history in-browser (`IndexedDB`), in the cloud (`Supabase`), or using a custom storage adapter.
 *   **First-Class Observability:** Deeply inspect an agent's thought process through a structured `Observation` system.
 *   **Real-time UI Integration:** A dedicated `UISystem` with event sockets for streaming tokens, thoughts, and messages to any front-end framework.
@@ -22,8 +23,8 @@ The ART Framework is a modular, extensible, and browser-first TypeScript library
 *   **Separation of Concerns:** Each component has a single, well-defined responsibility. The `StateManager` handles state, the `ToolSystem` handles tools, and `ProviderAdapters` handle LLM communication. This makes the system predictable and easy to debug.
 *   **Instance vs. Thread:** The `ArtInstance` is the long-lived application object that defines *potential capabilities* (available tools, providers). A `Thread` is a single conversation with a *specific configuration* (the exact model, API key, and enabled tools). This is the cornerstone of the framework's security and flexibility.
 *   **Standardized Interfaces:** The framework relies on a set of core interfaces (`IAgentCore`, `IToolExecutor`, `StorageAdapter`, `ProviderAdapter`). This allows developers to replace any part of the system with a custom implementation without breaking the rest of the framework.
-*   **Explicit State Management:** Configuration and state are managed through explicit API calls (e.g., `art.stateManager.setThreadConfig`). This creates a clear, predictable data flow and prevents race conditions.
-*   **Observability by Default:** Every significant action an agent takes—forming a plan, calling a tool, receiving an LLM response—is recorded as a structured `Observation`. This is a core feature for debugging, analysis, and building transparent AI systems.
+*   **Explicit State Management:** Configuration and state are managed through explicit API calls (e.g., `art.stateManager.setThreadConfig`). This creates a clear, predictable data flow and prevents race conditions. For a deep dive, see the [State Management Concept](file:///Users/hashanw/Developer/InferQ/ART/Docs/concepts/state-management.md).
+*   **Observability by Default:** Every significant action an agent takes—forming a plan, calling a tool, receiving an LLM response—is recorded as a structured `Observation`. For a full list of types, see the [Observation System Concept](file:///Users/hashanw/Developer/InferQ/ART/Docs/concepts/observations.md).
 
 ## 3. High-Level Architecture & Data Flow
 
@@ -206,7 +207,9 @@ await art.stateManager.setThreadConfig(threadId, threadConfig);
 
 // Now the agent can use the tool.
 await art.process({ query: "What's the weather like in Boston?", threadId });
-```
+
+> [!TIP]
+> **Dynamic Tools (MCP):** For advanced use cases, ART supports the **Model Context Protocol (MCP)**, allowing your agents to discover and use tools hosted on remote servers at runtime. Simply register an `MCPServer` in your configuration to get started.
 
 ### 4.3. Integrating with a UI for Real-Time Updates
 **Goal:** Display the agent's streaming response and thought process in a web UI.
@@ -223,8 +226,8 @@ function ChatComponent({ threadId }) {
     // Subscribe to LLM token stream for the final answer
     const unsubscribeStream = art.uiSystem.getLLMStreamSocket().subscribe(
       (event) => {
-        if (event.type === 'TOKEN' && event.tokenType === 'RESPONSE') {
-          setStreamingResponse((prev) => prev + event.payload);
+        if (event.type === 'TOKEN' && event.tokenType === 'FINAL_SYNTHESIS_LLM_RESPONSE') {
+          setStreamingResponse((prev) => prev + event.data);
         }
         if (event.type === 'END') {
           // Stream finished, save the full message to your state
@@ -274,10 +277,16 @@ MCP allows your agent to dynamically expand its capabilities without requiring a
 
 #### **Agent Orchestration & Reasoning**
 *   **`IAgentCore` / `PESAgent`**: **(Interface/Class)** The agent's central reasoning logic. `PESAgent` is the default implementation that orchestrates the Plan-Execute-Synthesize cycle.
-*   **`ReasoningEngine`**: **(Class)** The service that directly interacts with LLM providers via adapters.
-*   **`ProviderAdapter`**: **(Interface)** The contract for a specific LLM provider (e.g., `OpenAIAdapter`). Translates between ART's standard format and the provider's API.
+*   **`ReasoningEngine`**: **(Class)** The service that directly interacts with LLM providers via adapters. Supports native thinking token extraction.
+*   **`ProviderAdapter`**: **(Interface)** The contract for a specific LLM provider. Translates between ART's standard format and the provider's API.
+*   **`GeminiAdapter`**: Adapter for Google Gemini 3 models with `thinkingLevel` support.
+*   **`OpenAIAdapter`**: Adapter for GPT-5/Responses API with `reasoning` effort control.
+*   **`AnthropicAdapter`**: Adapter for Claude 4.5 models with `thinking` budget support.
+*   **`OpenRouterAdapter`**: Proxy adapter for various models with reasoning management.
+*   **`DeepSeekAdapter`**: Specialized adapter for DeepSeek models.
+*   **`OllamaAdapter`**: Adapter for local models via the Ollama service.
 *   **`ProviderManager`**: **(Class)** Manages the lifecycle and pooling of `ProviderAdapter` instances.
-*   **`StreamEvent`**: **(Interface)** A standardized object representing a chunk of data from an LLM stream (`TOKEN`, `METADATA`, `ERROR`, `END`).
+*   **`StreamEvent`**: **(Interface)** A standardized object representing a chunk of data from an LLM stream (`TOKEN`, `METADATA`, `ERROR`, `END`). Includes specialized `tokenType` for thinking vs. response.
 
 #### **Tools**
 *   **`IToolExecutor`**: **(Interface)** The contract that all tools must implement, requiring a `schema` and an `execute` method.
