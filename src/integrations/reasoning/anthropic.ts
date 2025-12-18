@@ -12,7 +12,7 @@ import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
 
 // Default model if not specified
-const ANTHROPIC_DEFAULT_MODEL_ID = 'claude-3-7-sonnet-20250219';
+const ANTHROPIC_DEFAULT_MODEL_ID = 'claude-4.5-sonnet';
 const ANTHROPIC_DEFAULT_MAX_TOKENS = 4096;
 
 /**
@@ -21,7 +21,7 @@ const ANTHROPIC_DEFAULT_MAX_TOKENS = 4096;
 export interface AnthropicAdapterOptions {
   /** Your Anthropic API key. Handle securely. */
   apiKey: string;
-  /** The default Anthropic model ID to use (e.g., 'claude-3-opus-20240229', 'claude-3-5-sonnet-20240620'). */
+  /** The default Anthropic model ID to use (e.g., 'claude_4.5_sonnet', 'claude_4.5_opus'). */
   model?: string;
   /** Optional: Override the base URL for the Anthropic API. */
   apiBaseUrl?: string;
@@ -106,7 +106,7 @@ export class AnthropicAdapter implements ProviderAdapter {
     const topP = anthropicApiParams.top_p || anthropicApiParams.topP || options.top_p || options.topP;
     const topK = anthropicApiParams.top_k || anthropicApiParams.topK || options.top_k || options.topK;
     const stopSequences = anthropicApiParams.stop_sequences || anthropicApiParams.stopSequences || options.stop || options.stop_sequences || options.stopSequences;
-    // Anthropic thinking config for Claude 3.7 Sonnet (reasoning): { type: 'enabled', budget_tokens?: number }
+    // Anthropic thinking config for Claude models (reasoning): { type: 'enabled', budget_tokens?: number }
     const thinking = anthropicApiParams.thinking || options.thinking;
 
     if (!maxTokens) {
@@ -379,7 +379,7 @@ export class AnthropicAdapter implements ProviderAdapter {
               input: tu.input,
             }));
             if (responseText) {
-              yield { type: 'TOKEN', data: [{type: 'text', text: responseText}, ...toolData], threadId, traceId, sessionId, tokenType };
+              yield { type: 'TOKEN', data: [{ type: 'text', text: responseText }, ...toolData], threadId, traceId, sessionId, tokenType };
             } else {
               yield { type: 'TOKEN', data: toolData, threadId, traceId, sessionId, tokenType };
             }
@@ -476,7 +476,7 @@ export class AnthropicAdapter implements ProviderAdapter {
 
       if (currentRoleInternal === messageRoleToPush && messages.length > 0) {
         const lastMessage = messages[messages.length - 1];
-        
+
         let currentLastMessageContentArray: Anthropic.Messages.ContentBlockParam[];
         if (typeof lastMessage.content === 'string') {
           currentLastMessageContentArray = [{ type: 'text', text: lastMessage.content } as Anthropic.Messages.TextBlockParam];
@@ -501,11 +501,11 @@ export class AnthropicAdapter implements ProviderAdapter {
     // Anthropic requires the first message to be 'user' if messages exist and no system prompt.
     if (!systemPrompt && messages.length > 0 && messages[0].role !== 'user') {
       Logger.warn("AnthropicAdapter: Prompt does not start with user message and has no system prompt. Prepending an empty user message for compatibility.");
-      messages.unshift({ role: 'user', content: '(Previous turn context)'});
+      messages.unshift({ role: 'user', content: '(Previous turn context)' });
     }
-    
+
     // Ensure conversation doesn't end on an assistant message if expecting tool results
-    const lastArtMsg = artPrompt[artPrompt.length -1];
+    const lastArtMsg = artPrompt[artPrompt.length - 1];
     if (lastArtMsg?.role === 'assistant' && lastArtMsg.tool_calls && lastArtMsg.tool_calls.length > 0) {
       Logger.debug("AnthropicAdapter: Prompt ends with assistant requesting tool calls.");
     }
@@ -529,7 +529,7 @@ export class AnthropicAdapter implements ProviderAdapter {
     // Handle text content
     if (artMsg.content && typeof artMsg.content === 'string' && artMsg.content.trim() !== '') {
       blocks.push({ type: 'text', text: artMsg.content });
-    } else if (artMsg.content && typeof artMsg.content !== 'string' && artMsg.role !== 'tool_result' && (!artMsg.tool_calls || artMsg.tool_calls.length === 0) ) {
+    } else if (artMsg.content && typeof artMsg.content !== 'string' && artMsg.role !== 'tool_result' && (!artMsg.tool_calls || artMsg.tool_calls.length === 0)) {
       Logger.warn(`AnthropicAdapter: Non-string, non-tool_result, non-tool_call-only content for role ${artMsg.role}, stringifying.`, { content: artMsg.content });
       blocks.push({ type: 'text', text: JSON.stringify(artMsg.content) });
     }
@@ -570,7 +570,7 @@ export class AnthropicAdapter implements ProviderAdapter {
       if (typeof artMsg.content === 'string') {
         toolResultBlock.content = artMsg.content;
       } else if (Array.isArray(artMsg.content) && artMsg.content.every(c => typeof c === 'object' && c.type === 'text' && typeof c.text === 'string')) {
-        toolResultBlock.content = artMsg.content.map(c => ({type: 'text', text: (c as any).text}));
+        toolResultBlock.content = artMsg.content.map(c => ({ type: 'text', text: (c as any).text }));
       } else if (artMsg.content !== null && artMsg.content !== undefined) {
         toolResultBlock.content = JSON.stringify(artMsg.content);
       }
@@ -582,7 +582,7 @@ export class AnthropicAdapter implements ProviderAdapter {
     if (blocks.length === 1 && blocks[0].type === 'text') {
       return (blocks[0] as Anthropic.TextBlockParam).text;
     }
-    
+
     // If blocks is empty, return empty string
     if (blocks.length === 0) {
       return "";

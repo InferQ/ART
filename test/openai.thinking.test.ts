@@ -12,7 +12,7 @@ import type { ArtStandardPrompt, CallOptions, RuntimeProviderConfig, StreamEvent
 const OPENAI_API_KEY_LOCAL = 'Your-OpenAI-API-Key-Here';
 const OPENAI_API_KEY = (OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY?.trim() || '');
 // Use a reasoning model that supports the Responses API
-const OPENAI_MODEL = 'gpt-5-mini'; // Use gpt-5-mini for testing reasoning capabilities
+const OPENAI_MODEL = 'gpt-5.2-instant'; // Use gpt-5.2-instant for testing reasoning capabilities
 const MAX_TOKENS = 2048;
 
 // Skip test if no API key is available
@@ -200,7 +200,7 @@ maybeDescribe('OpenAIAdapter thinking tokens (integration)', () => {
 
       // eslint-disable-next-line no-console
       console.log('[OpenAIAdapter Non-streaming Test] events:', events.map(e => ({ type: e.type, tokenType: e.tokenType })));
-      
+
       expect(hadError).toBeNull();
       expect(events.some(e => e.type === 'TOKEN')).toBe(true);
       expect(events.some(e => e.type === 'METADATA')).toBe(true);

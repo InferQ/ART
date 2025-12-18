@@ -1,6 +1,28 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
+2. 
+## [0.4.1] - 2025-12-18
+
+### 🤖 Next-Gen LLM Adapter Upgrades
+- **Gemini 3 Family Support**: 
+    - Full support for **Gemini 3 Pro**, **Flash**, and **Deep Think** models.
+    - Implemented **native `systemInstruction`** support for improved behavioral steering.
+    - Added **`thinkingLevel` control** (low, minimal, medium, high) to balance reasoning depth and latency.
+    - Updated default model to `gemini-3-flash`.
+- **Claude 4.5 Family Support**:
+    - Support for **Claude 4.5 Opus**, **Sonnet**, and **Haiku**.
+    - Maintained and optimized support for **thinking tokens** and reasoning blocks.
+    - Updated default model to `claude-4.5-sonnet`.
+- **GPT-5 Family Support**:
+    - Full support for **GPT-5**, **GPT-5.1**, and **GPT-5.2** (including Instant, Thinking, and Pro variants).
+    - Updated default model to `gpt-5.2-instant`.
+- **SDK Dependencies**: Upgraded `@google/genai`, `@anthropic-ai/sdk`, and `openai` to their latest December 2025 versions.
+
+### 🛠 Refactors & Maintenance
+- Improved integration test resilience by ensuring tests skip correctly when API keys are missing.
+- Updated documentation and README to reflect v0.4.1 status.
+
 
 ## [0.4.0] beta - 2025-12-18
 
