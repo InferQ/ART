@@ -29,7 +29,17 @@ function deepClone<T>(obj: T): T {
 
 /**
  * Manages thread-specific configuration (ThreadConfig) and state (AgentState)
- * using an underlying StateRepository. Supports explicit and implicit state saving strategies.
+ * using an underlying StateRepository.
+ * 
+ * This class serves as the central point for accessing and modifying the persistent context
+ * of a conversation thread. It supports two state saving strategies:
+ * 
+ * 1. **Explicit**: The agent is responsible for calling `setAgentState()` whenever it wants to persist changes.
+ *    `saveStateIfModified()` is a no-op. This gives fine-grained control but requires discipline.
+ * 
+ * 2. **Implicit**: State is loaded via `loadThreadContext()` and cached. The agent modifies the state object in-memory.
+ *    Calls to `saveStateIfModified()` (typically at the end of an execution cycle) compare the current state
+ *    against the initial snapshot and persist only if changes are detected. This simplifies agent logic.
  */
 export class StateManager implements IStateManager {
     private repository: IStateRepository;
@@ -52,8 +62,12 @@ export class StateManager implements IStateManager {
 
     /**
      * Loads the complete context (`ThreadConfig` and `AgentState`) for a specific thread.
-     * If in 'implicit' state saving strategy, it caches the loaded context and a snapshot
-     * of its AgentState for later comparison in `saveStateIfModified`.
+     * 
+     * - In **Implicit** mode: Caches the loaded context and creates a snapshot of the `AgentState`.
+     *   This snapshot is used later by `saveStateIfModified` to detect changes. Subsequent loads
+     *   within the same lifecycle might return the cached object to maintain reference consistency.
+     * - In **Explicit** mode: Simply fetches data from the repository.
+     * 
      * @param {string} threadId - The unique identifier for the thread.
      * @param {string} [_userId] - Optional user identifier (currently unused).
      * @returns {Promise<ThreadContext>} A promise resolving to the `ThreadContext` object.
@@ -130,11 +144,13 @@ export class StateManager implements IStateManager {
 
     /**
      * Persists the thread's `AgentState` if it has been modified.
+     * 
      * Behavior depends on the `stateSavingStrategy`:
-     * - 'explicit': This method is a no-op for `AgentState` persistence and logs a warning.
-     * - 'implicit': Compares the current `AgentState` (from the cached `ThreadContext` modified by the agent)
-     *               with the snapshot taken during `loadThreadContext`. If different, saves the state
-     *               to the repository and updates the snapshot.
+     * - **'explicit'**: This method is a no-op for `AgentState` persistence and logs a warning. State must be saved manually via `setAgentState`.
+     * - **'implicit'**: Compares the current `AgentState` (from the cached `ThreadContext` modified by the agent)
+     *   with the snapshot taken during `loadThreadContext`. If different, saves the state
+     *   to the repository and updates the snapshot.
+     * 
      * @param {string} threadId - The ID of the thread whose state might need saving.
      * @returns {Promise<void>} A promise that resolves when the state is saved or the operation is skipped.
      */
@@ -213,8 +229,10 @@ export class StateManager implements IStateManager {
 
     /**
      * Explicitly sets or updates the AgentState for a specific thread by calling the underlying state repository.
-     * If in 'implicit' mode, this also updates the cached snapshot to prevent `saveStateIfModified`
-     * from re-saving the same state immediately.
+     * 
+     * - If in **Implicit** mode: This also updates the cached snapshot to prevent `saveStateIfModified`
+     *   from re-saving the same state immediately (optimizing writes).
+     * 
      * @param {string} threadId - The unique identifier of the thread.
      * @param {AgentState} state - The AgentState object to save. Must not be undefined or null.
      * @returns {Promise<void>} A promise that resolves when the state is saved.

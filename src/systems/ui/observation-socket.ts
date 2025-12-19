@@ -5,13 +5,24 @@ import { Logger } from '@/utils/logger';
 import { IObservationRepository } from '@/core/interfaces'; // Assuming this exists
 
 /**
- * A specialized TypedSocket for handling Observation data.
- * Allows filtering by ObservationType.
- * Can optionally fetch historical observations from a repository.
+ * A specialized `TypedSocket` designed for handling `Observation` data streams.
+ * 
+ * @remarks
+ * This socket acts as the bridge between the agent's internal `ObservationManager` and the external UI or monitoring systems.
+ * It extends the generic `TypedSocket` to provide:
+ * 1. **Type-Safe Notification**: Specifically handles `Observation` objects.
+ * 2. **Specialized Filtering**: Allows subscribers to filter events by `ObservationType` (e.g., only subscribe to 'TOOL_EXECUTION' or 'THOUGHTS').
+ * 3. **Historical Access**: Provides a `getHistory` method that leverages the `IObservationRepository` to fetch past observations, enabling UIs to populate initial state.
+ * 
+ * This class is a key component of the `UISystem`.
  */
 export class ObservationSocket extends TypedSocket<Observation, ObservationType | ObservationType[]> {
   private observationRepository?: IObservationRepository;
 
+  /**
+   * Creates an instance of ObservationSocket.
+   * @param observationRepository - Optional repository for fetching observation history. If not provided, `getHistory` will return empty arrays.
+   */
   constructor(observationRepository?: IObservationRepository) {
     super(); // No logger instance needed
     this.observationRepository = observationRepository;
@@ -19,8 +30,15 @@ export class ObservationSocket extends TypedSocket<Observation, ObservationType 
   }
 
   /**
-   * Notifies subscribers about a new observation.
-   * @param observation - The observation data.
+   * Notifies all eligible subscribers about a new observation.
+   * 
+   * @remarks
+   * This method is called by the `ObservationManager` whenever a new observation is recorded.
+   * It iterates through all active subscriptions and invokes their callbacks if:
+   * 1. The subscriber's `targetThreadId` (if any) matches the observation's `threadId`.
+   * 2. The subscriber's `filter` (if any) matches the observation's `type`.
+   * 
+   * @param observation - The new `Observation` object to broadcast.
    */
   notifyObservation(observation: Observation): void {
     Logger.debug(`Notifying Observation: ${observation.id} (${observation.type}) for thread ${observation.threadId}`);
@@ -38,11 +56,15 @@ export class ObservationSocket extends TypedSocket<Observation, ObservationType 
   }
 
   /**
-   * Retrieves historical observations, optionally filtered by type and thread.
-   * Requires an ObservationRepository to be configured.
-   * @param filter - Optional ObservationType or array of types to filter by.
-   * @param options - Optional threadId and limit.
-   * @returns A promise resolving to an array of observations.
+   * Retrieves historical observations from the underlying repository.
+   * 
+   * @remarks
+   * This is typically used by UIs when they first connect to a thread to backfill the event log.
+   * It translates the socket's filter criteria into an `ObservationFilter` compatible with the repository.
+   * 
+   * @param filter - Optional `ObservationType` or array of types to filter the history by.
+   * @param options - Required object containing `threadId` and optional `limit`.
+   * @returns A promise resolving to an array of `Observation` objects matching the criteria.
    */
   async getHistory(
     filter?: ObservationType | ObservationType[],
@@ -65,26 +87,22 @@ export class ObservationSocket extends TypedSocket<Observation, ObservationType 
     if (filter) {
       observationFilter.types = Array.isArray(filter) ? filter : [filter];
     }
-    // Note: The limit option is not part of the ObservationFilter type.
-    // It's expected that the IObservationRepository implementation
-    // will handle limiting when querying the underlying StorageAdapter,
-    // potentially by accepting limit directly or translating from options.
-    // Sorting is also handled by the repository implementation.
+    // Note: The limit option is not part of the ObservationFilter type directly in all versions,
+    // but the repository implementation is expected to handle it if passed or slice the results.
+    // For this implementation, we rely on the repository to potentially handle limits or we just fetch based on filter.
     if (options.limit !== undefined) {
-       // We don't assign options.limit to observationFilter directly.
-       // The getObservations implementation needs to handle the limit.
-       Logger.debug(`Limit requested: ${options.limit}. Repository implementation must handle this.`);
+       Logger.debug(`Limit requested: ${options.limit}. Repository implementation logic applies.`);
     }
 
 
     try {
-      // Call the correct repository method
+      // Call the repository method
       const observations = await this.observationRepository.getObservations(
         options.threadId,
         observationFilter
       );
-      // The repository method likely returns observations in a standard order (e.g., chronological or reverse chronological).
-      // Assuming reverse chronological (newest first) based on common usage.
+      // The repository method returns observations sorted chronologically (ascending).
+      // We return them as is.
       return observations;
     } catch (error) {
       Logger.error(`Error fetching observation history for thread ${options.threadId} with filter ${JSON.stringify(observationFilter)}:`, error);

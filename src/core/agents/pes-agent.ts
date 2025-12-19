@@ -100,6 +100,21 @@ export class PESAgent implements IAgentCore {
         };
     }
 
+    /**
+     * Processes a user query through the PES (Plan-Execute-Synthesize) reasoning loop.
+     * This is the main entry point for the agent's execution logic.
+     *
+     * The process involves:
+     * 1. **Configuration**: Loading thread context, resolving system prompts, and determining the active persona.
+     * 2. **Context Gathering**: Retrieving conversation history and available tools.
+     * 3. **Planning**: Generating a new plan (Todo List) or refining an existing one based on the new query.
+     * 4. **Execution**: Iterating through the Todo List, executing tasks, calling tools, and managing dependencies.
+     * 5. **Synthesis**: Aggregating results to generate a final, coherent response for the user.
+     * 6. **Finalization**: Saving the response and updating the conversation history.
+     *
+     * @param props - The input properties for the agent execution, including the user query, thread ID, and optional configuration overrides.
+     * @returns A promise that resolves with the final agent response and detailed execution metadata.
+     */
     async process(props: AgentProps): Promise<AgentFinalResponse> {
         const startTime = Date.now();
         const traceId = props.traceId ?? generateUUID();
@@ -257,6 +272,11 @@ export class PESAgent implements IAgentCore {
 
     // --- Helper Methods ---
 
+    /**
+     * Persists the current agent state to the StateManager.
+     * @param threadId - The unique identifier of the thread.
+     * @param pesState - The current state of the PES agent.
+     */
     private async _saveState(threadId: string, pesState: PESAgentStateData) {
         await this.deps.stateManager.setAgentState(threadId, {
             data: pesState,
@@ -265,6 +285,14 @@ export class PESAgent implements IAgentCore {
         });
     }
 
+    /**
+     * Records observations related to the planning phase.
+     * Emits events for INTENT, TITLE (if new), and PLAN.
+     * @param threadId - The thread ID.
+     * @param traceId - The trace ID for correlation.
+     * @param planningOutput - The structured output from the planning LLM.
+     * @param rawText - The raw text output from the LLM (for debugging/audit).
+     */
     private async _recordPlanObservations(threadId: string, traceId: string, planningOutput: any, rawText: string) {
         await this.deps.observationManager.record({
             threadId, traceId, type: ObservationType.INTENT,
@@ -293,6 +321,17 @@ export class PESAgent implements IAgentCore {
         });
     }
 
+    /**
+     * Executes the initial planning phase using the LLM.
+     * Generates the initial Todo List based on the user's query and available tools.
+     * @param props - Agent execution properties.
+     * @param systemPrompt - The resolved system prompt for planning.
+     * @param formattedHistory - The conversation history formatted for the LLM.
+     * @param availableTools - List of tools available for the plan.
+     * @param runtimeProviderConfig - Configuration for the LLM provider.
+     * @param traceId - Trace ID for logging and observations.
+     * @returns The structured planning output and metadata.
+     */
     private async _performPlanning(
         props: AgentProps,
         systemPrompt: string,
@@ -334,6 +373,18 @@ You MUST output a JSON object with the following structure:
         return this._callPlanningLLM(planningPrompt, props, runtimeProviderConfig, traceId);
     }
 
+    /**
+     * Refines an existing plan based on new user input (follow-up).
+     * Updates the Todo List to accommodate the new request while preserving context.
+     * @param props - Agent execution properties.
+     * @param systemPrompt - The resolved system prompt.
+     * @param formattedHistory - Conversation history.
+     * @param currentState - The current agent state (including the existing plan).
+     * @param availableTools - Available tools.
+     * @param runtimeProviderConfig - LLM provider config.
+     * @param traceId - Trace ID.
+     * @returns The updated planning output.
+     */
     private async _performPlanRefinement(
         props: AgentProps,
         systemPrompt: string,
@@ -371,6 +422,15 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
         return this._callPlanningLLM(planningPrompt, props, runtimeProviderConfig, traceId);
     }
 
+    /**
+     * Common internal method to call the LLM for planning or refinement.
+     * Handles streaming, observation recording, and output parsing.
+     * @param prompt - The constructed prompt.
+     * @param props - Agent properties.
+     * @param runtimeProviderConfig - Provider config.
+     * @param traceId - Trace ID.
+     * @returns Parsed output and metadata.
+     */
     private async _callPlanningLLM(
         prompt: ArtStandardPrompt,
         props: AgentProps,
@@ -426,6 +486,16 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
         }
     }
 
+    /**
+     * Orchestrates the execution of the Todo List.
+     * Loops through pending items, checks dependencies, and executes them.
+     * @param props - Agent properties.
+     * @param pesState - The current state containing the Todo List.
+     * @param availableTools - Tools available for execution.
+     * @param runtimeProviderConfig - Provider config.
+     * @param traceId - Trace ID.
+     * @returns Execution statistics (LLM calls, tool calls) and metadata.
+     */
     private async _executeTodoList(
         props: AgentProps,
         pesState: PESAgentStateData,
@@ -518,6 +588,17 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
         return { llmCalls, toolCalls, llmMetadata: accumulatedMetadata };
     }
 
+    /**
+     * Processes a single Todo Item.
+     * This involves calling the LLM to execute the step, potentially using tools, and updating the plan if necessary.
+     * @param props - Agent properties.
+     * @param item - The Todo Item to execute.
+     * @param state - Current agent state.
+     * @param availableTools - Available tools.
+     * @param runtimeProviderConfig - Provider config.
+     * @param traceId - Trace ID.
+     * @returns Result of the item execution (status, output, usage metrics).
+     */
     private async _processTodoItem(
         props: AgentProps,
         item: TodoItem,
@@ -708,6 +789,17 @@ Instructions:
         };
     }
 
+    /**
+     * Synthesizes the final response based on the completed tasks and the user's original query.
+     * @param props - Agent properties.
+     * @param systemPrompt - Synthesis system prompt.
+     * @param formattedHistory - Conversation history.
+     * @param state - Final agent state.
+     * @param runtimeProviderConfig - Provider config.
+     * @param traceId - Trace ID.
+     * @param finalPersona - The persona to use for synthesis.
+     * @returns The final response content and metadata.
+     */
     private async _performSynthesis(
         props: AgentProps,
         systemPrompt: string,
@@ -794,6 +886,13 @@ Format your response with <mainContent>...</mainContent> for the user message an
         return { finalResponseContent: mainContent, synthesisMetadata, uiMetadata };
     }
 
+    /**
+     * Loads the initial configuration, thread context, and resolves prompts.
+     * @param props - Agent properties.
+     * @param traceId - Trace ID.
+     * @returns Loaded configuration and context.
+     * @throws {ARTError} If context or config is missing.
+     */
     private async _loadConfiguration(props: AgentProps, traceId: string) {
         // ... (Same as original implementation) ...
         // To save tokens/lines in this overwite, assuming I keep the exact same logic.
@@ -845,6 +944,12 @@ Format your response with <mainContent>...</mainContent> for the user message an
         };
     }
 
+    /**
+     * Retrieves the conversation history for the thread.
+     * @param threadId - The thread ID.
+     * @param threadContext - The loaded thread context.
+     * @returns Formatted conversation history.
+     */
     private async _gatherHistory(threadId: string, threadContext: any) {
         // Same as original
         Logger.debug(`[${threadContext.threadId || threadId}] Stage 2: Gathering History`);
@@ -853,6 +958,11 @@ Format your response with <mainContent>...</mainContent> for the user message an
         return this.formatHistoryForPrompt(rawHistory);
     }
 
+    /**
+     * Retrieves available tools for the thread.
+     * @param threadId - The thread ID.
+     * @returns Array of available tool schemas.
+     */
     private async _gatherTools(threadId: string) {
         // Same as original
         Logger.debug(`[${threadId}] Stage 2: Gathering Tools`);
@@ -860,6 +970,15 @@ Format your response with <mainContent>...</mainContent> for the user message an
     }
 
     // --- Restored A2A Logic ---
+
+    /**
+     * Delegates tasks to other agents (Agent-to-Agent).
+     * Discovers agents and sends task requests.
+     * @param planningOutput - Output from the planning phase containing potential delegation calls.
+     * @param threadId - Current thread ID.
+     * @param traceId - Trace ID.
+     * @returns Array of created A2A tasks.
+     */
     private async _delegateA2ATasks(
         planningOutput: { toolCalls?: ParsedToolCall[] },
         threadId: string,
@@ -929,6 +1048,16 @@ Format your response with <mainContent>...</mainContent> for the user message an
         return delegatedTasks;
     }
 
+    /**
+     * Waits for delegated A2A tasks to complete.
+     * Polls the repository until all tasks are in a terminal state or timeout is reached.
+     * @param a2aTasks - The tasks to wait for.
+     * @param threadId - Thread ID.
+     * @param traceId - Trace ID.
+     * @param maxWaitTimeMs - Maximum time to wait in milliseconds.
+     * @param pollIntervalMs - Polling interval.
+     * @returns The updated list of tasks.
+     */
     private async _waitForA2ACompletion(
         a2aTasks: A2ATask[],
         threadId: string,
@@ -991,6 +1120,14 @@ Format your response with <mainContent>...</mainContent> for the user message an
     }
 
 
+    /**
+     * Finalizes the agent execution by saving the AI response and recording the final observation.
+     * @param props - Agent properties.
+     * @param finalResponseContent - The content of the final AI message.
+     * @param traceId - Trace ID.
+     * @param uiMetadata - Optional UI metadata extracted from the response.
+     * @returns The created ConversationMessage object.
+     */
     private async _finalize(props: AgentProps, finalResponseContent: string, traceId: string, uiMetadata?: object): Promise<ConversationMessage> {
         // Same as original
         Logger.debug(`[${traceId}] Stage 7: Finalization`);
@@ -1014,6 +1151,11 @@ Format your response with <mainContent>...</mainContent> for the user message an
         return finalAiMessage;
     }
 
+    /**
+     * Helper to format internal conversation messages into the standard prompt format required by the LLM.
+     * @param history - Array of ConversationMessages.
+     * @returns Array of formatted prompt messages.
+     */
     private formatHistoryForPrompt(history: ConversationMessage[]): ArtStandardPrompt {
         // Same as original
         return history.map((msg) => {
