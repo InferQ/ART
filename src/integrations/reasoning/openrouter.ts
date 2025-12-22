@@ -217,7 +217,6 @@ export class OpenRouterAdapter implements ProviderAdapter {
       traceId = `openrouter-trace-${Date.now()}`,
       sessionId,
       stream,
-      callContext,
       model: modelOverride,
       tools: artTools,
     } = options;

@@ -16,7 +16,6 @@ import {
     AgentFinalResponse,
     ConversationMessage,
     ParsedToolCall,
-    ToolResult,
     ObservationType,
     ExecutionMetadata,
     MessageRole,
@@ -32,8 +31,7 @@ import {
     AgentPersona,
     TodoItem,
     TodoItemStatus,
-    PESAgentStateData,
-    ExecutionOutput
+    PESAgentStateData
 } from '@/types';
 import { RuntimeProviderConfig } from '@/types/providers';
 import { generateUUID } from '@/utils/uuid';
@@ -659,7 +657,7 @@ Instructions:
         let iteration = 0;
         let itemDone = false;
         let finalOutput: string | undefined;
-        let finalStatus: 'success' | 'fail' | 'wait' = 'success';
+        const finalStatus: 'success' | 'fail' | 'wait' = 'success';
 
         while (!itemDone && iteration < MAX_ITEM_ITERATIONS) {
             iteration++;
@@ -880,7 +878,7 @@ Format your response with <mainContent>...</mainContent> for the user message an
         const match = finalResponseContent.match(metadataBlockRegex);
         if (match && match[1]) {
             mainContent = finalResponseContent.replace(metadataBlockRegex, '').trim();
-            try { uiMetadata = JSON.parse(match[1]); } catch { }
+            try { uiMetadata = JSON.parse(match[1]); } catch { /* ignore */ }
         }
 
         return { finalResponseContent: mainContent, synthesisMetadata, uiMetadata };
@@ -1007,7 +1005,7 @@ Format your response with <mainContent>...</mainContent> for the user message an
                 const { agentId, taskType, input, instructions } = args;
 
                 const allAgents = await this.deps.agentDiscoveryService.discoverAgents(traceId);
-                const targetAgent = allAgents.find(a => a.agentId === agentId);
+                const targetAgent: A2AAgentInfo | undefined = allAgents.find(a => a.agentId === agentId);
 
                 if (!targetAgent) {
                     throw new Error(`Agent with ID "${agentId}" not found during delegation.`);

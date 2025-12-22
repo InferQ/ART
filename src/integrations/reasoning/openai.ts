@@ -225,11 +225,8 @@ export class OpenAIAdapter implements ProviderAdapter {
             stream: true,
           });
 
-          let accumulatedText = "";
-          let accumulatedReasoning = "";
           let finalStopReason: string | undefined;
           let finalUsage: OpenAIResponsesUsage | undefined;
-          let accumulatedToolCalls: any[] = [];
 
           // Process the stream
           for await (const event of streamInstance) {
@@ -240,7 +237,6 @@ export class OpenAIAdapter implements ProviderAdapter {
             // Handle reasoning deltas
             if (event.type === 'response.reasoning.delta' || event.type === 'response.reasoning_text.delta') {
               if (event.delta) {
-                accumulatedReasoning += event.delta;
                 const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_THINKING' : 'FINAL_SYNTHESIS_LLM_THINKING';
                 yield { type: 'TOKEN', data: event.delta, threadId, traceId, sessionId, tokenType };
               }
@@ -255,7 +251,6 @@ export class OpenAIAdapter implements ProviderAdapter {
             // Handle text/output deltas
             else if (event.type === 'response.text.delta' || event.type === 'response.output_text.delta') {
               if (event.delta) {
-                accumulatedText += event.delta;
                 const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
                 yield { type: 'TOKEN', data: event.delta, threadId, traceId, sessionId, tokenType };
               }
