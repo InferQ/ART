@@ -61,7 +61,7 @@ export class TypedSocket<DataType, FilterType = any> {
     const socketType = this.constructor.name; // Get class name (e.g., 'LLMStreamSocket', 'ObservationSocket')
     Logger.debug(`[${socketType}] notify() called. Data type: ${typeof data}, Sub count: ${this.subscriptions.size}, Options: ${JSON.stringify(options)}`);
 
-    Logger.debug(`Notifying ${this.subscriptions.size} subscribers. Data: ${JSON.stringify(data).substring(0, 100)}..., Options: ${JSON.stringify(options)}`); // Use static Logger
+    Logger.debug(`Notifying ${this.subscriptions.size} subscribers. Data: ${(JSON.stringify(data) ?? 'null').substring(0, 100)}..., Options: ${JSON.stringify(options)}`); // Use static Logger
     this.subscriptions.forEach((sub) => {
       try {
         // 1. Check threadId if provided in both subscription options and notification options

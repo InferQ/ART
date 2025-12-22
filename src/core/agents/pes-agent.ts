@@ -816,7 +816,7 @@ Instructions:
 
         const summary = `
 Completed Tasks:
-${completedItems.map(i => `- ${i.description}: ${JSON.stringify(i.result).substring(0, 200)}...`).join('\n')}
+${completedItems.map(i => `- ${i.description}: ${(JSON.stringify(i.result) ?? 'null').substring(0, 200)}...`).join('\n')}
 
 Failed Tasks:
 ${failedItems.map(i => `- ${i.description}`).join('\n')}

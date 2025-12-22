@@ -11,6 +11,79 @@ import {
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
 
+// Retry configuration
+const DEFAULT_MAX_RETRIES = 3;
+const DEFAULT_INITIAL_DELAY_MS = 1000;
+const DEFAULT_MAX_DELAY_MS = 30000;
+const RETRYABLE_STATUS_CODES = [503, 429, 500, 502, 504];
+
+/**
+ * Helper function to check if an error is retryable
+ */
+function isRetryableError(error: any): boolean {
+  // Check for status code in various error formats
+  const statusCode = error?.code || error?.status || error?.error?.code;
+  if (statusCode && RETRYABLE_STATUS_CODES.includes(Number(statusCode))) {
+    return true;
+  }
+  // Check for common retryable error messages
+  const message = String(error?.message || error?.error?.message || '').toLowerCase();
+  return message.includes('overloaded') ||
+    message.includes('rate limit') ||
+    message.includes('temporarily unavailable') ||
+    message.includes('503') ||
+    message.includes('429');
+}
+
+/**
+ * Executes a function with exponential backoff retry logic
+ */
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: {
+    maxRetries?: number;
+    initialDelayMs?: number;
+    maxDelayMs?: number;
+    onRetry?: (error: any, attempt: number, delayMs: number) => void;
+  } = {}
+): Promise<T> {
+  const maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
+  const initialDelayMs = options.initialDelayMs ?? DEFAULT_INITIAL_DELAY_MS;
+  const maxDelayMs = options.maxDelayMs ?? DEFAULT_MAX_DELAY_MS;
+
+  let lastError: any;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+
+      if (attempt === maxRetries || !isRetryableError(error)) {
+        throw error;
+      }
+
+      // Calculate delay with exponential backoff and jitter
+      const baseDelay = initialDelayMs * Math.pow(2, attempt);
+      const jitter = Math.random() * 0.3 * baseDelay; // 0-30% jitter
+      const delayMs = Math.min(baseDelay + jitter, maxDelayMs);
+
+      if (options.onRetry) {
+        options.onRetry(error, attempt + 1, delayMs);
+      }
+
+      Logger.warn(`OpenRouter API call failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${Math.round(delayMs)}ms...`, {
+        error: error?.message || error,
+        statusCode: error?.code || error?.status || error?.error?.code
+      });
+
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw lastError;
+}
+
 // Using OpenAI-compatible structures, as OpenRouter adheres to them.
 // Based on https://openrouter.ai/docs#api-reference-chat-completions
 interface OpenRouterMessage {
@@ -52,6 +125,14 @@ interface OpenRouterChatCompletionPayload {
   stream_options?: { include_usage: boolean };
   tools?: OpenRouterTool[];
   tool_choice?: 'auto' | 'any' | 'none' | { type: 'function'; function: { name: string } };
+  response_format?: {
+    type: 'json_object' | 'json_schema';
+    json_schema?: {
+      name: string;
+      strict?: boolean;
+      schema: Record<string, any>;
+    };
+  };
   // OpenRouter specific extensions
   provider?: {
     order?: string[];
@@ -62,7 +143,8 @@ interface OpenRouterChatCompletionPayload {
   reasoning?: {
     exclude?: boolean;
     effort?: 'low' | 'medium' | 'high';
-    tokens?: number;
+    max_tokens?: number;
+    tokens?: number; // legacy/alternative
   };
   // Legacy toggle allowed by OpenRouter; maps to reasoning include/exclude
   include_reasoning?: boolean;
@@ -181,6 +263,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
       ...(stream ? { stream_options: { include_usage: true } } : {}),
       tools: openAiTools,
       tool_choice: options.tool_choice,
+      response_format: (options as any).response_format, // Pass-through for JSON schema/object
       // OpenRouter specific fields from options
       provider: openRouterOptions.provider,
       transforms: openRouterOptions.useMiddleOutTransform === false ? undefined : ['middle-out'],
@@ -203,25 +286,26 @@ export class OpenRouterAdapter implements ProviderAdapter {
     Logger.debug(`Calling OpenRouter API: ${apiUrl} with model ${modelToUse}, stream: ${!!stream}`, { threadId, traceId });
 
     try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(payload),
-      });
+      const response = await withRetry(async () => {
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(payload),
+        });
 
-      if (!response.ok) {
-        const errorBody = await response.text();
-        const err = new ARTError(
-          `OpenRouter API request failed: ${response.status} ${response.statusText} - ${errorBody}`,
-          ErrorCode.LLM_PROVIDER_ERROR,
-          new Error(errorBody),
-        );
-        const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-          yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
-          yield { type: 'END', data: null, threadId, traceId, sessionId };
-        };
-        return errorGenerator();
-      }
+        if (!res.ok) {
+          // Check for retryable status codes before throwing final error
+          const errorBody = await res.text();
+          const error = new Error(`OpenRouter API request failed: ${res.status} ${res.statusText} - ${errorBody}`);
+          (error as any).status = res.status;
+          throw error;
+        }
+        return res;
+      }, {
+        onRetry: (error, attempt, delayMs) => {
+          Logger.info(`Retrying OpenRouter call (attempt ${attempt})`, { threadId, traceId, delayMs });
+        }
+      });
 
       if (stream && response.body) {
         return this.processStream(response.body, options);
