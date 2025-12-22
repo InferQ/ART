@@ -22,6 +22,10 @@ All notable changes to this project will be documented in this file.
 ### 🛠 Refactors & Maintenance
 - Improved integration test resilience by ensuring tests skip correctly when API keys are missing.
 - Updated documentation and README to reflect v0.4.1 status.
+- **Code Quality**: Resolved linting errors in `PESAgent`, `OpenAIAdapter`, and `OpenRouterAdapter`, removing unused variables and imports.
+- **Type Safety**: Enhanced `PESAgent` to explicitly utilize `A2AAgentInfo` during agent discovery and task delegation, improving type safety.
+- **Architecture Docs**: Added a comprehensive `AgentFactory` refactoring assessment and plan in `docs/architecture/agent-factory-refactoring-plan.md`.
+- **Testing**: Updated `vitest.config.ts` to explicitly load environment variables from `.env.local`, enabling smoother local integration testing.
 
 
 ## [0.4.0] beta - 2025-12-18
