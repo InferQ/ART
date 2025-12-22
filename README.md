@@ -163,6 +163,7 @@ initializeAndRun().catch(console.error);
 *   **[How-To Guides](./docs/how-to):** Practical guides for specific tasks, such as [Customizing the Agent's Persona](./docs/how-to/customizing-agent-persona.md).
 *   **[API Reference](./docs/components):** Auto-generated API documentation.
 *   **[Examples](./examples):** Find practical examples, including a full React chatbot implementation.
+*   **[Changelog](./CHANGELOG.md):** See the history of changes and updates.
 
 ## Contributing
 
