@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to this project will be documented in this file.
-2. 
+
 ## [0.4.1] - 2025-12-18
 
 ### 🤖 Next-Gen LLM Adapter Upgrades

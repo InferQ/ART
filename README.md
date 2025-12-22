@@ -1,5 +1,3 @@
-﻿
-
 # ✨ ART: Agentic Runtime Framework (beta) <img src="https://img.shields.io/badge/Version-v0.4.1-blue" alt="Version 0.4.1">
 
 <p align="center">
