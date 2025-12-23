@@ -39,6 +39,7 @@ import { RuntimeProviderConfig } from '@/types/providers';
 import { generateUUID } from '@/utils/uuid';
 import { ARTError, ErrorCode } from '@/errors';
 import { Logger } from '@/utils/logger';
+import { safeStringify } from '@/utils/string-helpers';
 
 import { AgentDiscoveryService } from '@/systems/a2a/AgentDiscoveryService';
 import { TaskDelegationService } from '@/systems/a2a/TaskDelegationService';
@@ -782,7 +783,7 @@ Instructions:
 
         const summary = `
 Completed Tasks:
-${completedItems.map(i => `- ${i.description}: ${JSON.stringify(i.result).substring(0, 200)}...`).join('\n')}
+${completedItems.map(i => `- ${i.description}: ${safeStringify(i.result, 200)}`).join('\n')}
 
 Failed Tasks:
 ${failedItems.map(i => `- ${i.description}`).join('\n')}
