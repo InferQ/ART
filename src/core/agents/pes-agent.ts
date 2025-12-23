@@ -313,17 +313,22 @@ ${systemPrompt}
 [END_CUSTOM_GUIDANCE]
 
 Your goal is to understand the user's query and create a structured plan (Todo List) to answer it.
-The todo list should be a logical, methodical, sensible list of steps that the agent should take to answer the user's query. Each step should progress gradually towards delivering a cmoprehensive, accurate, evidence driven, validated response.
-You MUST output a JSON object with the following structure:
+The todo list should be a logical, methodical, sensible list of steps that the agent should take to answer the user's query. Each step should progress gradually towards delivering a comprehensive, accurate, evidence driven, validated response.
+
+IMPORTANT: You MUST output your JSON response between these exact markers:
+---JSON_OUTPUT_START---
 {
   "title": "Short title",
   "intent": "User intent summary",
-  "plan": "High level description of the plan with and overview and bullet points",
+  "plan": "High level description of the plan with an overview and bullet points",
   "todoList": [
     { "id": "step_1", "description": "Description of step 1", "dependencies": [] },
     { "id": "step_2", "description": "Description of step 2", "dependencies": ["step_1"] }
   ]
 }
+---JSON_OUTPUT_END---
+
+Always wrap your JSON output with these markers exactly as shown.
 `;
         const planningPrompt: ArtStandardPrompt = [
             { role: 'system', content: wrappedSystemPrompt },
@@ -360,7 +365,19 @@ Intent: ${currentState.intent}
 Todo List:
 ${JSON.stringify(currentState.todoList, null, 2)}
 
-Output the updated JSON object (title, intent, plan, todoList). Ensure you preserve completed items and logically append or insert new items.
+IMPORTANT: Output the updated JSON object between these exact markers:
+---JSON_OUTPUT_START---
+{
+  "title": "Updated title",
+  "intent": "Updated user intent summary",
+  "plan": "Updated high level description",
+  "todoList": [
+    { "id": "step_1", "description": "Description", "status": "COMPLETED or PENDING", "dependencies": [] }
+  ]
+}
+---JSON_OUTPUT_END---
+
+Ensure you preserve completed items and logically append or insert new items. Always wrap your JSON output with these markers exactly as shown.
 `;
         const planningPrompt: ArtStandardPrompt = [
             { role: 'system', content: wrappedSystemPrompt },
@@ -385,7 +402,11 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
             ...(props.options?.llmParams ?? {}),
         };
 
-        let outputText = '';
+        // Solution 3+1: Separate buffers for thinking vs response tokens
+        // THINKING tokens are for showing reasoning to the user, not for data extraction
+        // RESPONSE tokens contain the actual structured output we need to parse
+        let thinkingText = '';
+        let responseText = '';
         let metadata: LLMMetadata | undefined;
         let streamError: Error | null = null;
 
@@ -408,7 +429,14 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
                 });
 
                 if (event.type === 'TOKEN') {
-                    outputText += event.data;
+                    const tokenType = String(event.tokenType || '');
+                    if (tokenType.includes('THINKING')) {
+                        // Thinking tokens: LLM reasoning process (for user visibility, not parsing)
+                        thinkingText += event.data;
+                    } else {
+                        // Response tokens: actual structured output to parse
+                        responseText += event.data;
+                    }
                 } else if (event.type === 'METADATA') {
                     metadata = event.data;
                 } else if (event.type === 'ERROR') {
@@ -418,8 +446,20 @@ Output the updated JSON object (title, intent, plan, todoList). Ensure you prese
 
             if (streamError) throw streamError;
 
-            const parsed = await this.deps.outputParser.parsePlanningOutput(outputText);
-            return { output: parsed, metadata, rawText: outputText };
+            // Primary: Parse response tokens only (contains the JSON output)
+            let parsed = await this.deps.outputParser.parsePlanningOutput(responseText);
+
+            // Fallback: If response-only parsing failed to extract todoList, try combined
+            // This maintains backward compatibility for providers that don't separate token types
+            if (!parsed.todoList && thinkingText) {
+                Logger.debug(`[${traceId}] Response-only parsing found no todoList, trying combined output`);
+                const combinedText = thinkingText + responseText;
+                parsed = await this.deps.outputParser.parsePlanningOutput(combinedText);
+            }
+
+            // Store full output for debugging/observability
+            const fullOutputText = thinkingText + responseText;
+            return { output: parsed, metadata, rawText: fullOutputText };
 
         } catch (err: any) {
             throw new ARTError(`Planning failed: ${err.message}`, ErrorCode.PLANNING_FAILED, err);
@@ -591,7 +631,9 @@ Instructions:
                 ...(props.options?.llmParams ?? {}),
             };
 
-            let outputText = '';
+            // Solution 3+1: Separate buffers for thinking vs response tokens
+            let thinkingText = '';
+            let responseText = '';
             let streamError: Error | null = null;
             let currentMetadata: LLMMetadata | undefined;
 
@@ -611,8 +653,10 @@ Instructions:
                 });
 
                 if (event.type === 'TOKEN') {
-                    outputText += event.data;
-                    if (event.tokenType && String(event.tokenType).includes('THINKING')) {
+                    const tokenType = String(event.tokenType || '');
+                    if (tokenType.includes('THINKING')) {
+                        // Thinking tokens: LLM reasoning process (for user visibility)
+                        thinkingText += event.data;
                         await this.deps.observationManager.record({
                             threadId: props.threadId,
                             traceId,
@@ -621,6 +665,9 @@ Instructions:
                             parentId: item.id,
                             metadata: { phase: 'execution', tokenType: event.tokenType, timestamp: Date.now() }
                         }).catch(err => Logger.error(`[${traceId}] Failed to record THOUGHTS observation:`, err));
+                    } else {
+                        // Response tokens: actual structured output to parse
+                        responseText += event.data;
                     }
                 } else if (event.type === 'METADATA') {
                     currentMetadata = event.data;
@@ -632,8 +679,19 @@ Instructions:
             if (streamError) throw streamError;
             if (currentMetadata) accumulatedMetadata = { ...accumulatedMetadata, ...currentMetadata };
 
-            const parsed = await this.deps.outputParser.parseExecutionOutput(outputText);
-            messages.push({ role: 'assistant', content: outputText });
+            // Primary: Parse response tokens only
+            let parsed = await this.deps.outputParser.parseExecutionOutput(responseText);
+
+            // Fallback: If response-only parsing found no useful content, try combined
+            if (!parsed.content && !parsed.toolCalls && thinkingText) {
+                Logger.debug(`[${traceId}] Response-only parsing found no content, trying combined output`);
+                const combinedText = thinkingText + responseText;
+                parsed = await this.deps.outputParser.parseExecutionOutput(combinedText);
+            }
+
+            // Store full output for conversation history
+            const fullOutputText = thinkingText + responseText;
+            messages.push({ role: 'assistant', content: fullOutputText });
 
             // Check for Plan Updates
             if (parsed.updatedPlan && parsed.updatedPlan.todoList) {

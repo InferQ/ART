@@ -71,11 +71,27 @@ export class OutputParser implements IOutputParser {
 
     processedOutput = nonThinkingContent;
 
-    // Helper for JSON parsing
+    // Helper for JSON parsing with marker support (Solution 6)
     const tryParseJson = (raw: string) => {
         if (!raw) return null;
         let s = raw.trim();
+
+        // Priority 1: Look for explicit JSON markers (most reliable)
+        // Using --- delimiters to avoid conflict with XmlMatcher which processes < characters
+        const markerMatch = s.match(/---JSON_OUTPUT_START---([\s\S]*?)---JSON_OUTPUT_END---/);
+        if (markerMatch && markerMatch[1]) {
+            const markerContent = markerMatch[1].trim();
+            try {
+                return JSON.parse(markerContent);
+            } catch {
+                Logger.debug('OutputParser: Found JSON markers but content is not valid JSON');
+            }
+        }
+
+        // Priority 2: Look for markdown code blocks
         s = s.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
+
+        // Priority 3: Find JSON object by brace matching (fallback for backward compatibility)
         if (!s.startsWith('{') && s.includes('{') && s.includes('}')) {
              const first = s.indexOf('{');
              const last = s.lastIndexOf('}');
