@@ -204,7 +204,7 @@ export default function Capabilities() {
                             >
                               {stage.id}
                             </span>
-                            <h3 className="text-xl lg:text-2xl font-bold tracking-tight">
+                            <h3 className="text-xl lg:text-2xl font-bold tracking-tight text-white">
                               {stage.name}
                             </h3>
                           </motion.div>
@@ -329,7 +329,9 @@ export default function Capabilities() {
                       <capability.icon className="w-7 h-7 text-white" />
                     </motion.div>
 
-                    <h4 className="text-xl font-bold mb-3 tracking-tight">{capability.title}</h4>
+                    <h4 className="text-xl font-bold mb-3 tracking-tight text-white">
+                      {capability.title}
+                    </h4>
                     <p className="text-slate-400 mb-4 leading-relaxed">{capability.description}</p>
 
                     <div className="pt-4 border-t border-slate-800/50">

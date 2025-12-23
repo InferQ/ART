@@ -165,7 +165,9 @@ export default function Benefits() {
                   <benefit.icon className="w-8 h-8 text-white" />
                 </motion.div>
 
-                <h3 className="text-xl font-bold mb-3 tracking-tight">{benefit.title}</h3>
+                <h3 className="text-xl font-bold mb-3 tracking-tight text-white">
+                  {benefit.title}
+                </h3>
                 <p className="text-sm text-slate-400 mb-6 leading-relaxed">{benefit.description}</p>
 
                 <div className="space-y-3">

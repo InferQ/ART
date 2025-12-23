@@ -20,7 +20,7 @@ export default function Footer() {
               >
                 <Sparkles className="w-6 h-6 text-white" />
               </motion.div>
-              <span className="text-xl font-bold tracking-tight">ART Framework</span>
+              <span className="text-xl font-bold tracking-tight text-white">ART Framework</span>
             </div>
             <p className="text-slate-400 leading-relaxed">
               Browser-first TypeScript framework for building sophisticated LLM-powered agents.
@@ -34,7 +34,7 @@ export default function Footer() {
             transition={{ delay: 0.1 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4 tracking-tight">Documentation</h3>
+            <h3 className="text-lg font-semibold mb-4 tracking-tight text-white">Documentation</h3>
             <ul className="space-y-3">
               {[
                 { href: '/ART/components/index.html', label: 'API Reference' },
@@ -62,7 +62,7 @@ export default function Footer() {
             transition={{ delay: 0.2 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4 tracking-tight">Resources</h3>
+            <h3 className="text-lg font-semibold mb-4 tracking-tight text-white">Resources</h3>
             <ul className="space-y-3">
               {[
                 { href: 'https://github.com/inferq/art', label: 'GitHub Repository', icon: Github },
@@ -99,7 +99,7 @@ export default function Footer() {
             transition={{ delay: 0.3 }}
             className="space-y-4"
           >
-            <h3 className="text-lg font-semibold mb-4 tracking-tight">License</h3>
+            <h3 className="text-lg font-semibold mb-4 tracking-tight text-white">License</h3>
             <p className="text-slate-400 leading-relaxed mb-4">
               MIT License - Open source and free to use in your projects.
             </p>

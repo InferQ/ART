@@ -118,7 +118,7 @@ export default function UseCases() {
                     <useCase.icon className="w-8 h-8 text-white" />
                   </motion.div>
 
-                  <h3 className="text-2xl lg:text-3xl font-bold mb-4 tracking-tight">
+                  <h3 className="text-2xl lg:text-3xl font-bold mb-4 tracking-tight text-white">
                     {useCase.title}
                   </h3>
                   <p className="text-slate-400 mb-6 leading-relaxed">{useCase.description}</p>
@@ -153,15 +153,6 @@ export default function UseCases() {
                       </motion.div>
                     ))}
                   </div>
-
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    whileHover={{ opacity: 1, x: 5 }}
-                    className="mt-8 pt-6 border-t border-slate-800/50 flex items-center gap-2 text-indigo-400 font-medium opacity-0 group-hover:opacity-100 transition-all duration-300"
-                  >
-                    <span>Explore example</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </motion.div>
                 </div>
               </motion.div>
             </motion.div>

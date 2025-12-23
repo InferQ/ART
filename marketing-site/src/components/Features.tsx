@@ -138,7 +138,9 @@ export default function Features() {
                     >
                       {category.icon}
                     </motion.div>
-                    <h3 className="text-2xl font-bold tracking-tight">{category.category}</h3>
+                    <h3 className="text-2xl font-bold tracking-tight text-white">
+                      {category.category}
+                    </h3>
                   </div>
 
                   <ul className="space-y-4">
