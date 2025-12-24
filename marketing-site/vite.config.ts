@@ -27,10 +27,6 @@ export default defineConfig(({ command, mode }) => {
     },
     // Only use publicDir in dev mode to serve static TypeDoc files
     publicDir: command === 'serve' ? '../Docs' : false,
-    // Expose environment variables
-    define: {
-      'import.meta.env.VITE_GROQ_API_KEY': JSON.stringify(env.GROQ_API_KEY || ''),
-    },
   };
 });
 
