@@ -158,6 +158,12 @@ export type { DeepSeekAdapterOptions } from '@/integrations/reasoning/deepseek';
 export { OllamaAdapter } from '@/integrations/reasoning/ollama';
 export type { OllamaAdapterOptions } from '@/integrations/reasoning/ollama';
 
+/**
+ * Adapter for Groq's ultra-fast inference API.
+ */
+export { GroqAdapter } from '@/integrations/reasoning/groq';
+export type { GroqAdapterOptions } from '@/integrations/reasoning/groq';
+
 // --- Built-in Tools ---
 
 /**
