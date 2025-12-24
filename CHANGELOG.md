@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.4] beta - 2025-12-24
+
+### 🚀 New Features & Integrations
+- **Groq Adapter Integration**: Added ultra-fast LPU-powered inference support via the new `GroqAdapter`. Includes full streaming support, tool-calling capabilities, and OpenAI-compatible message translation.
+- **Improved OpenRouter Support**: Enhanced token streaming and added a legacy reasoning toggle for better compatibility with varied models.
+- **Cinematic Marketing Experience**: Redesigned the PESAgent Workflow section with high-tech "scrollytelling" animations and interactive motion flows.
+- **Embedded Documentation Viewer**: Added a built-in markdown viewer for concepts and how-to guides, providing a seamless DX within the marketing site.
+
+### 🛠️ Improvements & Fixes
+- **Robust Persistence**: Added comprehensive guides and tests for Anthropic and OpenRouter integration.
+- **SPA Routing**: Optimized GitHub Pages deployment with React Router SPA routing fixes and catch-all route support.
+- **Utility Enhancements**: Added `safeStringify` to prevent errors when handling complex or undefined objects in logs and observations.
+- **DX & Docs**: Expanded conceptual documentation for PES Agent, State Management, and Provider Adapters.
+
 ## [0.4.0] beta - 2025-12-18
 
 ### 🚀 Core Framework Overhaul (PES Agent)
