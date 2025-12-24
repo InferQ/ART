@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script>
+      // GitHub Pages SPA redirect
+      // Store the current path and redirect to index.html
+      // The index.html will then use this to navigate to the correct route
+      const path = window.location.pathname;
+      const search = window.location.search;
+      const hash = window.location.hash;
+      
+      // Only redirect if we're in the /ART/ space
+      if (path.startsWith('/ART/')) {
+        // Store path for the SPA to pick up
+        sessionStorage.setItem('spa-redirect', path + search + hash);
+        // Redirect to the SPA
+        window.location.replace('/ART/');
+      }
+    </script>
+  </head>
+  <body>
+    <p>Redirecting...</p>
+  </body>
+</html>

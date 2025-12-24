@@ -2,11 +2,15 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [react()],
   base: '/ART/',
   server: {
     port: 4700,
+    fs: {
+      // Allow serving files from the parent Docs directory
+      allow: ['..'],
+    },
   },
   resolve: {
     alias: {
@@ -17,5 +21,6 @@ export default defineConfig({
     outDir: '../Docs',
     emptyOutDir: false,
   },
-});
-
+  // Only use publicDir in dev mode to serve static TypeDoc files
+  publicDir: command === 'serve' ? '../Docs' : false,
+}));

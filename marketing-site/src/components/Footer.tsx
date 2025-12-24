@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Github, Twitter, Heart, Sparkles } from 'lucide-react';
 
 export default function Footer() {
@@ -36,22 +37,34 @@ export default function Footer() {
           >
             <h3 className="text-lg font-semibold mb-4 tracking-tight text-white">Documentation</h3>
             <ul className="space-y-3">
-              {[
-                { href: '/ART/components/index.html', label: 'API Reference' },
-                { href: '/ART/concepts/', label: 'Concepts' },
-                { href: '/ART/how-to/', label: 'How-To Guides' },
-              ].map((item) => (
-                <li key={item.label}>
-                  <motion.a
-                    href={item.href}
-                    className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 group"
-                    whileHover={{ x: 5 }}
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    {item.label}
-                  </motion.a>
-                </li>
-              ))}
+              <li>
+                <motion.a
+                  href="/ART/components/index.html"
+                  className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 group"
+                  whileHover={{ x: 5 }}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  API Reference
+                </motion.a>
+              </li>
+              <li>
+                <Link
+                  to="/concepts"
+                  className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 group hover:translate-x-1 duration-200"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  Concepts
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/how-to"
+                  className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 group hover:translate-x-1 duration-200"
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  How-To Guides
+                </Link>
+              </li>
             </ul>
           </motion.div>
 
