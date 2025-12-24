@@ -12,29 +12,29 @@ const highlights = [
     color: 'from-indigo-500 to-purple-500',
     title: 'Browser-First',
     description:
-      'Run entirely in the browser for faster responses and reduced infrastructure costs',
-    features: ['Zero server latency', 'Client-side processing', 'Enhanced privacy'],
+      'Run entirely in the browser for enhanced privacy, offline capability, and zero server costs',
+    features: ['Zero server latency', 'Client-side processing', 'Offline capable'],
   },
   {
     icon: Zap,
     color: 'from-purple-500 to-pink-500',
     title: 'PESAgent System',
-    description: 'Plan-Execute-Synthesize workflow for intelligent agent orchestration',
-    features: ['Structured planning', 'Dynamic execution', 'Result synthesis'],
+    description: 'Plan-Execute-Synthesize workflow with persistent TodoLists and state recovery',
+    features: ['Structured planning', 'Resumable execution', 'Result synthesis'],
   },
   {
     icon: Layers,
     color: 'from-blue-500 to-cyan-500',
     title: 'Modular Architecture',
-    description: 'Swap reasoning providers, storage solutions, and tool systems freely',
-    features: ['Provider flexibility', 'Multiple backends', 'Custom adapters'],
+    description: 'Swap providers, storage, and tools with standardized interfaces',
+    features: ['Multi-provider support', 'Pluggable storage', 'MCP integration'],
   },
   {
     icon: Shield,
     color: 'from-green-500 to-emerald-500',
     title: 'Production Ready',
-    description: 'Built with TypeScript and tested in real-world applications',
-    features: ['Type safety', 'Comprehensive error handling', 'Extensive observability'],
+    description: 'Built with TypeScript, full observability, and A2A delegation support',
+    features: ['Type safety', 'Deep observability', 'Agent-to-Agent (A2A)'],
   },
 ];
 

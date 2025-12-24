@@ -1,7 +1,16 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles, Zap, Shield } from 'lucide-react';
+import { ArrowRight, Sparkles, Zap, Shield, Copy, Check, Network, Brain } from 'lucide-react';
+import { useState } from 'react';
 
 export default function HeroSection() {
+  const [copied, setCopied] = useState(false);
+
+  const copyInstallCommand = () => {
+    navigator.clipboard.writeText('npm install art-framework');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       <motion.div
@@ -14,10 +23,11 @@ export default function HeroSection() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.8 }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full"
+          className="inline-flex items-center gap-3 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full"
         >
           <Sparkles className="w-4 h-4 text-indigo-400" />
           <span className="text-sm font-medium text-indigo-300">Browser-First AI Framework</span>
+          <span className="px-2 py-0.5 bg-indigo-500/20 rounded text-xs font-bold text-indigo-300">v0.4.4</span>
         </motion.div>
 
         <motion.h1
@@ -51,11 +61,34 @@ export default function HeroSection() {
           <span className="text-pink-400">multi-agent coordination</span>.
         </motion.p>
 
+        {/* Install Command */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.45, duration: 0.8 }}
+          className="flex justify-center pt-4"
+        >
+          <motion.button
+            onClick={copyInstallCommand}
+            className="group flex items-center gap-3 px-6 py-3 bg-slate-900/80 border border-slate-700/50 rounded-xl font-mono text-sm hover:border-indigo-500/50 transition-all"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <span className="text-slate-500">$</span>
+            <span className="text-slate-300">npm install art-framework</span>
+            {copied ? (
+              <Check className="w-4 h-4 text-green-400" />
+            ) : (
+              <Copy className="w-4 h-4 text-slate-500 group-hover:text-indigo-400 transition-colors" />
+            )}
+          </motion.button>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.8 }}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8"
+          className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4"
         >
           <motion.a
             href="/ART/concepts/"
@@ -91,7 +124,8 @@ export default function HeroSection() {
           {[
             { icon: Zap, label: 'Lightning Fast', color: 'from-yellow-500 to-orange-500' },
             { icon: Shield, label: 'Production Ready', color: 'from-blue-500 to-cyan-500' },
-            { icon: Sparkles, label: 'Type Safe', color: 'from-purple-500 to-pink-500' },
+            { icon: Network, label: 'MCP & A2A', color: 'from-green-500 to-emerald-500' },
+            { icon: Brain, label: 'Multi-Provider', color: 'from-purple-500 to-pink-500' },
           ].map((item, index) => (
             <motion.div
               key={item.label}

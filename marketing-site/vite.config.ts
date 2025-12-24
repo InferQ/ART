@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/ART/',
   server: {
     port: 4700,
   },
@@ -13,7 +14,8 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../docs',
+    outDir: '../Docs',
     emptyOutDir: false,
   },
 });
+
