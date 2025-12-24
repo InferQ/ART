@@ -110,9 +110,9 @@ export default function DocsLayout({ children, allDocs, currentDoc, docType }: D
                         <Link to="/how-to" className={`text-sm transition-colors ${location.pathname.startsWith('/how-to') ? 'text-indigo-400' : 'text-slate-400 hover:text-white'}`}>
                             How-To Guides
                         </Link>
-                        <Link to="/ART/components/index.html" className="text-sm text-slate-400 hover:text-white transition-colors">
+                        <a href="/ART/components/index.html" className="text-sm text-slate-400 hover:text-white transition-colors">
                             API Reference
-                        </Link>
+                        </a>
                     </div>
 
                     <button
@@ -163,8 +163,8 @@ export default function DocsLayout({ children, allDocs, currentDoc, docType }: D
                                         to={`${basePath}/${doc.slug}`}
                                         onClick={() => setSidebarOpen(false)}
                                         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${isActive
-                                                ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                                : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                                            ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                                            : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                                             }`}
                                     >
                                         <span className="text-lg">{doc.icon}</span>

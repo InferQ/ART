@@ -38,9 +38,9 @@ export default function ConceptsIndex() {
                         <Link to="/how-to" className="text-sm text-slate-400 hover:text-white transition-colors">
                             How-To Guides
                         </Link>
-                        <Link to="/ART/components/index.html" className="text-sm text-slate-400 hover:text-white transition-colors">
+                        <a href="/ART/components/index.html" className="text-sm text-slate-400 hover:text-white transition-colors">
                             API Reference
-                        </Link>
+                        </a>
                     </div>
                 </div>
             </nav>

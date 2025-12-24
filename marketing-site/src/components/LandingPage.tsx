@@ -10,6 +10,7 @@ import Capabilities from './Capabilities';
 import Benefits from './Benefits';
 import Features from './Features';
 import UseCases from './UseCases';
+import ReleaseNotes from './ReleaseNotes';
 import CTA from './CTA';
 import Footer from './Footer';
 
@@ -193,6 +194,7 @@ export default function LandingPage() {
             <Benefits />
             <Features />
             <UseCases />
+            <ReleaseNotes />
             <CTA />
             <Footer />
         </div>

@@ -28,7 +28,7 @@ export default function HeroSection() {
         >
           <Sparkles className="w-4 h-4 text-indigo-400" />
           <span className="text-sm font-medium text-indigo-300">Browser-First AI Framework</span>
-          <span className="px-2 py-0.5 bg-indigo-500/20 rounded text-xs font-bold text-indigo-300">v0.4.4</span>
+          <span className="px-2 py-0.5 bg-indigo-500/20 rounded text-xs font-bold text-indigo-300">v0.4.5-beta</span>
         </motion.div>
 
         <motion.h1

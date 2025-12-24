@@ -13,7 +13,7 @@ const highlights = [
     title: 'Browser-First',
     description:
       'Run entirely in the browser for enhanced privacy, offline capability, and zero server costs',
-    features: ['Zero server latency', 'Client-side processing', 'Offline capable'],
+    features: ['No backend required', 'Client-side processing', 'Works offline'],
   },
   {
     icon: Zap,

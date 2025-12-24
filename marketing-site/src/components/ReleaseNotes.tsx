@@ -1,0 +1,125 @@
+/**
+ * ReleaseNotes Component
+ * 
+ * Displays the latest release notes from GitHub releases.
+ */
+
+import { motion } from 'framer-motion';
+import { Tag, ExternalLink, Sparkles, ArrowRight } from 'lucide-react';
+
+// Latest release information - update this when releasing new versions
+const LATEST_RELEASE = {
+    version: 'v0.4.5-beta',
+    date: 'December 24, 2024',
+    highlights: [
+        {
+            title: 'Groq Adapter',
+            description: 'New LLM adapter for Groq with ultra-fast inference speeds',
+        },
+        {
+            title: 'Enhanced A2A Protocol',
+            description: 'Improved Agent-to-Agent communication with better task delegation',
+        },
+        {
+            title: 'UISystem Improvements',
+            description: 'Real-time streaming with LLMStreamSocket and ObservationSocket',
+        },
+        {
+            title: 'Documentation Chatbot',
+            description: 'AI-powered documentation assistant built with ART',
+        },
+    ],
+    releaseUrl: 'https://github.com/InferQ/ART/releases',
+};
+
+export default function ReleaseNotes() {
+    return (
+        <section className="py-24 px-6 relative overflow-hidden">
+            {/* Background glow */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 blur-[100px] rounded-full" />
+            </div>
+
+            <div className="max-w-5xl mx-auto relative">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="text-center mb-12"
+                >
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        whileInView={{ scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ type: 'spring', stiffness: 200 }}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-violet-500/10 border border-violet-500/20 rounded-full mb-6"
+                    >
+                        <Sparkles className="w-4 h-4 text-violet-400" />
+                        <span className="text-sm font-medium text-violet-300">Latest Release</span>
+                    </motion.div>
+
+                    <h2 className="text-4xl md:text-5xl font-bold mb-4">
+                        <span className="bg-gradient-to-r from-white to-slate-300 bg-clip-text text-transparent">
+                            What's New in{' '}
+                        </span>
+                        <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+                            {LATEST_RELEASE.version}
+                        </span>
+                    </h2>
+                    <p className="text-slate-400 text-lg">
+                        Released {LATEST_RELEASE.date}
+                    </p>
+                </motion.div>
+
+                {/* Release highlights grid */}
+                <div className="grid md:grid-cols-2 gap-4 mb-10">
+                    {LATEST_RELEASE.highlights.map((highlight, index) => (
+                        <motion.div
+                            key={highlight.title}
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: index * 0.1 }}
+                            className="group p-5 rounded-xl bg-slate-900/50 border border-slate-800 hover:border-violet-500/30 transition-all"
+                        >
+                            <div className="flex items-start gap-4">
+                                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/30 flex items-center justify-center flex-shrink-0">
+                                    <Tag className="w-5 h-5 text-violet-400" />
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-white mb-1 group-hover:text-violet-400 transition-colors">
+                                        {highlight.title}
+                                    </h3>
+                                    <p className="text-slate-400 text-sm leading-relaxed">
+                                        {highlight.description}
+                                    </p>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ))}
+                </div>
+
+                {/* CTA to GitHub releases */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="text-center"
+                >
+                    <a
+                        href={LATEST_RELEASE.releaseUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-medium rounded-xl transition-all hover:scale-105 hover:-translate-y-0.5 shadow-lg shadow-violet-500/25"
+                    >
+                        View All Releases
+                        <ExternalLink className="w-4 h-4" />
+                    </a>
+                    <p className="text-slate-500 text-sm mt-3">
+                        See full changelog and previous versions on GitHub
+                    </p>
+                </motion.div>
+            </div>
+        </section>
+    );
+}
