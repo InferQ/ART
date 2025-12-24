@@ -69,6 +69,10 @@ export default function LandingPage() {
                     >
                         <motion.a
                             href="/ART/components/index.html"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href = '/ART/components/index.html';
+                            }}
                             className="text-slate-300 hover:text-white transition-colors relative group"
                             whileHover={{ scale: 1.05 }}
                         >
@@ -136,7 +140,7 @@ export default function LandingPage() {
                         <div className="glass-card p-6 backdrop-blur-xl">
                             <div className="flex flex-col gap-4">
                                 {[
-                                    { href: '/ART/components/index.html', label: 'API Reference' },
+                                    { href: '/ART/components/index.html', label: 'API Reference', forceReload: true },
                                     { to: '/concepts', label: 'Concepts' },
                                     { to: '/how-to', label: 'How-To Guides' },
                                     { href: '#benefits', label: 'Benefits' },
@@ -155,6 +159,10 @@ export default function LandingPage() {
                                         <motion.a
                                             key={item.label}
                                             href={item.href}
+                                            onClick={item.forceReload ? (e) => {
+                                                e.preventDefault();
+                                                window.location.href = item.href!;
+                                            } : undefined}
                                             target={item.href?.startsWith('http') ? '_blank' : undefined}
                                             rel={item.href?.startsWith('http') ? 'noopener noreferrer' : undefined}
                                             className="text-slate-300 hover:text-white transition-colors flex items-center gap-2 group"

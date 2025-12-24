@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Github, Twitter, Heart, Sparkles } from 'lucide-react';
+import { Github, Twitter, Sparkles } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -40,6 +40,10 @@ export default function Footer() {
               <li>
                 <motion.a
                   href="/ART/components/index.html"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    window.location.href = '/ART/components/index.html';
+                  }}
                   className="text-slate-400 hover:text-white transition-colors flex items-center gap-2 group"
                   whileHover={{ x: 5 }}
                 >
@@ -144,9 +148,16 @@ export default function Footer() {
           transition={{ delay: 0.4 }}
           className="pt-8 border-t border-slate-900 flex flex-col md:flex-row justify-between items-center gap-4"
         >
-          <p className="text-slate-500 text-sm flex items-center gap-2">
-            &copy; {new Date().getFullYear()} ART Framework. Built with{' '}
-            <Heart className="w-4 h-4 text-red-500 fill-red-500" /> TypeScript and React.
+          <p className="text-slate-500 text-sm flex items-center gap-2 flex-wrap">
+            © {new Date().getFullYear()} ART Framework. MIT License. Developed by{' '}
+            <a
+              href="http://www.inferencequotient.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-400 hover:text-indigo-300 transition-colors"
+            >
+              Inference Quotient
+            </a>
           </p>
           <motion.div
             className="flex items-center gap-1 text-slate-600 text-xs"

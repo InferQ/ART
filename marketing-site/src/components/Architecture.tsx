@@ -7,8 +7,6 @@ import {
   Activity,
   GitBranch,
   ArrowRight,
-  Zap,
-  Maximize2,
 } from 'lucide-react';
 
 const architectureLayers = [
@@ -228,17 +226,17 @@ export default function Architecture() {
           className="text-center mt-12"
         >
           <p className="text-slate-400 mb-4">Click on any layer to explore its components</p>
-          <a
+          <motion.a
             href="https://github.com/inferq/art"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-semibold shadow-2xl shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-105 transition-all"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-semibold shadow-2xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             <span>Explore Full Architecture</span>
             <ArrowRight className="w-5 h-5" />
-          </a>
+          </motion.a>
         </motion.div>
       </div>
     </section>
