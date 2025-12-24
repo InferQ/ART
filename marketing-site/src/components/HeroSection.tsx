@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Zap, Shield, Copy, Check, Network, Brain } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function HeroSection() {
   const [copied, setCopied] = useState(false);
@@ -90,18 +91,16 @@ export default function HeroSection() {
           transition={{ delay: 0.5, duration: 0.8 }}
           className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4"
         >
-          <motion.a
-            href="/ART/concepts/"
-            className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-semibold overflow-hidden shadow-2xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.98 }}
+          <Link
+            to="/concepts"
+            className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-semibold overflow-hidden shadow-2xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105 hover:-translate-y-0.5"
           >
             <span className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <span className="relative flex items-center gap-2">
               Read the Concepts Guide
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </span>
-          </motion.a>
+          </Link>
 
           <motion.a
             href="https://github.com/inferq/art"

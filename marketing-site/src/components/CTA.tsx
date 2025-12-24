@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, Sparkles, Rocket } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function CTA() {
   return (
@@ -68,11 +69,9 @@ export default function CTA() {
             transition={{ delay: 0.5 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <motion.a
-              href="/ART/concepts/"
-              className="group relative px-10 py-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-semibold overflow-hidden shadow-2xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all"
-              whileHover={{ scale: 1.05, y: -3 }}
-              whileTap={{ scale: 0.98 }}
+            <Link
+              to="/concepts"
+              className="group relative px-10 py-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl font-semibold overflow-hidden shadow-2xl shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-all hover:scale-105 hover:-translate-y-1"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               <span className="relative flex items-center gap-2">
@@ -80,16 +79,14 @@ export default function CTA() {
                 Read the Concepts Guide
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </span>
-            </motion.a>
+            </Link>
 
-            <motion.a
-              href="/ART/how-to/"
-              className="px-10 py-5 bg-slate-800/50 text-white rounded-2xl font-semibold border border-slate-700/50 backdrop-blur-sm hover:bg-slate-800/70 transition-all"
-              whileHover={{ scale: 1.05, y: -3 }}
-              whileTap={{ scale: 0.98 }}
+            <Link
+              to="/how-to"
+              className="px-10 py-5 bg-slate-800/50 text-white rounded-2xl font-semibold border border-slate-700/50 backdrop-blur-sm hover:bg-slate-800/70 transition-all hover:scale-105 hover:-translate-y-1"
             >
               How-To Guides
-            </motion.a>
+            </Link>
 
             <motion.a
               href="https://github.com/inferq/art"
