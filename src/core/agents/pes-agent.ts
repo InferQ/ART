@@ -535,6 +535,11 @@ Ensure you preserve completed items and logically append or insert new items. Al
                     pendingItem.result = itemResult.output;
                 } else if (itemResult.status === 'wait') {
                     pendingItem.status = TodoItemStatus.WAITING;
+                } else if (itemResult.status === 'suspended') {
+                    Logger.info(`[${traceId}] Execution loop suspended for HITL.`);
+                    // Item remains IN_PROGRESS, but loop stops.
+                    // State has already been saved with suspension context in _processTodoItem.
+                    loopContinue = false;
                 } else {
                     pendingItem.status = TodoItemStatus.FAILED;
                     loopContinue = false;
@@ -566,14 +571,14 @@ Ensure you preserve completed items and logically append or insert new items. Al
         availableTools: any[],
         runtimeProviderConfig: RuntimeProviderConfig,
         traceId: string
-    ): Promise<{ status: 'success' | 'fail' | 'wait', output?: any, llmCalls: number, toolCalls: number, metadata?: LLMMetadata }> {
+    ): Promise<{ status: 'success' | 'fail' | 'wait' | 'suspended', output?: any, llmCalls: number, toolCalls: number, metadata?: LLMMetadata }> {
 
         let llmCalls = 0;
         let toolCallsCount = 0;
         let accumulatedMetadata: LLMMetadata = {};
 
         const toolsJson = availableTools.map(t => ({
-            name: t.name, description: t.description, inputSchema: t.inputSchema
+            name: t.name, description: t.description, inputSchema: t.inputSchema, executionMode: t.executionMode // Include executionMode
         }));
 
         // Add A2A delegation tool to execution context
@@ -610,16 +615,25 @@ Instructions:
 4. Output Format: JSON response with 'content', 'toolCalls', 'updatedPlan', 'nextStepDecision'.
 `;
 
-        const messages: ArtStandardPrompt = [
-            { role: 'system', content: systemPromptText },
-            { role: 'user', content: `Execute the task: ${item.description}\n\nAvailable Tools:\n${JSON.stringify(executionTools)}` }
-        ];
+        // Load existing messages if resuming from suspension, otherwise start new
+        let messages: ArtStandardPrompt;
+        if (state.suspension && state.suspension.itemId === item.id) {
+             Logger.info(`[${traceId}] Resuming execution for item ${item.id} from suspension state.`);
+             messages = [...state.suspension.iterationState];
+             // Clear suspension state as we are resuming
+             delete state.suspension;
+        } else {
+             messages = [
+                { role: 'system', content: systemPromptText },
+                { role: 'user', content: `Execute the task: ${item.description}\n\nAvailable Tools:\n${JSON.stringify(executionTools)}` }
+            ];
+        }
 
         const MAX_ITEM_ITERATIONS = 5;
         let iteration = 0;
         let itemDone = false;
         let finalOutput: string | undefined;
-        let finalStatus: 'success' | 'fail' | 'wait' = 'success';
+        let finalStatus: 'success' | 'fail' | 'wait' | 'suspended' = 'success';
 
         while (!itemDone && iteration < MAX_ITEM_ITERATIONS) {
             iteration++;
@@ -735,6 +749,42 @@ Instructions:
                 if (localCalls.length > 0) {
                     const toolResults = await this.deps.toolSystem.executeTools(localCalls, props.threadId, traceId);
                     toolCallsCount += toolResults.length;
+
+                    // Check for Suspension
+                    const suspendedResult = toolResults.find(r => r.status === 'suspended');
+                    
+                    if (suspendedResult) {
+                         Logger.info(`[${traceId}] Suspension triggered by tool ${suspendedResult.toolName}`);
+                         
+                         // 1. Record Observation
+                         await this.deps.observationManager.record({
+                             threadId: props.threadId, traceId, type: ObservationType.AGENT_SUSPENDED,
+                             content: { 
+                                 toolName: suspendedResult.toolName, 
+                                 suspensionId: suspendedResult.metadata?.suspensionId 
+                             },
+                             parentId: item.id,
+                             metadata: { timestamp: Date.now() }
+                         });
+
+                         // 2. Save State with Suspension Context
+                         const triggeringCall = localCalls.find(c => c.callId === suspendedResult.callId);
+                         state.suspension = {
+                             suspensionId: suspendedResult.metadata?.suspensionId || generateUUID(),
+                             itemId: item.id,
+                             toolCall: triggeringCall!,
+                             iterationState: messages // Save the current message history of this iteration
+                         };
+                         // Also persist 'isPaused' flag if desired, or rely on 'suspension' field presence
+                         state.isPaused = true;
+                         
+                         return {
+                             status: 'suspended',
+                             llmCalls,
+                             toolCalls: toolCallsCount,
+                             metadata: accumulatedMetadata
+                         };
+                    }
 
                     await this.deps.observationManager.record({
                         threadId: props.threadId, traceId, type: ObservationType.TOOL_EXECUTION,

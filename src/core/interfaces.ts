@@ -631,6 +631,22 @@ import { AuthManager } from '@/systems/auth/AuthManager';
 export interface ArtInstance {
     /** The main method to process a user query using the configured Agent Core. */
     readonly process: IAgentCore['process'];
+    /**
+     * Resumes a suspended agent execution (HITL).
+     * @param threadId The ID of the suspended thread.
+     * @param suspensionId The ID provided in the suspension observation/state.
+     * @param decision The user's decision payload.
+     */
+    readonly resumeExecution: (
+        threadId: string,
+        suspensionId: string,
+        decision: {
+            approved: boolean;
+            reason?: string;
+            modifiedArgs?: Record<string, unknown>;
+        }
+    ) => Promise<import('@/types').AgentFinalResponse>;
+
     /** Accessor for the UI System, used to get sockets for subscriptions. */
     readonly uiSystem: UISystem;
     /** Accessor for the State Manager, used for managing thread configuration and state. */

@@ -36,6 +36,15 @@ export interface PESAgentStateData {
     todoList: TodoItem[];
     currentStepId: string | null;
     isPaused: boolean;
+    
+    // NEW: Suspension Context for HITL
+    suspension?: {
+        suspensionId: string;
+        itemId: string;           // The ID of the TodoItem currently being executed
+        toolCall: import('./index').ParsedToolCall; // The specific call that triggered suspension
+        iterationState: import('./index').ArtStandardPrompt; // Captured message history of the current iteration
+    };
+
     // Keep track of iterations for the overall process or per item?
     // The legacy executionHistory was per process call.
     // We might want to persist some history.

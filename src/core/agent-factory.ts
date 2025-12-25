@@ -24,7 +24,7 @@ import { IProviderManager } from '@/types/providers'; // Corrected path
 import type { ProviderManagerConfig } from '@/types/providers'; // type-only import
 // Import ArtInstanceConfig and StateSavingStrategy
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ArtInstanceConfig, StateSavingStrategy } from '@/types';
+import { ArtInstanceConfig, StateSavingStrategy, ObservationType, PESAgentStateData } from '@/types';
 import { ProviderManagerImpl } from '@/systems/reasoning/ProviderManagerImpl'; // Corrected path
 import { PESAgent } from '@/core/agents/pes-agent';
 
@@ -375,6 +375,52 @@ export async function createArtInstance(config: ArtInstanceConfig): Promise<ArtI
 
     return {
         process: agentCore.process.bind(agentCore), // Bind the process method
+        resumeExecution: async (threadId, suspensionId, decision) => {
+             const threadContext = await stateManager.loadThreadContext(threadId);
+             const stateData = threadContext.state?.data as PESAgentStateData;
+
+             if (!stateData || !stateData.suspension) {
+                 throw new Error(`Thread ${threadId} is not in a suspended state.`);
+             }
+
+             if (stateData.suspension.suspensionId !== suspensionId) {
+                 throw new Error(`Invalid suspension ID. Expected ${stateData.suspension.suspensionId}, got ${suspensionId}.`);
+             }
+
+             // Append user decision to the iteration state (message history)
+             const toolCallId = stateData.suspension.toolCall.callId;
+             const toolName = stateData.suspension.toolCall.toolName;
+             
+             stateData.suspension.iterationState.push({
+                 role: 'tool_result',
+                 content: JSON.stringify(decision),
+                 name: toolName,
+                 tool_call_id: toolCallId
+             });
+             
+             // Save the updated state (without clearing suspension, PESAgent does that)
+             await stateManager.setAgentState(threadId, {
+                 data: stateData,
+                 version: (threadContext.state?.version || 0) + 1,
+                 modified: Date.now()
+             });
+             
+             // Log resumption
+             await observationManager.record({
+                 threadId, 
+                 traceId: `resume-${suspensionId}`, 
+                 type: ObservationType.AGENT_RESUMED,
+                 content: { suspensionId, decision },
+                 metadata: { timestamp: Date.now() }
+             });
+
+             // Resume execution
+             return agentCore.process({
+                 query: '', // Empty query triggers continuation of existing plan
+                 threadId: threadId,
+                 traceId: `resume-${suspensionId}`
+             });
+        },
         uiSystem: uiSystem,
         stateManager: stateManager,
         conversationManager: conversationManager,
