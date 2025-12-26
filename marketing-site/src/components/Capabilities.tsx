@@ -60,6 +60,7 @@ const workflowStages = [
       { label: 'Task Decomposition', desc: 'Break into atomic steps' },
       { label: 'Step Classification', desc: 'Tag as Tool or Reasoning' },
       { label: 'Dependency Mapping', desc: 'Order by prerequisites' },
+      { label: 'Plan Refinement', desc: 'Optimize the approach' },
       { label: 'Intent Extraction', desc: 'Capture user goals' },
     ],
   },
@@ -75,7 +76,9 @@ const workflowStages = [
       { label: 'Strict Validation', desc: 'Enforce required tool calls' },
       { label: 'HITL Suspension', desc: 'Pause for human input' },
       { label: 'Step Execution', desc: 'Process each task item' },
+      { label: 'Tool Invocation', desc: 'Call registered tools' },
       { label: 'A2A Delegation', desc: 'Coordinate with agents' },
+      { label: 'Dynamic Updates', desc: 'Adapt plan in real-time' },
     ],
   },
   {
