@@ -1,7 +1,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createArtInstance } from '../src/core/agent-factory';
-import { ArtInstanceConfig, ToolSchema, ToolResult, ObservationType, PESAgentStateData } from '../src/types';
+import { ArtInstanceConfig, ToolSchema, ToolResult, ObservationType, PESAgentStateData, TodoItemStatus } from '../src/types';
 import { InMemoryStorageAdapter } from '../src/integrations/storage/inMemory';
 import { IToolExecutor, ExecutionContext } from '../src/core/interfaces';
 

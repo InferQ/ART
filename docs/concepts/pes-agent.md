@@ -27,6 +27,12 @@ Every significant change in the agent's lifecycle (plan creation, item start, it
       todoList: TodoItem[]; // The structured tasks
       currentStepId: string | null;
       isPaused: boolean;
+      suspension?: {       // New in v0.4.6
+          suspensionId: string;
+          itemId: string;
+          toolCall: ParsedToolCall;
+          iterationState: any[];
+      };
   }
   ```
 
@@ -142,3 +148,33 @@ const response = await pesAgent.process({
 const state = await stateManager.getAgentState(threadId);
 const todoList = state.data.todoList; // Render this list to show progress
 ```
+
+---
+
+## Advanced: Tool-Aware Execution Framework (TAEF) & HITL V2
+
+*New in v0.4.6*
+
+### 1. Tool-Aware Execution Framework (TAEF)
+To bridge the gap between "planning" to do something and "actually" doing it, the PES Agent now employs a specialized execution mode:
+*   **Step Classification:** Each step in the `TodoList` is classified as either a **Tool Step** (requires external action) or a **Reasoning Step** (internal thought).
+*   **Strict Validation:** The agent enforces that *required* tools are actually called. If an LLM "hallucinates" a result without calling the tool, the framework intercepts it and issues an **Enforcement Prompt**, forcing a retry.
+*   **Token Separation:** Thinking tokens (for the UI stream) are rigorously separated from Response tokens (JSON), ensuring reliable parsing even with verbose models.
+
+### 2. Human-in-the-Loop (HITL) V2
+The PES Agent now supports **Blocking Tools**—actions that require explicit user approval (e.g., `confirmation_tool`) before proceeding.
+
+#### The Suspension Lifecycle
+1.  **Trigger:** A tool is executed and returns a `status: 'suspended'`.
+2.  **Suspension:**
+    *   The PES Agent halts the execution loop immediately.
+    *   It generates a `suspensionId` and persists the entire execution context (messages, current item) to `state.suspension`.
+    *   The agent pauses and returns a `suspended` status to the UI.
+3.  **User Interaction:** The user sees a confirmation request (or other UI) driven by the blocking tool.
+4.  **Resumption:**
+    *   When the user approves/denies, the client calls `resumeExecution` (or just sends a new message to the thread).
+    *   The agent detects the existing `suspension` state.
+    *   It **hydrates** the exact message history from the moment of suspension.
+    *   It feeds the user's input (e.g., "Approved") as the tool result and resumes the execution loop exactly where it left off.
+
+This ensures that sensitive actions are never taken without consent, and the agent doesn't "forget" what it was doing during the wait.
