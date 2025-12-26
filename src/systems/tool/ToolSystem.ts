@@ -95,7 +95,7 @@ export class ToolSystem implements IToolSystem {
             callId: callId,
             toolName: toolName,
         };
-        Logger.debug(`Tool "${toolName}" execution successful`, { callId, result: result.output, threadId, traceId });
+        Logger.debug(`Tool "${toolName}" execution result: ${result.status}`, { callId, threadId, traceId });
 
       } catch (error: any) {
         Logger.error(`Tool "${toolName}" execution failed for callId "${callId}": ${error.message}`, { error, threadId, traceId });
@@ -118,6 +118,22 @@ export class ToolSystem implements IToolSystem {
         }).catch(err => Logger.error(`Failed to record TOOL_EXECUTION observation for callId ${call.callId}:`, err));
 
         results.push(result);
+
+        // BLOCKING TOOL BEHAVIOR: Check for suspension signal
+        // When a blocking tool (executionMode: 'blocking') returns status: 'suspended',
+        // we immediately halt processing of any remaining tools in this batch.
+        //
+        // IMPORTANT: If multiple blocking tools are requested in a single toolCalls array,
+        // only the FIRST blocking tool will be executed and trigger suspension.
+        // Subsequent tools (blocking or not) will NOT be executed until the agent resumes.
+        // After resume, a new execution cycle begins, and the LLM may request tools again.
+        //
+        // This is by design to ensure proper HITL flow - the user must approve each
+        // blocking action before the agent proceeds.
+        if (result.status === 'suspended') {
+            Logger.info(`Tool "${toolName}" (callId: ${callId}) triggered suspension. Halting subsequent tool calls in this batch.`);
+            break; // Stop processing remaining tools in this batch
+        }
       } else {
         // This case should ideally not happen if the try/catch always assigns to result
         Logger.error(`ToolSystem finished processing call ${call.callId} but result object was null.`);

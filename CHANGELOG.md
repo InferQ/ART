@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.6] - 2025-12-26
+
+### 🚦 Tool-Aware Execution Framework (TAEF)
+- **Bridging the Plan-Execute Gap**: Addressed a critical architectural gap where tools declared in the planning phase were not strictly enforced during execution.
+- **New TodoItem Schema**: Added `stepType` ('tool' | 'reasoning'), `requiredTools`, and `expectedOutcome` to explicitly define step requirements.
+- **Smart Validation**: 
+    - **Strict Mode**: Automatically retries execution if required tools are skipped.
+    - **Advisory Mode**: Logs warnings for missing tool calls without blocking.
+    - **Reasoning Steps**: explicit 'reasoning' steps skip tool validation logic.
+- **Enhanced Prompts**: Updated planning prompts to classify steps and execution prompts to enforce tool usage based on step type.
+
+### 🛑 HITL Blocking Tools V2
+- **Robust Suspension Handling**: Fixed `suspensionId` generation to ensure reliable tracking even if tools return incomplete metadata.
+- **Rejection Workflows**: Implemented specific system prompts to handle user rejections, instructing the agent to attempt alternatives rather than retrying the same blocked action.
+- **State Persistence**: Added `checkForSuspendedState` API to allow applications to resume suspended tool calls even after page refreshes.
+
+### 🐛 Improvements & Fixes
+- **Timestamp Fix**: Ensured `createdTimestamp` is correctly populated on all TodoItems during initialization.
+- **Validation Loop Protection**: Introduced `MAX_VALIDATION_RETRIES` to prevent infinite loops when agents stubbornly refuse to call tools.
+- **Empty Query Handling**: Added `isResume` flag to distinguish between intentional empty query resumes and accidental empty inputs.
+- **Test Coverage**: Added comprehensive test suites (`test/taef-validation.test.ts`, `test/hitl-blocking-tools.test.ts`) covering step classification, validation logic, and suspension flows.
+
 ## [0.4.4] beta - 2025-12-24
 
 ### 🚀 New Features & Integrations

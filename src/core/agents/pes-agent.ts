@@ -139,13 +139,20 @@ export class PESAgent implements IAgentCore {
                 llmCalls++;
                 if (planningResult.metadata) aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...planningResult.metadata };
 
-                // Initialize State
+                // Initialize State with properly timestamped TodoItems
+                const now = Date.now();
+                const todoListWithTimestamps = (planningResult.output.todoList || []).map((item: TodoItem) => ({
+                    ...item,
+                    createdTimestamp: item.createdTimestamp || now,
+                    updatedTimestamp: item.updatedTimestamp || now
+                }));
+
                 pesState = {
                     threadId: props.threadId,
                     intent: planningResult.output.intent || 'Unknown Intent',
                     title: planningResult.output.title || 'New Conversation',
                     plan: planningResult.output.plan || '',
-                    todoList: planningResult.output.todoList || [],
+                    todoList: todoListWithTimestamps,
                     currentStepId: null,
                     isPaused: false
                 };
@@ -159,7 +166,10 @@ export class PESAgent implements IAgentCore {
                 Logger.debug(`[${traceId}] Existing plan found. Processing follow-up/refinement.`);
                 phase = 'planning_refinement';
 
-                if (props.query && props.query.trim().length > 0) {
+                // Skip refinement if this is a resume from suspension (isResume flag) or empty query
+                const shouldRefine = !props.isResume && props.query && props.query.trim().length > 0;
+
+                if (shouldRefine) {
                     // We know pesState is defined here because isFollowUp is true
                     const refinementResult = await this._performPlanRefinement(
                         props, planningSystemPrompt, history, pesState!, availableTools, runtimeProviderConfig, traceId
@@ -170,7 +180,14 @@ export class PESAgent implements IAgentCore {
                     if (refinementResult.output.todoList) {
                         pesState!.intent = refinementResult.output.intent || pesState!.intent;
                         pesState!.plan = refinementResult.output.plan || pesState!.plan;
-                        pesState!.todoList = refinementResult.output.todoList;
+
+                        // Ensure all items have timestamps (new items get current time)
+                        const now = Date.now();
+                        pesState!.todoList = refinementResult.output.todoList.map((item: TodoItem) => ({
+                            ...item,
+                            createdTimestamp: item.createdTimestamp || now,
+                            updatedTimestamp: item.updatedTimestamp || now
+                        }));
 
                         await this._saveState(props.threadId, pesState!);
                         await this._recordPlanObservations(props.threadId, traceId, refinementResult.output, refinementResult.rawText);
@@ -187,6 +204,25 @@ export class PESAgent implements IAgentCore {
             llmCalls += executionResult.llmCalls;
             toolCallsCount += executionResult.toolCalls;
             if (executionResult.llmMetadata) aggregatedLlmMetadata = { ...(aggregatedLlmMetadata ?? {}), ...executionResult.llmMetadata };
+
+            // Check if execution was suspended
+            if (pesState!.isPaused) {
+                Logger.info(`[${traceId}] Execution suspended. Skipping synthesis.`);
+                finalAiMessage = await this._finalize(props, "I've initiated a process that requires your approval. Please review and confirm to proceed.", traceId, { status: 'suspended', suspensionId: pesState!.suspension?.suspensionId });
+                return {
+                    response: finalAiMessage,
+                    metadata: {
+                        threadId: props.threadId,
+                        traceId: traceId,
+                        userId: props.userId,
+                        status: 'success',
+                        totalDurationMs: Date.now() - startTime,
+                        llmCalls: llmCalls,
+                        toolCalls: toolCallsCount,
+                        llmMetadata: aggregatedLlmMetadata,
+                    },
+                };
+            }
 
             // Stage 5: Synthesis
             phase = 'synthesis';
@@ -314,7 +350,20 @@ ${systemPrompt}
 [END_CUSTOM_GUIDANCE]
 
 Your goal is to understand the user's query and create a structured plan (Todo List) to answer it.
-The todo list should be a logical, methodical, sensible list of steps that the agent should take to answer the user's query. Each step should progress gradually towards delivering a comprehensive, accurate, evidence driven, validated response.
+
+STEP TYPES - Each step should be classified as one of:
+
+1. **Tool Steps** (stepType: "tool"): When you need external data, user input, or to perform actions.
+   - MUST include "requiredTools" array specifying which tools to call
+   - Examples: searching the web, getting user confirmation, performing calculations with tools
+   - The execution phase will ENFORCE that these tools are actually called
+
+2. **Reasoning Steps** (stepType: "reasoning"): When you need to analyze, synthesize, or process information from previous steps.
+   - Do NOT include "requiredTools" - these steps use LLM reasoning only
+   - Examples: comparing data, drawing conclusions, formatting responses, summarizing
+
+CRITICAL: Only specify "requiredTools" for steps that genuinely require tool invocation.
+For reasoning/synthesis steps, omit "requiredTools" entirely.
 
 IMPORTANT: You MUST output your JSON response between these exact markers:
 ---JSON_OUTPUT_START---
@@ -323,8 +372,21 @@ IMPORTANT: You MUST output your JSON response between these exact markers:
   "intent": "User intent summary",
   "plan": "High level description of the plan with an overview and bullet points",
   "todoList": [
-    { "id": "step_1", "description": "Description of step 1", "dependencies": [] },
-    { "id": "step_2", "description": "Description of step 2", "dependencies": ["step_1"] }
+    {
+      "id": "step_1",
+      "description": "Search for population data",
+      "stepType": "tool",
+      "requiredTools": ["webSearch"],
+      "expectedOutcome": "Retrieved population statistics for analysis",
+      "dependencies": []
+    },
+    {
+      "id": "step_2",
+      "description": "Analyze the retrieved data to identify trends",
+      "stepType": "reasoning",
+      "expectedOutcome": "Identified key population growth trends",
+      "dependencies": ["step_1"]
+    }
   ]
 }
 ---JSON_OUTPUT_END---
@@ -366,6 +428,20 @@ Intent: ${currentState.intent}
 Todo List:
 ${JSON.stringify(currentState.todoList, null, 2)}
 
+STEP TYPES - Each step should be classified as one of:
+
+1. **Tool Steps** (stepType: "tool"): When you need external data, user input, or to perform actions.
+   - MUST include "requiredTools" array specifying which tools to call
+   - Examples: searching the web, getting user confirmation, performing calculations with tools
+   - The execution phase will ENFORCE that these tools are actually called
+
+2. **Reasoning Steps** (stepType: "reasoning"): When you need to analyze, synthesize, or process information from previous steps.
+   - Do NOT include "requiredTools" - these steps use LLM reasoning only
+   - Examples: comparing data, drawing conclusions, formatting responses, summarizing
+
+CRITICAL: Only specify "requiredTools" for steps that genuinely require tool invocation.
+For reasoning/synthesis steps, omit "requiredTools" entirely.
+
 IMPORTANT: Output the updated JSON object between these exact markers:
 ---JSON_OUTPUT_START---
 {
@@ -373,12 +449,29 @@ IMPORTANT: Output the updated JSON object between these exact markers:
   "intent": "Updated user intent summary",
   "plan": "Updated high level description",
   "todoList": [
-    { "id": "step_1", "description": "Description", "status": "COMPLETED or PENDING", "dependencies": [] }
+    {
+      "id": "step_1",
+      "description": "Search for additional data",
+      "stepType": "tool",
+      "requiredTools": ["webSearch"],
+      "expectedOutcome": "Retrieved additional data",
+      "status": "PENDING",
+      "dependencies": []
+    },
+    {
+      "id": "step_2",
+      "description": "Analyze and combine all data",
+      "stepType": "reasoning",
+      "expectedOutcome": "Comprehensive analysis ready",
+      "status": "PENDING",
+      "dependencies": ["step_1"]
+    }
   ]
 }
 ---JSON_OUTPUT_END---
 
-Ensure you preserve completed items and logically append or insert new items. Always wrap your JSON output with these markers exactly as shown.
+Ensure you preserve completed items (keep their status as "COMPLETED") and logically append or insert new items.
+Always wrap your JSON output with these markers exactly as shown.
 `;
         const planningPrompt: ArtStandardPrompt = [
             { role: 'system', content: wrappedSystemPrompt },
@@ -535,6 +628,11 @@ Ensure you preserve completed items and logically append or insert new items. Al
                     pendingItem.result = itemResult.output;
                 } else if (itemResult.status === 'wait') {
                     pendingItem.status = TodoItemStatus.WAITING;
+                } else if (itemResult.status === 'suspended') {
+                    Logger.info(`[${traceId}] Execution loop suspended for HITL.`);
+                    // Item remains IN_PROGRESS, but loop stops.
+                    // State has already been saved with suspension context in _processTodoItem.
+                    loopContinue = false;
                 } else {
                     pendingItem.status = TodoItemStatus.FAILED;
                     loopContinue = false;
@@ -559,6 +657,127 @@ Ensure you preserve completed items and logically append or insert new items. Al
         return { llmCalls, toolCalls, llmMetadata: accumulatedMetadata };
     }
 
+    // --- TAEF: Step-Type-Aware Prompt Builders ---
+
+    /**
+     * Builds execution prompt for TOOL-type steps.
+     * Emphasizes tool invocation and explicitly names required tools.
+     */
+    private _buildToolStepPrompt(
+        item: TodoItem,
+        userQuery: string,
+        completedItemsContext: string,
+        executionTools: any[]
+    ): string {
+        const requiredToolsStr = item.requiredTools?.join(', ') || 'Check available tools';
+        const expectedOutcome = item.expectedOutcome || 'Complete the task successfully';
+
+        return `You are executing a TOOL STEP in a larger plan.
+
+Current Task: ${item.description}
+Required Tools: ${requiredToolsStr}
+Expected Outcome: ${expectedOutcome}
+Context: ${userQuery}
+
+Previous Steps Results:
+${completedItemsContext || 'No previous results yet.'}
+
+CRITICAL INSTRUCTIONS FOR TOOL STEPS:
+1. This step REQUIRES you to invoke tools. You MUST call the required tools listed above.
+2. Do NOT just describe what you would do - actually call the tools by including them in 'toolCalls'.
+3. If you include 'toolCalls', do NOT include any text after the JSON block. The system will suspend and provide tool results.
+4. If you need to delegate to another agent, use 'delegate_to_agent'.
+
+Output Format - You MUST provide the response inside a markdown code block labeled 'json':
+\`\`\`json
+{
+  "toolCalls": [
+    { "toolName": "toolName", "arguments": { ... } }
+  ]
+}
+\`\`\`
+
+Example for calling a required tool:
+\`\`\`json
+{
+  "toolCalls": [
+    { "toolName": "${item.requiredTools?.[0] || 'webSearch'}", "arguments": { "query": "example query" } }
+  ]
+}
+\`\`\`
+`;
+    }
+
+    /**
+     * Builds execution prompt for REASONING-type steps.
+     * Emphasizes analysis and synthesis without requiring tool invocation.
+     */
+    private _buildReasoningStepPrompt(
+        item: TodoItem,
+        userQuery: string,
+        completedItemsContext: string,
+        executionTools: any[]
+    ): string {
+        const expectedOutcome = item.expectedOutcome || 'Provide analysis or synthesis';
+
+        return `You are executing a REASONING STEP in a larger plan.
+
+Current Task: ${item.description}
+Expected Outcome: ${expectedOutcome}
+Context: ${userQuery}
+
+Previous Steps Results:
+${completedItemsContext || 'No previous results yet.'}
+
+INSTRUCTIONS FOR REASONING STEPS:
+1. This step requires you to ANALYZE, SYNTHESIZE, or PROCESS information from previous steps.
+2. You do NOT need to call any tools for this step - focus on reasoning.
+3. Draw insights, make comparisons, or prepare output based on available context.
+4. If you learn new information that changes the plan, include 'updatedPlan'.
+5. If during reasoning you realize you actually need external data, you MAY include 'toolCalls'.
+
+Output Format - Provide the response inside a markdown code block labeled 'json':
+\`\`\`json
+{
+  "content": "Your analysis, synthesis, or reasoning output here...",
+  "nextStepDecision": "continue"
+}
+\`\`\`
+
+Example:
+\`\`\`json
+{
+  "content": "Based on the retrieved data, the top 3 countries by population are China (1.4B), India (1.4B), and USA (330M). The trend shows Asia dominates global population.",
+  "nextStepDecision": "continue"
+}
+\`\`\`
+`;
+    }
+
+    /**
+     * TAEF: Retry mechanism when required tools were not invoked.
+     * Appends enforcement prompt and returns the messages for retry.
+     */
+    private _buildToolEnforcementPrompt(missingTools: string[]): string {
+        return `
+VALIDATION FAILED: Your previous response did not call the required tools: ${missingTools.join(', ')}
+
+This step REQUIRES you to call these tools. You MUST include them in your 'toolCalls' array.
+Do NOT describe what you would do - actually call the tools.
+
+REQUIRED OUTPUT FORMAT:
+\`\`\`json
+{
+  "toolCalls": [
+    { "toolName": "${missingTools[0]}", "arguments": { ... provide appropriate arguments ... } }
+  ]
+}
+\`\`\`
+
+Try again. Call the required tools now.
+`;
+    }
+
     private async _processTodoItem(
         props: AgentProps,
         item: TodoItem,
@@ -566,14 +785,14 @@ Ensure you preserve completed items and logically append or insert new items. Al
         availableTools: any[],
         runtimeProviderConfig: RuntimeProviderConfig,
         traceId: string
-    ): Promise<{ status: 'success' | 'fail' | 'wait', output?: any, llmCalls: number, toolCalls: number, metadata?: LLMMetadata }> {
+    ): Promise<{ status: 'success' | 'fail' | 'wait' | 'suspended', output?: any, llmCalls: number, toolCalls: number, metadata?: LLMMetadata }> {
 
         let llmCalls = 0;
         let toolCallsCount = 0;
         let accumulatedMetadata: LLMMetadata = {};
 
         const toolsJson = availableTools.map(t => ({
-            name: t.name, description: t.description, inputSchema: t.inputSchema
+            name: t.name, description: t.description, inputSchema: t.inputSchema, executionMode: t.executionMode // Include executionMode
         }));
 
         // Add A2A delegation tool to execution context
@@ -598,28 +817,40 @@ Ensure you preserve completed items and logically append or insert new items. Al
             .map(i => `Item ${i.id}: ${i.description}\nResult: ${JSON.stringify(i.result)}`)
             .join('\n\n');
 
-        const systemPromptText = `You are executing a step in a larger plan.
-Current Task: ${item.description}
-Context: ${props.query}
-Previous Steps Results:
-${completedItemsContext}
-Instructions:
-1. Use tools if necessary.
-2. If you need to delegate to another agent, use 'delegate_to_agent'.
-3. If you learn new information that changes the plan, include 'updatedPlan' in your JSON output.
-4. Output Format: JSON response with 'content', 'toolCalls', 'updatedPlan', 'nextStepDecision'.
-`;
+        // TAEF: Determine step type for conditional prompting and validation
+        const isToolStep = item.stepType === 'tool' || (item.requiredTools && item.requiredTools.length > 0);
 
-        const messages: ArtStandardPrompt = [
-            { role: 'system', content: systemPromptText },
-            { role: 'user', content: `Execute the task: ${item.description}\n\nAvailable Tools:\n${JSON.stringify(executionTools)}` }
-        ];
+        // TAEF: Warn about inconsistent step configuration
+        if (item.stepType === 'reasoning' && item.requiredTools && item.requiredTools.length > 0) {
+            Logger.warn(`[${traceId}] TAEF Warning: Step ${item.id} has stepType='reasoning' but requiredTools is set: [${item.requiredTools.join(', ')}]. This is inconsistent - the step will be treated as a tool step.`);
+        }
+
+        // TAEF: Build step-type-aware execution prompt
+        const systemPromptText = isToolStep
+            ? this._buildToolStepPrompt(item, props.query, completedItemsContext, executionTools)
+            : this._buildReasoningStepPrompt(item, props.query, completedItemsContext, executionTools);
+
+        // Load existing messages if resuming from suspension, otherwise start new
+        let messages: ArtStandardPrompt;
+        if (state.suspension && state.suspension.itemId === item.id) {
+            Logger.info(`[${traceId}] Resuming execution for item ${item.id} from suspension state.`);
+            messages = [...state.suspension.iterationState];
+            // Clear suspension state as we are resuming
+            delete state.suspension;
+        } else {
+            messages = [
+                { role: 'system', content: systemPromptText },
+                { role: 'user', content: `Execute the task: ${item.description}\n\nAvailable Tools:\n${JSON.stringify(executionTools)}` }
+            ];
+        }
 
         const MAX_ITEM_ITERATIONS = 5;
+        const MAX_VALIDATION_RETRIES = 2; // Separate limit for tool validation retries
         let iteration = 0;
+        let validationRetryCount = 0; // Track validation-specific retries
         let itemDone = false;
         let finalOutput: string | undefined;
-        let finalStatus: 'success' | 'fail' | 'wait' = 'success';
+        let finalStatus: 'success' | 'fail' | 'wait' | 'suspended' = 'success';
 
         while (!itemDone && iteration < MAX_ITEM_ITERATIONS) {
             iteration++;
@@ -697,7 +928,23 @@ Instructions:
             // Check for Plan Updates
             if (parsed.updatedPlan && parsed.updatedPlan.todoList) {
                 Logger.info(`[${traceId}] Plan update received from execution step.`);
-                state.todoList = parsed.updatedPlan.todoList;
+
+                // Sanitize: Ensure agent doesn't mark current/future items as COMPLETED prematurely
+                const sanitizedList = parsed.updatedPlan.todoList.map(newItem => {
+                    // Find if this item was already COMPLETED in our previous state
+                    const oldItem = state.todoList.find(i => i.id === newItem.id);
+                    if (oldItem && oldItem.status === TodoItemStatus.COMPLETED) {
+                        return { ...newItem, status: TodoItemStatus.COMPLETED };
+                    }
+                    // If it's the current item or a future item, keep it as PENDING or IN_PROGRESS
+                    if (newItem.id === item.id) {
+                        return { ...newItem, status: TodoItemStatus.IN_PROGRESS };
+                    }
+                    // Default to PENDING if not already completed
+                    return { ...newItem, status: newItem.status || TodoItemStatus.PENDING };
+                });
+
+                state.todoList = sanitizedList;
                 if (parsed.updatedPlan.intent) state.intent = parsed.updatedPlan.intent;
                 if (parsed.updatedPlan.plan) state.plan = parsed.updatedPlan.plan;
 
@@ -708,6 +955,52 @@ Instructions:
                     metadata: { timestamp: Date.now() }
                 });
             }
+
+            // --- TAEF: Tool Invocation Validation ---
+            // Only validate for tool-type steps with declared requiredTools
+            if (isToolStep && item.requiredTools && item.requiredTools.length > 0) {
+                const calledToolNames = new Set(parsed.toolCalls?.map(tc => tc.toolName) || []);
+                const missingTools = item.requiredTools.filter(t => !calledToolNames.has(t));
+
+                if (missingTools.length > 0) {
+                    Logger.warn(`[${traceId}] TAEF Validation: Step ${item.id} missing required tools: ${missingTools.join(', ')}`);
+
+                    // Check validation mode
+                    // Default to 'strict' for tool steps with requiredTools - this ensures tools are actually called
+                    // Use 'advisory' if you want lenient behavior (warnings only)
+                    const validationMode = item.toolValidationMode || 'strict';
+
+                    // Use separate validation retry counter to prevent exhausting all iterations on validation
+                    const canRetryValidation = validationMode === 'strict' &&
+                                               validationRetryCount < MAX_VALIDATION_RETRIES &&
+                                               iteration < MAX_ITEM_ITERATIONS;
+
+                    if (canRetryValidation) {
+                        // Retry with enforcement prompt
+                        validationRetryCount++;
+                        Logger.info(`[${traceId}] TAEF: Retrying step ${item.id} with tool enforcement prompt (retry ${validationRetryCount}/${MAX_VALIDATION_RETRIES})`);
+                        item.validationStatus = 'failed';
+                        messages.push({ role: 'user', content: this._buildToolEnforcementPrompt(missingTools) });
+                        continue; // Continue to next iteration with enforcement prompt
+                    } else {
+                        // Advisory mode, max validation retries, or max iterations reached: log warning and continue
+                        item.validationStatus = 'failed';
+                        if (validationRetryCount >= MAX_VALIDATION_RETRIES) {
+                            Logger.error(`[${traceId}] TAEF: Max validation retries (${MAX_VALIDATION_RETRIES}) reached for step ${item.id}. Continuing despite missing tools.`);
+                        } else {
+                            Logger.warn(`[${traceId}] TAEF: Advisory mode - continuing despite missing tools`);
+                        }
+                    }
+                } else {
+                    // Validation passed - required tools were invoked
+                    item.validationStatus = 'passed';
+                    item.actualToolCalls = parsed.toolCalls;
+                }
+            } else {
+                // Reasoning step or no tool requirements - skip validation
+                item.validationStatus = 'skipped';
+            }
+            // --- End TAEF Validation ---
 
             if (parsed.toolCalls && parsed.toolCalls.length > 0) {
                 // Check for A2A delegation
@@ -735,6 +1028,50 @@ Instructions:
                 if (localCalls.length > 0) {
                     const toolResults = await this.deps.toolSystem.executeTools(localCalls, props.threadId, traceId);
                     toolCallsCount += toolResults.length;
+
+                    // Check for Suspension
+                    const suspendedResult = toolResults.find(r => r.status === 'suspended');
+
+                    if (suspendedResult) {
+                        Logger.info(`[${traceId}] Suspension triggered by tool ${suspendedResult.toolName}`);
+
+                        const triggeringCall = localCalls.find(c => c.callId === suspendedResult.callId);
+
+                        // Generate suspensionId in the framework - this is the source of truth
+                        // Tools should NOT generate suspensionIds; the framework always generates them
+                        // to ensure consistency and proper state management.
+                        const suspensionId = generateUUID();
+
+                        // 1. Record Observation with the framework-generated suspensionId
+                        await this.deps.observationManager.record({
+                            threadId: props.threadId, traceId, type: ObservationType.AGENT_SUSPENDED,
+                            content: {
+                                toolName: suspendedResult.toolName,
+                                suspensionId: suspensionId,
+                                toolInput: triggeringCall?.arguments,
+                                toolOutput: suspendedResult.output
+                            },
+                            parentId: item.id,
+                            metadata: { timestamp: Date.now() }
+                        });
+
+                        // 2. Save State with Suspension Context
+                        state.suspension = {
+                            suspensionId: suspensionId,
+                            itemId: item.id,
+                            toolCall: triggeringCall!,
+                            iterationState: messages // Save the current message history of this iteration
+                        };
+                        // Also persist 'isPaused' flag if desired, or rely on 'suspension' field presence
+                        state.isPaused = true;
+
+                        return {
+                            status: 'suspended',
+                            llmCalls,
+                            toolCalls: toolCallsCount,
+                            metadata: accumulatedMetadata
+                        };
+                    }
 
                     await this.deps.observationManager.record({
                         threadId: props.threadId, traceId, type: ObservationType.TOOL_EXECUTION,

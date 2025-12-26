@@ -137,6 +137,14 @@ export enum ObservationType {
   /** Records status changes of a specific todo item. */
   ITEM_STATUS_CHANGE = 'ITEM_STATUS_CHANGE',
 
+  // Suspension / HITL Types
+  /** Emitted when an agent pauses execution to wait for human input (Blocking Tool). */
+  AGENT_SUSPENDED = 'AGENT_SUSPENDED',
+  /** Emitted when an agent resumes execution after receiving human input. */
+  AGENT_RESUMED = 'AGENT_RESUMED',
+  /** Emitted if a suspension times out (reserved for future use). */
+  SUSPENSION_TIMEOUT = 'SUSPENSION_TIMEOUT',
+
   // New types for streaming events
   /** Logged by Agent Core when LLM stream consumption begins. */
   LLM_STREAM_START = 'LLM_STREAM_START',
@@ -416,6 +424,14 @@ export interface ToolSchema {
    * @property {Array<{ input: any; output?: any; description?: string }>} [examples]
    */
   examples?: Array<{ input: any; output?: any; description?: string }>;
+  /**
+   * Defines the execution mode of the tool.
+   * - 'immediate': The tool executes and returns a result immediately (default).
+   * - 'blocking': The tool initiates a process that requires human intervention (HITL).
+   *               The agent will suspend execution until resumed.
+   * @property {'immediate' | 'blocking'} [executionMode]
+   */
+  executionMode?: 'immediate' | 'blocking';
 }
 /**
  * Represents the structured result of a tool execution.
@@ -434,10 +450,10 @@ export interface ToolResult {
    */
   toolName: string;
   /**
-   * Indicates whether the tool execution succeeded or failed.
-   * @property {'success' | 'error'} status
+   * Indicates whether the tool execution succeeded, failed, or was suspended.
+   * @property {'success' | 'error' | 'suspended'} status
    */
-  status: 'success' | 'error';
+  status: 'success' | 'error' | 'suspended';
   /**
    * The data returned by the tool upon successful execution. Structure may be validated against `outputSchema`.
    * @property {any} [output]
@@ -458,6 +474,7 @@ export interface ToolResult {
       url?: string;
       [key: string]: any;
     }>;
+    suspensionId?: string; // ID for resuming suspended tools
     [key: string]: any;
   };
 }
@@ -681,6 +698,13 @@ export interface AgentProps {
    * @property {AgentOptions} [options]
    */
   options?: AgentOptions;
+  /**
+   * Internal flag indicating this is a resume from a suspended state.
+   * Set automatically by `resumeExecution()` - do not set manually for regular queries.
+   * When true, the agent continues from the suspended step without triggering plan refinement.
+   * @property {boolean} [isResume]
+   */
+  isResume?: boolean;
   // Note: Core dependencies (StateManager, ConversationManager, etc.) are typically injected
   // during `createArtInstance` and are accessed internally by the Agent Core, not passed in AgentProps.
 }

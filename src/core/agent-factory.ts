@@ -24,7 +24,7 @@ import { IProviderManager } from '@/types/providers'; // Corrected path
 import type { ProviderManagerConfig } from '@/types/providers'; // type-only import
 // Import ArtInstanceConfig and StateSavingStrategy
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { ArtInstanceConfig, StateSavingStrategy } from '@/types';
+import { ArtInstanceConfig, StateSavingStrategy, ObservationType, PESAgentStateData } from '@/types';
 import { ProviderManagerImpl } from '@/systems/reasoning/ProviderManagerImpl'; // Corrected path
 import { PESAgent } from '@/core/agents/pes-agent';
 
@@ -375,6 +375,89 @@ export async function createArtInstance(config: ArtInstanceConfig): Promise<ArtI
 
     return {
         process: agentCore.process.bind(agentCore), // Bind the process method
+        resumeExecution: async (threadId, suspensionId, decision) => {
+             const threadContext = await stateManager.loadThreadContext(threadId);
+             const stateData = threadContext.state?.data as PESAgentStateData;
+
+             if (!stateData || !stateData.suspension) {
+                 throw new Error(`Thread ${threadId} is not in a suspended state.`);
+             }
+
+             if (stateData.suspension.suspensionId !== suspensionId) {
+                 throw new Error(`Invalid suspension ID. Expected ${stateData.suspension.suspensionId}, got ${suspensionId}.`);
+             }
+
+             // Append user decision to the iteration state (message history)
+             const toolCallId = stateData.suspension.toolCall.callId;
+             const toolName = stateData.suspension.toolCall.toolName;
+
+             stateData.suspension.iterationState.push({
+                 role: 'tool_result',
+                 content: JSON.stringify(decision),
+                 name: toolName,
+                 tool_call_id: toolCallId
+             });
+
+             // CRITICAL: Handle rejection explicitly
+             // When user rejects, add a system message instructing the LLM how to handle rejection
+             if (decision && typeof decision === 'object' && 'approved' in decision && !decision.approved) {
+                 stateData.suspension.iterationState.push({
+                     role: 'system',
+                     content: `IMPORTANT: The user has REJECTED the previous action "${toolName}".
+Do NOT retry this tool call. You must:
+1. Acknowledge the rejection
+2. Either mark this step as failed and proceed to the next step, OR
+3. Find an alternative approach that doesn't require this approval
+
+Respond with a JSON object containing "content" explaining the situation and "nextStepDecision": "continue" or "complete_item".`
+                 });
+             }
+
+             // Save the updated state (without clearing suspension, PESAgent does that)
+             await stateManager.setAgentState(threadId, {
+                 data: stateData,
+                 version: (threadContext.state?.version || 0) + 1,
+                 modified: Date.now()
+             });
+             
+             // Log resumption
+             await observationManager.record({
+                 threadId, 
+                 traceId: `resume-${suspensionId}`, 
+                 type: ObservationType.AGENT_RESUMED,
+                 content: { suspensionId, decision },
+                 metadata: { timestamp: Date.now() }
+             });
+
+             // Resume execution with explicit isResume flag
+             return agentCore.process({
+                 query: '', // Empty query for resume - we continue from suspension
+                 threadId: threadId,
+                 traceId: `resume-${suspensionId}`,
+                 isResume: true // Explicit flag to distinguish resume from empty follow-up query
+             });
+        },
+        checkForSuspendedState: async (threadId: string) => {
+            try {
+                const threadContext = await stateManager.loadThreadContext(threadId);
+                const stateData = threadContext.state?.data as PESAgentStateData;
+
+                if (!stateData || !stateData.suspension || !stateData.isPaused) {
+                    return null;
+                }
+
+                // Return suspension info for UI restoration
+                return {
+                    suspensionId: stateData.suspension.suspensionId,
+                    itemId: stateData.suspension.itemId,
+                    toolName: stateData.suspension.toolCall.toolName,
+                    toolInput: stateData.suspension.toolCall.arguments
+                };
+            } catch (error) {
+                Logger.debug(`checkForSuspendedState: No suspended state found for thread ${threadId}`);
+                return null;
+            }
+        },
         uiSystem: uiSystem,
         stateManager: stateManager,
         conversationManager: conversationManager,
