@@ -10,6 +10,29 @@ import { Tag, ExternalLink, Sparkles, ArrowRight } from 'lucide-react';
 // Release information
 const RELEASES = [
     {
+        version: 'v0.4.7',
+        date: 'December 27, 2024',
+        highlights: [
+            {
+                title: 'PES Agent Robustness',
+                description: 'Fixed critical issues in execution loop result population and state recovery',
+            },
+            {
+                title: 'Enhanced Fallback Logic',
+                description: 'Smart fallback to tool results when explicit LLM content is missing',
+            },
+            {
+                title: 'HITL Resumption Fixes',
+                description: 'Corrected state reset bugs when resuming from suspended agent states',
+            },
+            {
+                title: 'Regression Testing',
+                description: 'New integration tests for deep state verification of the execution loop',
+            }
+        ],
+        releaseUrl: 'https://github.com/InferQ/ART/releases/tag/v0.4.7',
+    },
+    {
         version: 'v0.4.6',
         date: 'December 26, 2024',
         highlights: [
@@ -20,40 +43,9 @@ const RELEASES = [
             {
                 title: 'HITL V2',
                 description: 'Production-ready Human-in-the-Loop with robust suspension and rejection handling',
-            },
-            {
-                title: 'Strict Validation',
-                description: 'New strict mode enforces tool usage for critical steps',
-            },
-            {
-                title: 'State Persistence',
-                description: 'New APIs to support resuming suspended agent states after page refreshes',
-            },
+            }
         ],
         releaseUrl: 'https://github.com/InferQ/ART/releases/tag/v0.4.6',
-    },
-    {
-        version: 'v0.4.5-beta',
-        date: 'December 24, 2024',
-        highlights: [
-            {
-                title: 'Groq Adapter',
-                description: 'New LLM adapter for Groq with ultra-fast inference speeds',
-            },
-            {
-                title: 'Enhanced A2A Protocol',
-                description: 'Improved Agent-to-Agent communication with better task delegation',
-            },
-            {
-                title: 'UISystem Improvements',
-                description: 'Real-time streaming with LLMStreamSocket and ObservationSocket',
-            },
-            {
-                title: 'Documentation Chatbot',
-                description: 'AI-powered documentation assistant built with ART',
-            },
-        ],
-        releaseUrl: 'https://github.com/InferQ/ART/releases',
     }
 ];
 

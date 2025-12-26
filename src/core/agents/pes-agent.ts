@@ -1113,12 +1113,8 @@ Try again. Call the required tools now.
                         // Also persist 'isPaused' flag if desired, or rely on 'suspension' field presence
                         state.isPaused = true;
 
-                        return {
-                            status: 'suspended',
-                            llmCalls,
-                            toolCalls: toolCallsCount,
-                            metadata: accumulatedMetadata
-                        };
+                        finalStatus = 'suspended';
+                        break;
                     }
 
                     await this.deps.observationManager.record({
