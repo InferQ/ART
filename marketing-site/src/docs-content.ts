@@ -52,6 +52,12 @@ Every significant change in the agent's lifecycle (plan creation, item start, it
       todoList: TodoItem[]; // The structured tasks
       currentStepId: string | null;
       isPaused: boolean;
+      suspension?: {       // New in v0.4.6
+          suspensionId: string;
+          itemId: string;
+          toolCall: ParsedToolCall;
+          iterationState: any[];
+      };
   }
   \`\`\`
 
@@ -167,6 +173,36 @@ const response = await pesAgent.process({
 const state = await stateManager.getAgentState(threadId);
 const todoList = state.data.todoList; // Render this list to show progress
 \`\`\`
+
+---
+
+## Advanced: Tool-Aware Execution Framework (TAEF) & HITL V2
+
+*New in v0.4.6*
+
+### 1. Tool-Aware Execution Framework (TAEF)
+To bridge the gap between "planning" to do something and "actually" doing it, the PES Agent now employs a specialized execution mode:
+*   **Step Classification:** Each step in the \`TodoList\` is classified as either a **Tool Step** (requires external action) or a **Reasoning Step** (internal thought).
+*   **Strict Validation:** The agent enforces that *required* tools are actually called. If an LLM "hallucinates" a result without calling the tool, the framework intercepts it and issues an **Enforcement Prompt**, forcing a retry.
+*   **Token Separation:** Thinking tokens (for the UI stream) are rigorously separated from Response tokens (JSON), ensuring reliable parsing even with verbose models.
+
+### 2. Human-in-the-Loop (HITL) V2
+The PES Agent now supports **Blocking Tools**—actions that require explicit user approval (e.g., \`confirmation_tool\`) before proceeding.
+
+#### The Suspension Lifecycle
+1.  **Trigger:** A tool is executed and returns a \`status: 'suspended'\`.
+2.  **Suspension:**
+    *   The PES Agent halts the execution loop immediately.
+    *   It generates a \`suspensionId\` and persists the entire execution context (messages, current item) to \`state.suspension\`.
+    *   The agent pauses and returns a \`suspended\` status to the UI.
+3.  **User Interaction:** The user sees a confirmation request (or other UI) driven by the blocking tool.
+4.  **Resumption:**
+    *   When the user approves/denies, the client calls \`resumeExecution\` (or just sends a new message to the thread).
+    *   The agent detects the existing \`suspension\` state.
+    *   It **hydrates** the exact message history from the moment of suspension.
+    *   It feeds the user's input (e.g., "Approved") as the tool result and resumes the execution loop exactly where it left off.
+
+This ensures that sensitive actions are never taken without consent, and the agent doesn't "forget" what it was doing during the wait.
 `
   },
   {
@@ -1436,6 +1472,126 @@ await art.stateManager.setThreadConfig('your-thread-id', threadConfig);
 4. **Use the Framework Logger**: Use \`Logger\` from ART for consistent logging.
 5. **Test Thoroughly**: Test both streaming and non-streaming modes.
 `
+  },
+  {
+    slug: 'using-hitl-pausing',
+    title: 'Using HITL Pausing',
+    description: 'Learn how to implement Human-in-the-Loop approval flows using blocking tools and agent suspension.',
+    icon: '⏸️',
+    readTime: '10 min',
+    order: 7,
+    content: \`# How-to Guide: Using Human-in-the-Loop (HITL) with the PES Agent
+
+This guide explains how to implement Human-in-the-Loop (HITL) functionality using the PES (Plan-Execute-Synthesize) Agent in ART version 0.4.6+.
+
+## Overview
+
+HITL allows the agent to pause execution when a sensitive or "blocking" tool is called. The agent saves its entire execution state and waits for a user decision (Approval/Rejection) before resuming.
+
+---
+
+## 1. Defining a Blocking Tool
+
+To make a tool "blocking," you must set its \`executionMode\` to \`'blocking'\` in the schema and return a \`status: 'suspended'\` from its \`execute\` method.
+
+\\\`\\\`\\\`typescript
+import { IToolExecutor, ToolSchema, ToolResult, ExecutionContext } from 'art-framework';
+
+export class ConfirmationTool implements IToolExecutor {
+  schema: ToolSchema = {
+    name: 'confirm_action',
+    description: 'Requests user approval for sensitive actions.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        action: { type: 'string', description: 'The action to confirm' },
+        cost: { type: 'number' }
+      },
+      required: ['action']
+    },
+    executionMode: 'blocking' // CRITICAL: This enables HITL behavior
+  };
+
+  async execute(input: any, context: ExecutionContext): Promise<ToolResult> {
+    // Return 'suspended' status to trigger the HITL flow
+    return {
+      toolName: 'confirm_action',
+      status: 'suspended',
+      output: { 
+        message: \\\`Action requires approval: \\\${input.action}\\\`,
+        cost: input.cost 
+      }
+    };
+  }
+}
+\\\`\\\`\\\`
+
+---
+
+## 2. Handling Suspension in the UI
+
+When a blocking tool is executed, the agent's \`process()\` call will return a response with \`status: 'suspended'\`. Additionally, an observation of type \`AGENT_SUSPENDED\` is emitted.
+
+### Detecting Suspension (via Observations)
+Subscribing to observations is the recommended way to handle suspension in streaming UIs.
+
+\\\`\\\`\\\`typescript
+art.uiSystem.getObservationSocket().subscribe((observation) => {
+  if (observation.type === 'AGENT_SUSPENDED') {
+    const { suspensionId, toolName, toolInput, toolOutput } = observation.content;
+    
+    console.log(\\\`Agent is waiting for approval for: \\\${toolName}\\\`);
+    // Render your dialog using these details and the suspensionId
+  }
+});
+\\\`\\\`\\\`
+
+---
+
+## 3. Resuming Execution
+
+Once the user makes a decision, call \`art.resumeExecution()\`.
+
+### Resume Decision Payload
+\\\`\\\`\\\`typescript
+{
+  approved: boolean;
+  reason?: string;
+  modifiedArgs?: Record<string, unknown>;
+}
+\\\`\\\`\\\`
+
+### Resuming from UI
+\\\`\\\`\\\`typescript
+async function handleUserApproval(suspensionId: string, approved: boolean) {
+  const result = await art.resumeExecution(
+    threadId,
+    suspensionId,
+    { approved, reason: approved ? "User approved" : "Too risky" }
+  );
+}
+\\\`\\\`\\\`
+
+---
+
+## 4. Handling Rejection
+
+When \`approved: false\` is passed, the framework appends the rejection to the history with a system instruction telling the agent to find an alternative approach or proceed to the next step.
+
+---
+
+## 5. Persistence & Page Refresh
+
+### Checking for Suspended State on Load
+\\\`\\\`\\\`typescript
+const suspendedState = await art.checkForSuspendedState(threadId);
+
+if (suspendedState) {
+  const { suspensionId, toolName, toolInput } = suspendedState;
+  // Restore the confirmation dialog
+}
+\\\`\\\`\\\`
+\`
   }
 ];
 
