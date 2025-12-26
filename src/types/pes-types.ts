@@ -17,11 +17,21 @@ export interface TodoItem {
     status: TodoItemStatus;
     dependencies?: string[]; // IDs of tasks that must be finished first
 
-    // Execution history for this item
+    // Step type classification (TAEF)
+    stepType?: 'tool' | 'reasoning';
+
+    // Tool execution requirements (only for tool steps)
+    requiredTools?: string[];
+    expectedOutcome?: string;
+    toolValidationMode?: 'strict' | 'advisory';
+
+    // Execution tracking
     result?: any;
     thoughts?: string[];
     toolCalls?: ParsedToolCall[];
+    actualToolCalls?: ParsedToolCall[]; // What was actually called during execution
     toolResults?: ToolResult[];
+    validationStatus?: 'passed' | 'failed' | 'skipped';
 
     // Metadata
     createdTimestamp: number;
@@ -36,7 +46,7 @@ export interface PESAgentStateData {
     todoList: TodoItem[];
     currentStepId: string | null;
     isPaused: boolean;
-    
+
     // NEW: Suspension Context for HITL
     suspension?: {
         suspensionId: string;

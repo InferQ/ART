@@ -698,6 +698,13 @@ export interface AgentProps {
    * @property {AgentOptions} [options]
    */
   options?: AgentOptions;
+  /**
+   * Internal flag indicating this is a resume from a suspended state.
+   * Set automatically by `resumeExecution()` - do not set manually for regular queries.
+   * When true, the agent continues from the suspended step without triggering plan refinement.
+   * @property {boolean} [isResume]
+   */
+  isResume?: boolean;
   // Note: Core dependencies (StateManager, ConversationManager, etc.) are typically injected
   // during `createArtInstance` and are accessed internally by the Agent Core, not passed in AgentProps.
 }

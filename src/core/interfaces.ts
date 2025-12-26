@@ -647,6 +647,19 @@ export interface ArtInstance {
         }
     ) => Promise<import('@/types').AgentFinalResponse>;
 
+    /**
+     * Checks if a thread is currently in a suspended state (waiting for HITL approval).
+     * Use this on app initialization to detect and restore suspension UI after page refresh.
+     * @param threadId The ID of the thread to check.
+     * @returns Suspension info if suspended, null otherwise.
+     */
+    readonly checkForSuspendedState: (threadId: string) => Promise<{
+        suspensionId: string;
+        itemId: string;
+        toolName: string;
+        toolInput: any;
+    } | null>;
+
     /** Accessor for the UI System, used to get sockets for subscriptions. */
     readonly uiSystem: UISystem;
     /** Accessor for the State Manager, used for managing thread configuration and state. */
