@@ -52,7 +52,7 @@ Every significant change in the agent's lifecycle (plan creation, item start, it
       todoList: TodoItem[]; // The structured tasks
       currentStepId: string | null;
       isPaused: boolean;
-      suspension?: {       // New in v0.4.6
+      suspension?: {       // New in v0.4.7
           suspensionId: string;
           itemId: string;
           toolCall: ParsedToolCall;
@@ -178,7 +178,7 @@ const todoList = state.data.todoList; // Render this list to show progress
 
 ## Advanced: Tool-Aware Execution Framework (TAEF) & HITL V2
 
-*New in v0.4.6*
+*New in v0.4.7*
 
 ### 1. Tool-Aware Execution Framework (TAEF)
 To bridge the gap between "planning" to do something and "actually" doing it, the PES Agent now employs a specialized execution mode:
@@ -1482,7 +1482,7 @@ await art.stateManager.setThreadConfig('your-thread-id', threadConfig);
     order: 7,
     content: \`# How-to Guide: Using Human-in-the-Loop (HITL) with the PES Agent
 
-This guide explains how to implement Human-in-the-Loop (HITL) functionality using the PES (Plan-Execute-Synthesize) Agent in ART version 0.4.6+.
+This guide explains how to implement Human-in-the-Loop (HITL) functionality using the PES (Plan-Execute-Synthesize) Agent in ART version 0.4.7+.
 
 ## Overview
 

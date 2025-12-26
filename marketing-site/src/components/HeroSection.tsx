@@ -20,16 +20,11 @@ export default function HeroSection() {
         transition={{ duration: 0.8, ease: 'easeOut' }}
         className="space-y-8 text-center"
       >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
-          className="inline-flex items-center gap-3 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full"
-        >
-          <Sparkles className="w-4 h-4 text-indigo-400" />
-          <span className="text-sm font-medium text-indigo-300">Browser-First AI Framework</span>
-          <span className="px-2 py-0.5 bg-indigo-500/20 rounded text-xs font-bold text-indigo-300">v0.4.5-beta</span>
-        </motion.div>
+          <span className="px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full">
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            <span className="text-sm font-medium text-indigo-300">Browser-First AI Framework</span>
+            <span className="px-2 py-0.5 bg-indigo-500/20 rounded text-xs font-bold text-indigo-300">v0.4.7</span>
+          </span>
 
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
