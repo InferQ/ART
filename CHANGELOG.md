@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.7] - 2025-12-27
+
+### 🛠️ Stability & Robustness (PES Agent)
+- **Execution Loop Integrity**: Addressed a critical issue where `item.result` was not being populated if the execution loop terminated due to max iterations or lacked explicit final content.
+- **Enhanced Fallback Logic**:
+    - **Smart Result Capture**: Implemented intelligent fallback to the *last* tool execution result when explicit LLM content is missing.
+    - **Context Awareness**: Updated context building for synthesis and subsequent steps to utilize tool results when `item.result` is empty, eliminating "undefined" errors in prompts.
+    - **Stale Content Protection**: Ensured `lastContent` is only updated with meaningful content, preventing empty strings from overriding valid previous outputs.
+- **HITL Resumption Fixes**:
+    - **State Reset**: Fixed a bug where resuming from a suspended state failed to reset `isPaused` and item status, causing the execution loop to skip the resumed task.
+    - **A2A Integration**: Ensured Agent-to-Agent (A2A) task results are correctly captured and used in the result fallback chain.
+- **Regression Testing**: Added `test/pes-agent-result.test.ts` with deep state verification to prevent future regressions in result population and resumption flows.
+
 ## [0.4.6] - 2025-12-26
 
 ### 🚦 Tool-Aware Execution Framework (TAEF)
