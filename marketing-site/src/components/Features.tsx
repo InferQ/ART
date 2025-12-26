@@ -19,6 +19,8 @@ const features = [
     icon: '🤖',
     items: [
       'Plan-Execute-Synthesize (PES) workflow',
+      'Tool-Aware Execution (TAEF)',
+      'Human-in-the-Loop (HITL) V2',
       'Dynamic plan management and refinement',
       'Stateful execution with context management',
       'Multi-agent task delegation (A2A)',

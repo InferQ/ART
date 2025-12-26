@@ -7,32 +7,59 @@
 import { motion } from 'framer-motion';
 import { Tag, ExternalLink, Sparkles, ArrowRight } from 'lucide-react';
 
-// Latest release information - update this when releasing new versions
-const LATEST_RELEASE = {
-    version: 'v0.4.5-beta',
-    date: 'December 24, 2024',
-    highlights: [
-        {
-            title: 'Groq Adapter',
-            description: 'New LLM adapter for Groq with ultra-fast inference speeds',
-        },
-        {
-            title: 'Enhanced A2A Protocol',
-            description: 'Improved Agent-to-Agent communication with better task delegation',
-        },
-        {
-            title: 'UISystem Improvements',
-            description: 'Real-time streaming with LLMStreamSocket and ObservationSocket',
-        },
-        {
-            title: 'Documentation Chatbot',
-            description: 'AI-powered documentation assistant built with ART',
-        },
-    ],
-    releaseUrl: 'https://github.com/InferQ/ART/releases',
-};
+// Release information
+const RELEASES = [
+    {
+        version: 'v0.4.6',
+        date: 'December 26, 2024',
+        highlights: [
+            {
+                title: 'TAEF Framework',
+                description: 'Tool-Aware Execution Framework bridging the gap between planning and execution',
+            },
+            {
+                title: 'HITL V2',
+                description: 'Production-ready Human-in-the-Loop with robust suspension and rejection handling',
+            },
+            {
+                title: 'Strict Validation',
+                description: 'New strict mode enforces tool usage for critical steps',
+            },
+            {
+                title: 'State Persistence',
+                description: 'New APIs to support resuming suspended agent states after page refreshes',
+            },
+        ],
+        releaseUrl: 'https://github.com/InferQ/ART/releases/tag/v0.4.6',
+    },
+    {
+        version: 'v0.4.5-beta',
+        date: 'December 24, 2024',
+        highlights: [
+            {
+                title: 'Groq Adapter',
+                description: 'New LLM adapter for Groq with ultra-fast inference speeds',
+            },
+            {
+                title: 'Enhanced A2A Protocol',
+                description: 'Improved Agent-to-Agent communication with better task delegation',
+            },
+            {
+                title: 'UISystem Improvements',
+                description: 'Real-time streaming with LLMStreamSocket and ObservationSocket',
+            },
+            {
+                title: 'Documentation Chatbot',
+                description: 'AI-powered documentation assistant built with ART',
+            },
+        ],
+        releaseUrl: 'https://github.com/InferQ/ART/releases',
+    }
+];
 
 export default function ReleaseNotes() {
+    const latestRelease = RELEASES[0];
+
     return (
         <section className="py-24 px-6 relative overflow-hidden">
             {/* Background glow */}
@@ -63,17 +90,17 @@ export default function ReleaseNotes() {
                             What's New in{' '}
                         </span>
                         <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-                            {LATEST_RELEASE.version}
+                            {latestRelease.version}
                         </span>
                     </h2>
                     <p className="text-slate-400 text-lg">
-                        Released {LATEST_RELEASE.date}
+                        Released {latestRelease.date}
                     </p>
                 </motion.div>
 
                 {/* Release highlights grid */}
                 <div className="grid md:grid-cols-2 gap-4 mb-10">
-                    {LATEST_RELEASE.highlights.map((highlight, index) => (
+                    {latestRelease.highlights.map((highlight, index) => (
                         <motion.div
                             key={highlight.title}
                             initial={{ opacity: 0, y: 20 }}
@@ -107,7 +134,7 @@ export default function ReleaseNotes() {
                     className="text-center"
                 >
                     <a
-                        href={LATEST_RELEASE.releaseUrl}
+                        href={latestRelease.releaseUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white font-medium rounded-xl transition-all hover:scale-105 hover:-translate-y-0.5 shadow-lg shadow-violet-500/25"
