@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.12] - 2025-12-28
+
+### 🛡️ Robustness & Bug Fixes
+- **HITL Infinite Loop Fix (Critical)**: Fixed a critical issue where resuming from a blocking tool suspension would trigger an infinite validation loop. 
+  - **Logic Update**: TAEF validation now correctly accounts for tools executed in previous sessions (including the suspended tool itself) when checking for required tool calls.
+  - **Validation Context**: The validator now inspects both the current turn's tool calls and the aggregated execution history, ensuring that resumed steps are recognized as valid.
+
 ## [0.4.11] - 2025-12-27
 
 ### 🛡️ Data Flow & Robustness Fixes

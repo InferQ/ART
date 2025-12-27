@@ -19,7 +19,6 @@ import {
   ToolSchema, // Removed erroneous 'export type'
   AgentState,
   // --- Import new types (Refactor Phase 1) ---
-  ArtStandardPrompt,
   TodoItem,
   ExecutionOutput
 } from '@/types';
