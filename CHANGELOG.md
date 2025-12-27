@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.13] - 2025-12-28
+
+### 🛡️ HITL & Data Safety Fixes
+- **Resumption Logic Overhaul (Critical)**: Refactored `resumeExecution` to pass user decisions via `AgentProps` instead of directly mutating the persistence layer. This ensures the `tool_result` message is correctly injected into the LLM's context, preventing execution loops.
+- **Race Condition Protection**: `resumeExecution` now implements an optimistic lock by verifying and updating the `isPaused` flag *before* starting the agent process, preventing concurrent resumption requests from triggering double execution.
+- **Circular Reference Safety**: Implemented `safeStringify` with configurable truncation for injected HITL decision payloads, preventing crashes when users provide complex or circular JSON data.
+- **Rejection Handling**: Added explicit `SYSTEM` prompt injection when a user rejects a tool call, instructing the agent to acknowledge the rejection and seek alternatives rather than retrying.
+
 ## [0.4.12] - 2025-12-28
 
 ### 🛡️ Robustness & Bug Fixes

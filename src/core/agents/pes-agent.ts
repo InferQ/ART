@@ -995,6 +995,44 @@ Try again. Call the required tools now.
         if (state.suspension && state.suspension.itemId === item.id) {
             Logger.info(`[${traceId}] Resuming execution for item ${item.id} from suspension state.`);
             messages = [...state.suspension.iterationState];
+
+            // Fix for Issue #2: Inject user decision into message history during resumption
+            // This ensures the LLM sees the tool_result and doesn't re-trigger the tool.
+            if (props.isResume && props.resumeDecision && state.suspension.toolCall) {
+                Logger.info(`[${traceId}] Injecting resume decision into message history.`);
+
+                // 1. Add tool_result message
+                messages.push({
+                    role: 'tool_result',
+                    content: safeStringify(props.resumeDecision, executionConfig.toolResultMaxLength),
+                    name: state.suspension.toolCall.toolName,
+                    tool_call_id: state.suspension.toolCall.callId
+                });
+
+                // 2. Add to allToolResults for TAEF validation (so it counts as executed)
+                allToolResults.push({
+                    callId: state.suspension.toolCall.callId,
+                    toolName: state.suspension.toolCall.toolName,
+                    status: 'success', // Considered a successful interaction (even if rejected)
+                    output: props.resumeDecision,
+                    metadata: { suspensionId: state.suspension.suspensionId }
+                });
+
+                // 3. Handle Rejection (System Prompt Injection)
+                if (typeof props.resumeDecision === 'object' && 'approved' in props.resumeDecision && !props.resumeDecision.approved) {
+                    messages.push({
+                        role: 'system',
+                        content: `IMPORTANT: The user has REJECTED the previous action "${state.suspension.toolCall.toolName}".
+Do NOT retry this tool call. You must:
+1. Acknowledge the rejection
+2. Either mark this step as failed and proceed to the next step, OR
+3. Find an alternative approach that doesn't require this approval
+
+Respond with a JSON object containing "content" explaining the situation and "nextStepDecision": "continue" or "complete_item".`
+                    });
+                }
+            }
+
             // Restore partial tool results from prior tools in this batch (Issue #1 fix)
             if (state.suspension.partialToolResults && state.suspension.partialToolResults.length > 0) {
                 Logger.debug(`[${traceId}] Restoring ${state.suspension.partialToolResults.length} partial tool results from suspension.`);

@@ -741,6 +741,16 @@ export interface AgentProps {
    * @property {boolean} [isResume]
    */
   isResume?: boolean;
+  /**
+   * The decision payload provided by the user when resuming from a HITL suspension.
+   * Passed automatically by `resumeExecution()`.
+   * @property {object} [resumeDecision]
+   */
+  resumeDecision?: {
+    approved: boolean;
+    modifiedArgs?: Record<string, unknown>;
+    reason?: string;
+  };
   // Note: Core dependencies (StateManager, ConversationManager, etc.) are typically injected
   // during `createArtInstance` and are accessed internally by the Agent Core, not passed in AgentProps.
 }

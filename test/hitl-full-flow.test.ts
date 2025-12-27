@@ -142,16 +142,20 @@ describe('HITL Full Flow', () => {
         }
         
         // 3. Verify State Update
-        // The last call to setAgentState should have the tool_result
+        // The last call to setAgentState should come from PESAgent starting execution (setting isPaused=false, status=IN_PROGRESS)
         expect(setStateSpy).toHaveBeenCalled();
         const lastCall = setStateSpy.mock.calls[setStateSpy.mock.calls.length - 1];
         const savedState = (lastCall[1] as any).data as PESAgentStateData;
         
-        expect(savedState.suspension).toBeDefined(); // It is not cleared yet
-        expect(savedState.suspension!.iterationState).toHaveLength(3); // sys, user, tool_result
-        const lastMsg = savedState.suspension!.iterationState[2];
-        expect(lastMsg.role).toBe('tool_result');
-        expect(lastMsg.content).toContain('true');
+        expect(savedState.suspension).toBeDefined(); // It is not cleared yet (unless completed, but we failed)
+        // With the new fix (Issue #2), we do NOT modify the persistent suspension state directly.
+        // We inject the tool_result into the ephemeral message history during execution.
+        // So iterationState should still be length 2 (original state).
+        expect(savedState.suspension!.iterationState).toHaveLength(2); 
+        
+        // Verify that the agent actually started processing (isPaused should be false)
+        // This confirms resumeExecution successfully triggered the agent process loop
+        expect(savedState.isPaused).toBe(false);
         
         // 4. Verify Observation
         // We can spy on observationManager too if we could access the instance, 

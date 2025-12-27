@@ -387,39 +387,10 @@ export async function createArtInstance(config: ArtInstanceConfig): Promise<ArtI
                  throw new Error(`Invalid suspension ID. Expected ${stateData.suspension.suspensionId}, got ${suspensionId}.`);
              }
 
-             // Append user decision to the iteration state (message history)
-             const toolCallId = stateData.suspension.toolCall.callId;
-             const toolName = stateData.suspension.toolCall.toolName;
-
-             stateData.suspension.iterationState.push({
-                 role: 'tool_result',
-                 content: JSON.stringify(decision),
-                 name: toolName,
-                 tool_call_id: toolCallId
-             });
-
-             // CRITICAL: Handle rejection explicitly
-             // When user rejects, add a system message instructing the LLM how to handle rejection
-             if (decision && typeof decision === 'object' && 'approved' in decision && !decision.approved) {
-                 stateData.suspension.iterationState.push({
-                     role: 'system',
-                     content: `IMPORTANT: The user has REJECTED the previous action "${toolName}".
-Do NOT retry this tool call. You must:
-1. Acknowledge the rejection
-2. Either mark this step as failed and proceed to the next step, OR
-3. Find an alternative approach that doesn't require this approval
-
-Respond with a JSON object containing "content" explaining the situation and "nextStepDecision": "continue" or "complete_item".`
-                 });
+             if (!stateData.isPaused) {
+                 throw new Error(`Thread ${threadId} is not currently paused. It might be running or already resumed.`);
              }
 
-             // Save the updated state (without clearing suspension, PESAgent does that)
-             await stateManager.setAgentState(threadId, {
-                 data: stateData,
-                 version: (threadContext.state?.version || 0) + 1,
-                 modified: Date.now()
-             });
-             
              // Log resumption
              await observationManager.record({
                  threadId, 
@@ -429,12 +400,21 @@ Respond with a JSON object containing "content" explaining the situation and "ne
                  metadata: { timestamp: Date.now() }
              });
 
-             // Resume execution with explicit isResume flag
+             // Update state to prevent race conditions (double resume)
+             stateData.isPaused = false;
+             await stateManager.setAgentState(threadId, {
+                 data: stateData,
+                 version: (threadContext.state?.version || 0) + 1,
+                 modified: Date.now()
+             });
+
+             // Resume execution with explicit isResume flag and pass the decision
              return agentCore.process({
                  query: '', // Empty query for resume - we continue from suspension
                  threadId: threadId,
                  traceId: `resume-${suspensionId}`,
-                 isResume: true // Explicit flag to distinguish resume from empty follow-up query
+                 isResume: true, // Explicit flag to distinguish resume from empty follow-up query
+                 resumeDecision: decision // Pass the decision to the agent core to inject into history
              });
         },
         checkForSuspendedState: async (threadId: string) => {
