@@ -1,95 +1,432 @@
-// src/types/pes-types.ts
+/**
+ * @module types/pes-types
+ *
+ * This module defines the core types and interfaces used by the PES (Plan-Execute-Synthesize)
+ * Agent implementation in the ART framework. These types support agent state management,
+ * task tracking, execution flow control, and Human-in-the-Loop (HITL) functionality.
+ *
+ * Key components:
+ * - {@link TodoItemStatus}: Enumeration of possible states for individual todo items
+ * - {@link TodoItem}: Represents a single step or task in the agent's execution plan
+ * - {@link PESAgentStateData}: The persistent state data for a PES agent instance
+ * - {@link StepOutputEntry}: Cached output from completed steps for cross-step reference
+ * - {@link ExecutionOutput}: Structured output from LLM execution calls
+ */
 
 import { ParsedToolCall, ToolResult } from './index';
 
+/**
+ * Represents the current status of a TodoItem within the PES Agent's execution plan.
+ * These states track the lifecycle of individual steps throughout the agent's processing.
+ *
+ * @enum {string}
+ */
 export enum TodoItemStatus {
-    PENDING = 'pending',
-    IN_PROGRESS = 'in_progress',
-    COMPLETED = 'completed',
-    FAILED = 'failed',
-    CANCELLED = 'cancelled',
-    WAITING = 'waiting' // For A2A tasks
-}
+  /**
+   * The item has been created but has not yet started execution.
+   * This is the initial state for all newly planned items.
+   */
+  PENDING = 'pending',
 
-export interface TodoItem {
-    id: string;
-    description: string;
-    status: TodoItemStatus;
-    dependencies?: string[]; // IDs of tasks that must be finished first
+  /**
+   * The item is currently being executed by the agent.
+   * Only one item should be in this state at a time per thread.
+   */
+  IN_PROGRESS = 'in_progress',
 
-    // Step type classification (TAEF)
-    stepType?: 'tool' | 'reasoning';
+  /**
+   * The item has been successfully completed.
+   * The agent will not re-execute items in this state.
+   */
+  COMPLETED = 'completed',
 
-    // Tool execution requirements (only for tool steps)
-    requiredTools?: string[];
-    expectedOutcome?: string;
-    toolValidationMode?: 'strict' | 'advisory';
+  /**
+   * The item execution failed and could not be completed.
+   * The agent may retry the item or skip it based on configuration.
+   */
+  FAILED = 'failed',
 
-    // Execution tracking
-    result?: any;
-    thoughts?: string[];
-    toolCalls?: ParsedToolCall[];
-    actualToolCalls?: ParsedToolCall[]; // What was actually called during execution
-    toolResults?: ToolResult[];
-    validationStatus?: 'passed' | 'failed' | 'skipped';
+  /**
+   * The item was cancelled before execution could complete.
+   * This may occur due to user intervention, timeout, or agent decision.
+   */
+  CANCELLED = 'cancelled',
 
-    // Metadata
-    createdTimestamp: number;
-    updatedTimestamp: number;
-}
-
-export interface PESAgentStateData {
-    threadId: string;
-    intent: string;
-    title: string;
-    plan: string; // High level description
-    todoList: TodoItem[];
-    currentStepId: string | null;
-    isPaused: boolean;
-
-    // NEW: Suspension Context for HITL
-    suspension?: {
-        suspensionId: string;
-        itemId: string;           // The ID of the TodoItem currently being executed
-        toolCall: import('./index').ParsedToolCall; // The specific call that triggered suspension
-        iterationState: import('./index').ArtStandardPrompt; // Captured message history of the current iteration
-    };
-
-    // Step Output Table - persisted for resume and synthesis access
-    stepOutputs?: Record<string, StepOutputEntry>;
-
-    // Keep track of iterations for the overall process or per item?
-    // The legacy executionHistory was per process call.
-    // We might want to persist some history.
+  /**
+   * The item is waiting for external conditions to be met.
+   * This is typically used for A2A (Agent-to-Agent) tasks waiting for remote completion.
+   */
+  WAITING = 'waiting',
 }
 
 /**
- * Structured entry for step output table.
- * Persisted for resume capability and cross-step data access.
+ * Represents a single step or task in the PES Agent's execution plan.
+ * Each TodoItem corresponds to one action the agent needs to take, which could be
+ * a tool call, a reasoning step, or a subtask.
+ *
+ * @interface TodoItem
  */
-export interface StepOutputEntry {
-    stepId: string;
-    description: string;
-    stepType: 'tool' | 'reasoning';
-    status: TodoItemStatus;
-    completedAt?: number;
+export interface TodoItem {
+  /**
+   * A unique identifier for this specific todo item.
+   * This ID is used for tracking, logging, and referencing the item across systems.
+   * @property {string} id
+   */
+  id: string;
 
-    // Raw outputs (no truncation - full data for downstream steps)
-    rawResult?: any;
-    toolResults?: ToolResult[];
+  /**
+   * A human-readable description of what this item accomplishes.
+   * This description is typically generated by the planning LLM and should be clear and actionable.
+   * @property {string} description
+   */
+  description: string;
 
-    // Optional summary for quick reference
-    summary?: string;
+  /**
+   * The current execution status of this item.
+   * Values come from the {@link TodoItemStatus} enum.
+   * @property {TodoItemStatus} status
+   */
+  status: TodoItemStatus;
+
+  /**
+   * An array of todo item IDs that must be completed before this item can start.
+   * This enables the agent to define task dependencies and execution order.
+   * If empty or undefined, the item has no dependencies and can execute immediately.
+   * @property {string[]} [dependencies]
+   */
+  dependencies?: string[];
+
+  /**
+   * The type of execution step this item represents.
+   * - 'tool': The item requires executing one or more tools.
+   * - 'reasoning': The item requires LLM reasoning without external tool calls.
+   *
+   * This classification is part of the TAEF (Tool-Aware Execution Framework) system.
+   * @property {'tool' | 'reasoning'} [stepType]
+   */
+  stepType?: 'tool' | 'reasoning';
+
+  /**
+   * For tool-type steps, an array of tool names that must be called during execution.
+   * This is used by TAEF for validation - if required tools are not called,
+   * the agent may be prompted to retry or the step may fail validation.
+   * @property {string[]} [requiredTools]
+   */
+  requiredTools?: string[];
+
+  /**
+   * A description of the expected outcome for this item.
+   * This helps the LLM understand what success looks like and guides execution.
+   * @property {string} [expectedOutcome]
+   */
+  expectedOutcome?: string;
+
+  /**
+   * The validation mode for tool execution in this item.
+   * - 'strict': Required tools must be called for the step to pass validation.
+   * - 'advisory': Required tools are recommended but not enforced.
+   *
+   * @property {'strict' | 'advisory'} [toolValidationMode]
+   */
+  toolValidationMode?: 'strict' | 'advisory';
+
+  /**
+   * The actual result produced by executing this item.
+   * The structure depends on the step type and what was executed.
+   * @property {any} [result]
+   */
+  result?: any;
+
+  /**
+   * An array of thought strings captured during execution.
+   * These represent the agent's internal reasoning for this specific item.
+   * @property {string[]} [thoughts]
+   */
+  thoughts?: string[];
+
+  /**
+   * The tool calls that were planned for this item.
+   * This comes from the planning phase and represents the intended execution.
+   * @property {ParsedToolCall[]} [toolCalls]
+   */
+  toolCalls?: ParsedToolCall[];
+
+  /**
+   * The tool calls that were actually executed during processing.
+   * This may differ from the planned calls if the agent modified its approach.
+   * @property {ParsedToolCall[]} [actualToolCalls]
+   */
+  actualToolCalls?: ParsedToolCall[];
+
+  /**
+   * The results from all tool executions for this item.
+   * Includes both successful and failed tool attempts.
+   * @property {ToolResult[]} [toolResults]
+   */
+  toolResults?: ToolResult[];
+
+  /**
+   * The validation status for this item's execution.
+   * - 'passed': The item passed all validation checks (e.g., required tools called).
+   * - 'failed': The item failed validation.
+   * - 'skipped': Validation was skipped for this item.
+   *
+   * @property {'passed' | 'failed' | 'skipped'} [validationStatus]
+   */
+  validationStatus?: 'passed' | 'failed' | 'skipped';
+
+  /**
+   * The Unix timestamp (in milliseconds) when this item was created.
+   * This is used for tracking execution order and debugging.
+   * @property {number} createdTimestamp
+   */
+  createdTimestamp: number;
+
+  /**
+   * The Unix timestamp (in milliseconds) when this item was last updated.
+   * This tracks the most recent modification to the item's state.
+   * @property {number} updatedTimestamp
+   */
+  updatedTimestamp: number;
 }
 
+/**
+ * Represents the persistent state data for a PES Agent instance associated with a thread.
+ * This state is saved to storage and persists across multiple execution cycles.
+ *
+ * @interface PESAgentStateData
+ */
+export interface PESAgentStateData {
+  /**
+   * The thread ID this state belongs to.
+   * Links the state to a specific conversation thread.
+   * @property {string} threadId
+   */
+  threadId: string;
+
+  /**
+   * The user's intent extracted from their query.
+   * This is a concise summary of what the user wants to accomplish.
+   * @property {string} intent
+   */
+  intent: string;
+
+  /**
+   * A concise title for the thread, typically <= 10 words.
+   * Generated based on the user's query and context.
+   * @property {string} title
+   */
+  title: string;
+
+  /**
+   * The high-level plan describing how the agent will address the user's intent.
+   * This is a human-readable description of the overall approach.
+   * @property {string} plan
+   */
+  plan: string;
+
+  /**
+   * The complete list of todo items representing the execution plan.
+   * This array contains all steps the agent needs to take, in execution order.
+   * @property {TodoItem[]} todoList
+   */
+  todoList: TodoItem[];
+
+  /**
+   * The ID of the todo item currently being executed.
+   * If null, no item is currently active (e.g., planning phase, completed state).
+   * @property {string | null} currentStepId
+   */
+  currentStepId: string | null;
+
+  /**
+   * Indicates whether the agent is currently paused.
+   * This flag is set when HITL (Human-in-the-Loop) is triggered.
+   * @property {boolean} isPaused
+   */
+  isPaused: boolean;
+
+  /**
+   * Suspension context for HITL (Human-in-the-Loop) functionality.
+   * When a blocking tool is called, the agent suspends execution and stores
+   * the context here to allow resumption after user input.
+   *
+   * @remarks
+   * This field is only present when the agent is in a suspended state.
+   *
+   * @property {object} [suspension]
+   * @property {string} [suspension.suspensionId] - Unique ID for this suspension event.
+   * @property {string} [suspension.itemId] - The TodoItem ID that triggered suspension.
+   * @property {ParsedToolCall} [suspension.toolCall] - The specific tool call that caused suspension.
+   * @property {ArtStandardPrompt} [suspension.iterationState] - Captured message history for resumption.
+   */
+  suspension?: {
+    /**
+     * Unique identifier for this suspension event.
+     * Used to match resume requests to the correct suspension.
+     * @property {string} suspensionId
+     */
+    suspensionId: string;
+
+    /**
+     * The ID of the TodoItem that triggered the suspension.
+     * This identifies which step is waiting for human input.
+     * @property {string} itemId
+     */
+    itemId: string;
+
+    /**
+     * The specific tool call that triggered the suspension.
+     * This is the call that requires human approval or input.
+     * @property {import('./index').ParsedToolCall} toolCall
+     */
+    toolCall: import('./index').ParsedToolCall;
+
+    /**
+     * The captured message history (ArtStandardPrompt) at the time of suspension.
+     * This allows the agent to resume execution with the correct context.
+     * @property {import('./index').ArtStandardPrompt} iterationState
+     */
+    iterationState: import('./index').ArtStandardPrompt;
+  };
+
+  /**
+   * A table of outputs from completed steps.
+   * This persists step outputs for use during resume operations and synthesis.
+   * Keys are step IDs, values are {@link StepOutputEntry} objects.
+   *
+   * @remarks
+   * This enables cross-step data access and ensures that the synthesis phase
+   * has access to all relevant information from completed steps.
+   *
+   * @property {Record<string, StepOutputEntry>} [stepOutputs]
+   */
+  stepOutputs?: Record<string, StepOutputEntry>;
+}
+
+/**
+ * Represents a cached output entry from a completed execution step.
+ * These entries are persisted in the PESAgentStateData to enable resume
+ * capability and cross-step data access.
+ *
+ * @interface StepOutputEntry
+ */
+export interface StepOutputEntry {
+  /**
+   * The ID of the step this output belongs to.
+   * Matches the TodoItem.id.
+   * @property {string} stepId
+   */
+  stepId: string;
+
+  /**
+   * A description of the step.
+   * Matches the TodoItem.description.
+   * @property {string} description
+   */
+  description: string;
+
+  /**
+   * The type of step that produced this output.
+   * Matches the TodoItem.stepType.
+   * @property {'tool' | 'reasoning'} stepType
+   */
+  stepType: 'tool' | 'reasoning';
+
+  /**
+   * The final status of the step.
+   * Matches the TodoItem.status at completion time.
+   * @property {TodoItemStatus} status
+   */
+  status: TodoItemStatus;
+
+  /**
+   * The Unix timestamp (in milliseconds) when the step was completed.
+   * @property {number} [completedAt]
+   */
+  completedAt?: number;
+
+  /**
+   * The raw result from the step execution.
+   * This contains full, untruncated data for use by downstream steps.
+   * For tool steps, this includes tool outputs. For reasoning steps,
+   * this includes the LLM response.
+   *
+   * @remarks
+   * Unlike the step context which may truncate large outputs,
+   * this rawResult preserves the complete data.
+   *
+   * @property {any} [rawResult]
+   */
+  rawResult?: any;
+
+  /**
+   * Array of tool results if this was a tool-type step.
+   * Contains all tool execution attempts including errors.
+   * @property {ToolResult[]} [toolResults]
+   */
+  toolResults?: ToolResult[];
+
+  /**
+   * An optional summary of the step output.
+   * This provides a quick reference without loading the full rawResult.
+   * Useful for synthesis and debugging.
+   * @property {string} [summary]
+   */
+  summary?: string;
+}
+
+/**
+ * Represents the structured output from an LLM execution call during the PES Agent's
+ * execution phase. This is parsed from the raw LLM response.
+ *
+ * @interface ExecutionOutput
+ */
 export interface ExecutionOutput {
-    thoughts?: string;
-    content?: string; // The response text
-    toolCalls?: ParsedToolCall[];
-    nextStepDecision?: 'continue' | 'wait' | 'complete_item' | 'update_plan';
-    updatedPlan?: {
-        intent?: string;
-        plan?: string;
-        todoList?: TodoItem[]; // If the agent decides to modify the list
-    };
+  /**
+   * The agent's thoughts or reasoning for this execution step.
+   * This may include decision-making logic or reflections.
+   * @property {string} [thoughts]
+   */
+  thoughts?: string;
+
+  /**
+   * The main response content from the LLM.
+   * This is the primary textual output from the execution step.
+   * @property {string} [content]
+   */
+  content?: string;
+
+  /**
+   * Any tool calls the LLM decided to make during execution.
+   * These are parsed and will be executed by the ToolSystem.
+   * @property {ParsedToolCall[]} [toolCalls]
+   */
+  toolCalls?: ParsedToolCall[];
+
+  /**
+   * The agent's decision on how to proceed after this execution.
+   * - 'continue': Proceed to the next iteration or step.
+   * - 'wait': Pause and wait for external input (rare in execution phase).
+   * - 'complete_item': Mark the current item as complete and move to the next.
+   * - 'update_plan': Modify the execution plan (intent, todo list, etc.).
+   *
+   * @property {'continue' | 'wait' | 'complete_item' | 'update_plan'} [nextStepDecision]
+   */
+  nextStepDecision?: 'continue' | 'wait' | 'complete_item' | 'update_plan';
+
+  /**
+   * Updates to the plan if the agent decided to modify it.
+   * This can include changes to intent, plan description, or the todo list.
+   *
+   * @property {object} [updatedPlan]
+   * @property {string} [updatedPlan.intent] - Modified intent statement.
+   * @property {string} [updatedPlan.plan] - Modified plan description.
+   * @property {TodoItem[]} [updatedPlan.todoList] - Modified list of todo items.
+   */
+  updatedPlan?: {
+    intent?: string;
+    plan?: string;
+    todoList?: TodoItem[];
+  };
 }
