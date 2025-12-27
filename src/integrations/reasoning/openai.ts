@@ -17,6 +17,38 @@ const OPENAI_DEFAULT_MAX_TOKENS = 4096;
 const OPENAI_DEFAULT_TEMPERATURE = 0.7;
 
 /**
+ * Helper to determine tokenType and phase based on callContext.
+ * @since 0.4.11
+ */
+function getTokenContext(callContext: string | undefined, isThinking: boolean): {
+  tokenType: string;
+  phase: 'planning' | 'execution' | 'synthesis' | undefined;
+} {
+  switch (callContext) {
+    case 'PLANNING_THOUGHTS':
+      return {
+        phase: 'planning',
+        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
+      };
+    case 'EXECUTION_THOUGHTS':
+      return {
+        phase: 'execution',
+        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
+      };
+    case 'SYNTHESIS_THOUGHTS':
+      return {
+        phase: 'synthesis',
+        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
+      };
+    default:
+      return {
+        phase: undefined,
+        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
+      };
+  }
+}
+
+/**
  * Configuration options required for the `OpenAIAdapter`.
  */
 export interface OpenAIAdapterOptions {
@@ -154,6 +186,7 @@ export class OpenAIAdapter implements ProviderAdapter {
       tools: availableArtTools,
       providerConfig,
     } = options;
+    const stepContext = (options as any).stepContext;
 
     const modelToUse = providerConfig?.modelId || modelOverride || this.defaultModel;
 
@@ -161,7 +194,7 @@ export class OpenAIAdapter implements ProviderAdapter {
     const openaiApiParams = providerConfig?.adapterOptions || {};
     const maxTokens = openaiApiParams.max_tokens || openaiApiParams.maxTokens || options.max_tokens || options.maxOutputTokens || this.defaultMaxTokens;
     const temperature = openaiApiParams.temperature ?? options.temperature ?? this.defaultTemperature;
-    
+
     // Extract reasoning configuration from options
     const openaiOptions = (options as any).openai || {};
     const reasoningEffort = openaiOptions.reasoning?.effort || 'medium';
@@ -217,7 +250,7 @@ export class OpenAIAdapter implements ProviderAdapter {
       try {
         const startTime = Date.now();
         let timeToFirstTokenMs: number | undefined;
-        
+
         if (stream) {
           // Use the OpenAI SDK's responses.create method for streaming
           const streamInstance = await (this.client as any).responses.create({
@@ -241,39 +274,39 @@ export class OpenAIAdapter implements ProviderAdapter {
             if (event.type === 'response.reasoning.delta' || event.type === 'response.reasoning_text.delta') {
               if (event.delta) {
                 accumulatedReasoning += event.delta;
-                const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_THINKING' : 'FINAL_SYNTHESIS_LLM_THINKING';
-                yield { type: 'TOKEN', data: event.delta, threadId, traceId, sessionId, tokenType };
+                const { tokenType, phase } = getTokenContext(callContext, true);
+                yield { type: 'TOKEN', data: event.delta, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
               }
             }
             // Handle reasoning summary deltas
             else if (event.type === 'response.reasoning_summary.delta' || event.type === 'response.reasoning_summary_text.delta') {
               if (event.delta) {
-                const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_THINKING' : 'FINAL_SYNTHESIS_LLM_THINKING';
-                yield { type: 'TOKEN', data: event.delta, threadId, traceId, sessionId, tokenType };
+                const { tokenType, phase } = getTokenContext(callContext, true);
+                yield { type: 'TOKEN', data: event.delta, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
               }
             }
             // Handle text/output deltas
             else if (event.type === 'response.text.delta' || event.type === 'response.output_text.delta') {
               if (event.delta) {
                 accumulatedText += event.delta;
-                const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-                yield { type: 'TOKEN', data: event.delta, threadId, traceId, sessionId, tokenType };
+                const { tokenType, phase } = getTokenContext(callContext, false);
+                yield { type: 'TOKEN', data: event.delta, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
               }
             }
             // Handle output item additions (alternative format for complete items)
             else if (event.type === 'response.output_item.added') {
               if (event.item) {
                 if (event.item.type === 'text' && event.item.text) {
-                  const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-                  yield { type: 'TOKEN', data: event.item.text, threadId, traceId, sessionId, tokenType };
+                  const { tokenType, phase } = getTokenContext(callContext, false);
+                  yield { type: 'TOKEN', data: event.item.text, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                 } else if (event.item.type === 'reasoning' && event.item.text) {
-                  const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_THINKING' : 'FINAL_SYNTHESIS_LLM_THINKING';
-                  yield { type: 'TOKEN', data: event.item.text, threadId, traceId, sessionId, tokenType };
+                  const { tokenType, phase } = getTokenContext(callContext, true);
+                  yield { type: 'TOKEN', data: event.item.text, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                 } else if (event.item.type === 'message' && event.item.content) {
                   for (const content of event.item.content) {
                     if (content.type === 'output_text' && content.text) {
-                      const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-                      yield { type: 'TOKEN', data: content.text, threadId, traceId, sessionId, tokenType };
+                      const { tokenType, phase } = getTokenContext(callContext, false);
+                      yield { type: 'TOKEN', data: content.text, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                     }
                   }
                 }
@@ -344,14 +377,14 @@ export class OpenAIAdapter implements ProviderAdapter {
 
           // Yield reasoning tokens first if available
           if (reasoningText.trim()) {
-            const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_THINKING' : 'FINAL_SYNTHESIS_LLM_THINKING';
-            yield { type: 'TOKEN', data: reasoningText.trim(), threadId, traceId, sessionId, tokenType };
+            const { tokenType, phase } = getTokenContext(callContext, true);
+            yield { type: 'TOKEN', data: reasoningText.trim(), tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
           }
 
           // Then yield response tokens
           if (responseText.trim()) {
-            const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-            yield { type: 'TOKEN', data: responseText.trim(), threadId, traceId, sessionId, tokenType };
+            const { tokenType, phase } = getTokenContext(callContext, false);
+            yield { type: 'TOKEN', data: responseText.trim(), tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
           }
 
           // Handle tool calls if present
@@ -362,8 +395,8 @@ export class OpenAIAdapter implements ProviderAdapter {
               name: tu.name,
               input: tu.input,
             }));
-            const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-            yield { type: 'TOKEN', data: toolData, threadId, traceId, sessionId, tokenType };
+            const { tokenType, phase } = getTokenContext(callContext, false);
+            yield { type: 'TOKEN', data: toolData, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
           }
 
           // Yield metadata for non-streaming
@@ -388,7 +421,7 @@ export class OpenAIAdapter implements ProviderAdapter {
       } catch (error: any) {
         Logger.error(`Error during OpenAI Responses API call: ${error.message}`, { error, threadId, traceId });
         const artError = error instanceof ARTError ? error :
-          (error instanceof Error && error.message.includes('OpenAI') ? 
+          (error instanceof Error && error.message.includes('OpenAI') ?
             new ARTError(`OpenAI API Error: ${error.message}`, ErrorCode.LLM_PROVIDER_ERROR, error) :
             new ARTError(error.message || 'Unknown OpenAI adapter error', ErrorCode.LLM_PROVIDER_ERROR, error));
         yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
@@ -455,7 +488,7 @@ export class OpenAIAdapter implements ProviderAdapter {
       case 'tool_result': {
         // Both user and tool_result messages become 'user' role in Responses API
         const content: Array<{ type: 'input_text'; text: string }> = [];
-        
+
         if (artMsg.role === 'tool_result') {
           // Format tool result with context
           const toolResultText = `Tool result for ${artMsg.name || 'unknown tool'}: ${String(artMsg.content)}`;
@@ -471,7 +504,7 @@ export class OpenAIAdapter implements ProviderAdapter {
 
       case 'assistant': {
         const content: Array<{ type: 'output_text'; text: string }> = [];
-        
+
         // Handle text content
         if (typeof artMsg.content === 'string' && artMsg.content.trim() !== '') {
           content.push({ type: 'output_text', text: artMsg.content });
@@ -490,7 +523,7 @@ export class OpenAIAdapter implements ProviderAdapter {
               );
             }
           }).join('\n');
-          
+
           if (content.length > 0) {
             content[0].text += '\n\n' + toolCallsText;
           } else {

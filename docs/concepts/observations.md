@@ -44,9 +44,39 @@ The `ObservationType` enum defines the vocabulary of events the system can expre
 | **`TITLE`** | A generated concise title for the conversation thread. | `{ title: string }` |
 | **`PLAN`** | The logical steps the agent intends to take. | `{ plan: string; rawOutput?: string }` |
 | **`PLAN_UPDATE`** | Updates to the existing plan structure. | _Varies based on update_ |
-| **`THOUGHTS`** | The agent's internal monologue or reasoning process before acting. | `{ thought: string }` |
+| **`THOUGHTS`** | The agent's internal reasoning process. Recorded across all phases. See [Standardized THOUGHTS](#standardized-thoughts-v0411) below. | `{ text: string }` |
 | **`SYNTHESIS`** | Events related to the synthesis phase, often where the final response is constructed. | _Varies_ |
 | **`FINAL_RESPONSE`** | The final message delivered to the user. | `{ message: ConversationMessage; uiMetadata?: object }` |
+
+### Standardized THOUGHTS (v0.4.11)
+
+> [!IMPORTANT]
+> **Breaking Change**: In v0.4.11, the THOUGHTS observation system was standardized to consistently capture agent reasoning across all three PES agent phases: Planning, Execution, and Synthesis.
+
+THOUGHTS observations are now recorded with enhanced metadata:
+
+| Field | Description |
+| :--- | :--- |
+| `content.text` | The thinking token text from the LLM |
+| `metadata.phase` | `'planning'` \| `'execution'` \| `'synthesis'` |
+| `metadata.tokenType` | The LLM tokenType (e.g., `PLANNING_LLM_THINKING`) |
+| `metadata.timestamp` | Unix timestamp when the token was emitted |
+| `metadata.stepId` | (Execution only) The TodoItem ID being executed |
+| `metadata.stepDescription` | (Execution only) The TodoItem description |
+
+**Phase-Specific TokenTypes:**
+
+| Phase | Thinking TokenType | Response TokenType |
+| :--- | :--- | :--- |
+| Planning | `PLANNING_LLM_THINKING` | `PLANNING_LLM_RESPONSE` |
+| Execution | `EXECUTION_LLM_THINKING` | `EXECUTION_LLM_RESPONSE` |
+| Synthesis | `SYNTHESIS_LLM_THINKING` | `SYNTHESIS_LLM_RESPONSE` |
+
+**Migration from v0.4.10:**
+- `AGENT_THOUGHT_LLM_THINKING` → `PLANNING_LLM_THINKING` or `EXECUTION_LLM_THINKING`
+- `AGENT_THOUGHT_LLM_RESPONSE` → `PLANNING_LLM_RESPONSE` or `EXECUTION_LLM_RESPONSE`
+- `FINAL_SYNTHESIS_LLM_THINKING` → `SYNTHESIS_LLM_THINKING`
+- `FINAL_SYNTHESIS_LLM_RESPONSE` → `SYNTHESIS_LLM_RESPONSE`
 
 ### Tool Usage
 

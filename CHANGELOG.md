@@ -25,6 +25,35 @@ All notable changes to this project will be documented in this file.
 ### 🛠️ Improvements
 - **Generous Default Truncation**: Increased `safeStringify` default from 200 to 10,000 characters to prevent unexpected truncation in edge cases.
 
+### ⚠️ Breaking: Standardized THOUGHTS Observations
+This release standardizes the THOUGHTS observation system across all PES agent phases for consistent reasoning capture.
+
+**TokenType Renames:**
+| Old (deprecated) | New |
+|------------------|-----|
+| `AGENT_THOUGHT_LLM_THINKING` | `PLANNING_LLM_THINKING` / `EXECUTION_LLM_THINKING` |
+| `AGENT_THOUGHT_LLM_RESPONSE` | `PLANNING_LLM_RESPONSE` / `EXECUTION_LLM_RESPONSE` |
+| `FINAL_SYNTHESIS_LLM_THINKING` | `SYNTHESIS_LLM_THINKING` |
+| `FINAL_SYNTHESIS_LLM_RESPONSE` | `SYNTHESIS_LLM_RESPONSE` |
+
+**CallContext Renames:**
+| Old (deprecated) | New |
+|------------------|-----|
+| `AGENT_THOUGHT` | `PLANNING_THOUGHTS` / `EXECUTION_THOUGHTS` |
+| `FINAL_SYNTHESIS` | `SYNTHESIS_THOUGHTS` |
+
+**New StreamEvent Fields:**
+- `phase`: `'planning' | 'execution' | 'synthesis'`
+- `stepId`, `stepDescription`: Execution step metadata (execution phase only)
+- `timestamp`: Token emission timestamp
+
+**THOUGHTS Observation Parity:**
+- Planning phase now records THOUGHTS observations with `metadata.phase = 'planning'`
+- Execution phase records THOUGHTS with `metadata.phase = 'execution'`, `stepId`, `stepDescription`
+- Synthesis phase now captures thinking tokens and records THOUGHTS with `metadata.phase = 'synthesis'`
+
+**Migration Required:** Update any code that checks for old `tokenType` or `callContext` values.
+
 ## [0.4.10] - 2025-12-27
 
 ### 🔧 Configurable Execution Framework

@@ -11,6 +11,38 @@ import {
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
 
+/**
+ * Helper to determine tokenType and phase based on callContext.
+ * @since 0.4.11
+ */
+function getTokenContext(callContext: string | undefined, isThinking: boolean): {
+  tokenType: string;
+  phase: 'planning' | 'execution' | 'synthesis' | undefined;
+} {
+  switch (callContext) {
+    case 'PLANNING_THOUGHTS':
+      return {
+        phase: 'planning',
+        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
+      };
+    case 'EXECUTION_THOUGHTS':
+      return {
+        phase: 'execution',
+        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
+      };
+    case 'SYNTHESIS_THOUGHTS':
+      return {
+        phase: 'synthesis',
+        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
+      };
+    default:
+      return {
+        phase: undefined,
+        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
+      };
+  }
+}
+
 // Using OpenAI-compatible structures, as OpenRouter adheres to them.
 // Based on https://openrouter.ai/docs#api-reference-chat-completions
 interface OpenRouterMessage {
@@ -167,8 +199,8 @@ export class OpenRouterAdapter implements ProviderAdapter {
       typeof openRouterOptions?.include_reasoning === 'boolean'
         ? openRouterOptions.include_reasoning
         : (openRouterOptions?.reasoning
-            ? (openRouterOptions.reasoning.exclude === true ? false : true)
-            : undefined);
+          ? (openRouterOptions.reasoning.exclude === true ? false : true)
+          : undefined);
 
     const payload: OpenRouterChatCompletionPayload = {
       model: modelToUse,
@@ -245,6 +277,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
     options: CallOptions,
   ): AsyncIterable<StreamEvent> {
     const { threadId, traceId, sessionId, callContext } = options;
+    const stepContext = (options as any).stepContext;
     const tid = (threadId || '') as string;
     const trid = (traceId || '') as string;
     const sid = (sessionId || '') as string;
@@ -299,10 +332,8 @@ export class OpenRouterAdapter implements ProviderAdapter {
 
           // 1) Reasoning text (simple field)
           if (typeof delta.reasoning === 'string' && delta.reasoning.length > 0) {
-            const tokenType = callContext === 'AGENT_THOUGHT'
-              ? 'AGENT_THOUGHT_LLM_THINKING'
-              : 'FINAL_SYNTHESIS_LLM_THINKING';
-            yield { type: 'TOKEN', data: delta.reasoning, threadId: tid, traceId: trid, sessionId: sid, tokenType };
+            const { tokenType, phase } = getTokenContext(callContext, true);
+            yield { type: 'TOKEN', data: delta.reasoning, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
           }
 
           // 2) Reasoning details array (normalized across providers)
@@ -311,15 +342,11 @@ export class OpenRouterAdapter implements ProviderAdapter {
             for (const rd of reasoningDetails) {
               // Prefer raw reasoning.text, else summarize/ignore encrypted
               if (rd?.type === 'reasoning.text' && typeof rd.text === 'string' && rd.text.length > 0) {
-                const tokenType = callContext === 'AGENT_THOUGHT'
-                  ? 'AGENT_THOUGHT_LLM_THINKING'
-                  : 'FINAL_SYNTHESIS_LLM_THINKING';
-                yield { type: 'TOKEN', data: rd.text, threadId: tid, traceId: trid, sessionId: sid, tokenType };
+                const { tokenType, phase } = getTokenContext(callContext, true);
+                yield { type: 'TOKEN', data: rd.text, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
               } else if (rd?.type === 'reasoning.summary' && typeof rd.summary === 'string' && rd.summary.length > 0) {
-                const tokenType = callContext === 'AGENT_THOUGHT'
-                  ? 'AGENT_THOUGHT_LLM_THINKING'
-                  : 'FINAL_SYNTHESIS_LLM_THINKING';
-                yield { type: 'TOKEN', data: rd.summary, threadId: tid, traceId: trid, sessionId: sid, tokenType };
+                const { tokenType, phase } = getTokenContext(callContext, true);
+                yield { type: 'TOKEN', data: rd.summary, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
               }
               // Encrypted or unknown formats are ignored for token streaming
             }
@@ -327,10 +354,8 @@ export class OpenRouterAdapter implements ProviderAdapter {
 
           // 3) Content delta (normal response tokens)
           if (typeof delta.content === 'string' && delta.content.length > 0) {
-            const tokenType = callContext === 'AGENT_THOUGHT'
-              ? 'AGENT_THOUGHT_LLM_RESPONSE'
-              : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-            yield { type: 'TOKEN', data: delta.content, threadId: tid, traceId: trid, sessionId: sid, tokenType };
+            const { tokenType, phase } = getTokenContext(callContext, false);
+            yield { type: 'TOKEN', data: delta.content, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
           }
 
           // 4) Tool call deltas
@@ -373,8 +398,8 @@ export class OpenRouterAdapter implements ProviderAdapter {
         name: String(tc?.function?.name ?? ''),
         input: JSON.parse((tc?.function?.arguments as string | undefined) ?? '{}'),
       }));
-      const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-      yield { type: 'TOKEN', data: toolData, threadId: tid, traceId: trid, sessionId: sid, tokenType };
+      const { tokenType, phase } = getTokenContext(callContext, false);
+      yield { type: 'TOKEN', data: toolData, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
     }
 
     const totalGenerationTimeMs = Date.now() - startTime;
@@ -397,6 +422,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
     options: CallOptions,
   ): AsyncIterable<StreamEvent> {
     const { threadId, traceId, sessionId, callContext } = options;
+    const stepContext = (options as any).stepContext;
     const tid = (threadId || '') as string;
     const trid = (traceId || '') as string;
     const sid = (sessionId || '') as string;
@@ -418,28 +444,22 @@ export class OpenRouterAdapter implements ProviderAdapter {
 
     // Emit reasoning (non-streaming) if present
     if (typeof responseMessage.reasoning === 'string' && responseMessage.reasoning.length > 0) {
-      const thinkingType = callContext === 'AGENT_THOUGHT'
-        ? 'AGENT_THOUGHT_LLM_THINKING'
-        : 'FINAL_SYNTHESIS_LLM_THINKING';
-      yield { type: 'TOKEN', data: responseMessage.reasoning, threadId: tid, traceId: trid, sessionId: sid, tokenType: thinkingType };
+      const { tokenType, phase } = getTokenContext(callContext, true);
+      yield { type: 'TOKEN', data: responseMessage.reasoning, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
     }
     if (Array.isArray(responseMessage.reasoning_details)) {
       for (const rd of responseMessage.reasoning_details) {
         if (rd?.type === 'reasoning.text' && typeof rd.text === 'string' && rd.text.length > 0) {
-          const thinkingType = callContext === 'AGENT_THOUGHT'
-            ? 'AGENT_THOUGHT_LLM_THINKING'
-            : 'FINAL_SYNTHESIS_LLM_THINKING';
-          yield { type: 'TOKEN', data: rd.text, threadId: tid, traceId: trid, sessionId: sid, tokenType: thinkingType };
+          const { tokenType, phase } = getTokenContext(callContext, true);
+          yield { type: 'TOKEN', data: rd.text, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
         } else if (rd?.type === 'reasoning.summary' && typeof rd.summary === 'string' && rd.summary.length > 0) {
-          const thinkingType = callContext === 'AGENT_THOUGHT'
-            ? 'AGENT_THOUGHT_LLM_THINKING'
-            : 'FINAL_SYNTHESIS_LLM_THINKING';
-          yield { type: 'TOKEN', data: rd.summary, threadId: tid, traceId: trid, sessionId: sid, tokenType: thinkingType };
+          const { tokenType, phase } = getTokenContext(callContext, true);
+          yield { type: 'TOKEN', data: rd.summary, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
         }
       }
     }
 
-    const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
+    const { tokenType, phase } = getTokenContext(callContext, false);
 
     const toolData =
       (responseMessage.tool_calls as any[] | undefined)?.map((tc) => ({
@@ -460,10 +480,13 @@ export class OpenRouterAdapter implements ProviderAdapter {
       yield {
         type: 'TOKEN',
         data: tokenPayload.length === 1 && tokenPayload[0].type === 'text' ? tokenPayload[0].text : tokenPayload,
+        tokenType: tokenType as any,
+        phase,
+        timestamp: Date.now(),
+        ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }),
         threadId: tid,
         traceId: trid,
         sessionId: sid,
-        tokenType,
       };
     }
 

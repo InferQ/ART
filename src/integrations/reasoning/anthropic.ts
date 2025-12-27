@@ -31,6 +31,38 @@ export interface AnthropicAdapterOptions {
   defaultTemperature?: number;
 }
 
+/**
+ * Helper to determine tokenType and phase based on callContext.
+ * @since 0.4.11
+ */
+function getTokenContext(callContext: string | undefined, isThinking: boolean): {
+  tokenType: string;
+  phase: 'planning' | 'execution' | 'synthesis' | undefined;
+} {
+  switch (callContext) {
+    case 'PLANNING_THOUGHTS':
+      return {
+        phase: 'planning',
+        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
+      };
+    case 'EXECUTION_THOUGHTS':
+      return {
+        phase: 'execution',
+        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
+      };
+    case 'SYNTHESIS_THOUGHTS':
+      return {
+        phase: 'synthesis',
+        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
+      };
+    default:
+      return {
+        phase: undefined,
+        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
+      };
+  }
+}
+
 // Types for Anthropic API interaction using the SDK
 type AnthropicSDKMessageParam = Anthropic.Messages.MessageParam;
 type AnthropicSDKContentBlockParam = Anthropic.Messages.TextBlockParam | Anthropic.Messages.ImageBlockParam | Anthropic.Messages.ToolUseBlockParam | Anthropic.Messages.ToolResultBlockParam;
@@ -96,6 +128,7 @@ export class AnthropicAdapter implements ProviderAdapter {
       tools: availableArtTools,
       providerConfig,
     } = options;
+    const stepContext = (options as any).stepContext;
 
     const modelToUse = providerConfig?.modelId || modelOverride || this.defaultModel;
 
@@ -215,8 +248,18 @@ export class AnthropicAdapter implements ProviderAdapter {
                   const thinkingText = (event.content_block as any).thinking || '';
                   if (thinkingText) {
                     if (timeToFirstTokenMs === undefined) timeToFirstTokenMs = Date.now() - startTime;
-                    const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_THINKING' : 'FINAL_SYNTHESIS_LLM_THINKING';
-                    yield { type: 'TOKEN', data: thinkingText, threadId, traceId, sessionId, tokenType };
+                    const { tokenType, phase } = getTokenContext(callContext, true);
+                    yield {
+                      type: 'TOKEN',
+                      data: thinkingText,
+                      tokenType: tokenType as any,
+                      phase,
+                      timestamp: Date.now(),
+                      ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }),
+                      threadId,
+                      traceId,
+                      sessionId
+                    };
                   }
                 }
                 // Initialize tool_use accumulation for this block index
@@ -232,14 +275,34 @@ export class AnthropicAdapter implements ProviderAdapter {
                   const textDelta = event.delta.text;
                   accumulatedText += textDelta;
                   if (timeToFirstTokenMs === undefined) timeToFirstTokenMs = Date.now() - startTime;
-                  const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-                  yield { type: 'TOKEN', data: textDelta, threadId, traceId, sessionId, tokenType };
+                  const { tokenType, phase } = getTokenContext(callContext, false);
+                  yield {
+                    type: 'TOKEN',
+                    data: textDelta,
+                    tokenType: tokenType as any,
+                    phase,
+                    timestamp: Date.now(),
+                    ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }),
+                    threadId,
+                    traceId,
+                    sessionId
+                  };
                 } else if ((event.delta as any).type === 'thinking_delta') {
                   const thinkingDelta = (event.delta as any).thinking || '';
                   if (thinkingDelta) {
                     if (timeToFirstTokenMs === undefined) timeToFirstTokenMs = Date.now() - startTime;
-                    const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_THINKING' : 'FINAL_SYNTHESIS_LLM_THINKING';
-                    yield { type: 'TOKEN', data: thinkingDelta, threadId, traceId, sessionId, tokenType };
+                    const { tokenType, phase } = getTokenContext(callContext, true);
+                    yield {
+                      type: 'TOKEN',
+                      data: thinkingDelta,
+                      tokenType: tokenType as any,
+                      phase,
+                      timestamp: Date.now(),
+                      ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }),
+                      threadId,
+                      traceId,
+                      sessionId
+                    };
                   }
                 } else if ((event.delta as any).type === 'input_json_delta') {
                   const entry = toolUseAcc.get(event.index);
@@ -307,7 +370,7 @@ export class AnthropicAdapter implements ProviderAdapter {
                 }
 
                 if (finalStopReason === 'tool_use' && accumulatedToolUses.length > 0) {
-                  const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
+                  const { tokenType, phase } = getTokenContext(callContext, false);
                   const toolData = accumulatedToolUses.map(tu => ({
                     type: 'tool_use',
                     id: tu.id,
@@ -315,13 +378,13 @@ export class AnthropicAdapter implements ProviderAdapter {
                     input: tu.input,
                   }));
                   if (accumulatedText.trim()) {
-                    yield { type: 'TOKEN', data: [{ type: 'text', text: accumulatedText.trim() }, ...toolData], threadId, traceId, sessionId, tokenType };
+                    yield { type: 'TOKEN', data: [{ type: 'text', text: accumulatedText.trim() }, ...toolData], tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                   } else {
-                    yield { type: 'TOKEN', data: toolData, threadId, traceId, sessionId, tokenType };
+                    yield { type: 'TOKEN', data: toolData, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                   }
                 } else if (accumulatedText.trim()) {
-                  const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-                  yield { type: 'TOKEN', data: accumulatedText.trim(), threadId, traceId, sessionId, tokenType };
+                  const { tokenType, phase } = getTokenContext(callContext, false);
+                  yield { type: 'TOKEN', data: accumulatedText.trim(), tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                 }
 
                 const totalGenerationTimeMs = Date.now() - startTime;
@@ -369,7 +432,7 @@ export class AnthropicAdapter implements ProviderAdapter {
           });
           responseText = responseText.trim();
 
-          const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
+          const { tokenType, phase } = getTokenContext(callContext, false);
 
           if (response.stop_reason === 'tool_use' && toolUseBlocks.length > 0) {
             const toolData = toolUseBlocks.map(tu => ({
@@ -379,12 +442,12 @@ export class AnthropicAdapter implements ProviderAdapter {
               input: tu.input,
             }));
             if (responseText) {
-              yield { type: 'TOKEN', data: [{type: 'text', text: responseText}, ...toolData], threadId, traceId, sessionId, tokenType };
+              yield { type: 'TOKEN', data: [{ type: 'text', text: responseText }, ...toolData], tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
             } else {
-              yield { type: 'TOKEN', data: toolData, threadId, traceId, sessionId, tokenType };
+              yield { type: 'TOKEN', data: toolData, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
             }
           } else if (responseText) {
-            yield { type: 'TOKEN', data: responseText, threadId, traceId, sessionId, tokenType };
+            yield { type: 'TOKEN', data: responseText, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
           } else if (response.stop_reason !== 'tool_use') {
             Logger.warn('Anthropic API (non-streaming): Empty response text and not a tool_use stop_reason.', { response, threadId, traceId });
           }
@@ -476,7 +539,7 @@ export class AnthropicAdapter implements ProviderAdapter {
 
       if (currentRoleInternal === messageRoleToPush && messages.length > 0) {
         const lastMessage = messages[messages.length - 1];
-        
+
         let currentLastMessageContentArray: Anthropic.Messages.ContentBlockParam[];
         if (typeof lastMessage.content === 'string') {
           currentLastMessageContentArray = [{ type: 'text', text: lastMessage.content } as Anthropic.Messages.TextBlockParam];
@@ -501,11 +564,11 @@ export class AnthropicAdapter implements ProviderAdapter {
     // Anthropic requires the first message to be 'user' if messages exist and no system prompt.
     if (!systemPrompt && messages.length > 0 && messages[0].role !== 'user') {
       Logger.warn("AnthropicAdapter: Prompt does not start with user message and has no system prompt. Prepending an empty user message for compatibility.");
-      messages.unshift({ role: 'user', content: '(Previous turn context)'});
+      messages.unshift({ role: 'user', content: '(Previous turn context)' });
     }
-    
+
     // Ensure conversation doesn't end on an assistant message if expecting tool results
-    const lastArtMsg = artPrompt[artPrompt.length -1];
+    const lastArtMsg = artPrompt[artPrompt.length - 1];
     if (lastArtMsg?.role === 'assistant' && lastArtMsg.tool_calls && lastArtMsg.tool_calls.length > 0) {
       Logger.debug("AnthropicAdapter: Prompt ends with assistant requesting tool calls.");
     }
@@ -529,7 +592,7 @@ export class AnthropicAdapter implements ProviderAdapter {
     // Handle text content
     if (artMsg.content && typeof artMsg.content === 'string' && artMsg.content.trim() !== '') {
       blocks.push({ type: 'text', text: artMsg.content });
-    } else if (artMsg.content && typeof artMsg.content !== 'string' && artMsg.role !== 'tool_result' && (!artMsg.tool_calls || artMsg.tool_calls.length === 0) ) {
+    } else if (artMsg.content && typeof artMsg.content !== 'string' && artMsg.role !== 'tool_result' && (!artMsg.tool_calls || artMsg.tool_calls.length === 0)) {
       Logger.warn(`AnthropicAdapter: Non-string, non-tool_result, non-tool_call-only content for role ${artMsg.role}, stringifying.`, { content: artMsg.content });
       blocks.push({ type: 'text', text: JSON.stringify(artMsg.content) });
     }
@@ -570,7 +633,7 @@ export class AnthropicAdapter implements ProviderAdapter {
       if (typeof artMsg.content === 'string') {
         toolResultBlock.content = artMsg.content;
       } else if (Array.isArray(artMsg.content) && artMsg.content.every(c => typeof c === 'object' && c.type === 'text' && typeof c.text === 'string')) {
-        toolResultBlock.content = artMsg.content.map(c => ({type: 'text', text: (c as any).text}));
+        toolResultBlock.content = artMsg.content.map(c => ({ type: 'text', text: (c as any).text }));
       } else if (artMsg.content !== null && artMsg.content !== undefined) {
         toolResultBlock.content = JSON.stringify(artMsg.content);
       }
@@ -582,7 +645,7 @@ export class AnthropicAdapter implements ProviderAdapter {
     if (blocks.length === 1 && blocks[0].type === 'text') {
       return (blocks[0] as Anthropic.TextBlockParam).text;
     }
-    
+
     // If blocks is empty, return empty string
     if (blocks.length === 0) {
       return "";

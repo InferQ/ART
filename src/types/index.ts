@@ -274,25 +274,61 @@ export interface StreamEvent {
    */
   data: any;
   /**
-   * Optional: Provides a more specific classification for `TOKEN` events,
-   * combining LLM-level detection (thinking/response, if available from adapter)
-   * and agent-level context (`callContext` from `CallOptions`).
-   * Used by consumers (like UI) to differentiate between intermediate thoughts and the final response.
-   *
-   * - `LLM_THINKING`: Token identified by the adapter as part of the LLM's internal reasoning/thought process.
-   * - `LLM_RESPONSE`: Token identified by the adapter as part of the LLM's final response content.
-   * - `AGENT_THOUGHT_LLM_THINKING`: Token from an LLM call made in the 'AGENT_THOUGHT' context, identified as thinking.
-   * - `AGENT_THOUGHT_LLM_RESPONSE`: Token from an LLM call made in the 'AGENT_THOUGHT' context, identified as response (e.g., the raw planning output).
-   * - `FINAL_SYNTHESIS_LLM_THINKING`: Token from an LLM call made in the 'FINAL_SYNTHESIS' context, identified as thinking.
-   * - `FINAL_SYNTHESIS_LLM_RESPONSE`: Token from an LLM call made in the 'FINAL_SYNTHESIS' context, identified as response (part of the final answer to the user).
+   * Classification for TOKEN events, combining phase context and thinking detection.
+   * 
+   * @since 0.4.11 - Breaking change: New phase-based naming scheme.
+   * 
+   * Phase-specific token types:
+   * - `PLANNING_LLM_THINKING`: Thinking token during planning phase.
+   * - `PLANNING_LLM_RESPONSE`: Response token during planning phase.
+   * - `EXECUTION_LLM_THINKING`: Thinking token during execution phase (per-step).
+   * - `EXECUTION_LLM_RESPONSE`: Response token during execution phase.
+   * - `SYNTHESIS_LLM_THINKING`: Thinking token during synthesis phase.
+   * - `SYNTHESIS_LLM_RESPONSE`: Response token during synthesis phase.
+   * - `LLM_THINKING`: Generic fallback when callContext not provided.
+   * - `LLM_RESPONSE`: Generic fallback when callContext not provided.
    *
    * @remarks
    * Not all adapters can reliably distinguish 'LLM_THINKING' vs 'LLM_RESPONSE'.
-   * Adapters should prioritize setting the agent context part (`AGENT_THOUGHT_...` or `FINAL_SYNTHESIS_...`) based on `CallOptions.callContext`.
-   * If thinking detection is unavailable, adapters should default to `AGENT_THOUGHT_LLM_RESPONSE` or `FINAL_SYNTHESIS_LLM_RESPONSE`.
-   * @property {'LLM_THINKING' | 'LLM_RESPONSE' | 'AGENT_THOUGHT_LLM_THINKING' | 'AGENT_THOUGHT_LLM_RESPONSE' | 'FINAL_SYNTHESIS_LLM_THINKING' | 'FINAL_SYNTHESIS_LLM_RESPONSE'} [tokenType]
+   * Adapters should prioritize setting the phase-based token type based on `CallOptions.callContext`.
    */
-  tokenType?: 'LLM_THINKING' | 'LLM_RESPONSE' | 'AGENT_THOUGHT_LLM_THINKING' | 'AGENT_THOUGHT_LLM_RESPONSE' | 'FINAL_SYNTHESIS_LLM_THINKING' | 'FINAL_SYNTHESIS_LLM_RESPONSE';
+  tokenType?:
+  // Planning phase
+  | 'PLANNING_LLM_THINKING'
+  | 'PLANNING_LLM_RESPONSE'
+  // Execution phase (per-step)
+  | 'EXECUTION_LLM_THINKING'
+  | 'EXECUTION_LLM_RESPONSE'
+  // Synthesis phase
+  | 'SYNTHESIS_LLM_THINKING'
+  | 'SYNTHESIS_LLM_RESPONSE'
+  // Generic fallback (when callContext not provided)
+  | 'LLM_THINKING'
+  | 'LLM_RESPONSE';
+  /**
+   * Phase identification for the agent execution lifecycle.
+   * @since 0.4.11
+   * @property {'planning' | 'execution' | 'synthesis'} [phase]
+   */
+  phase?: 'planning' | 'execution' | 'synthesis';
+  /**
+   * Step ID during execution phase. Links tokens to specific TodoItem being executed.
+   * @since 0.4.11 - Only populated during execution phase.
+   * @property {string} [stepId]
+   */
+  stepId?: string;
+  /**
+   * Step description during execution phase.
+   * @since 0.4.11 - Only populated during execution phase.
+   * @property {string} [stepDescription]
+   */
+  stepDescription?: string;
+  /**
+   * Token emission timestamp (Unix ms).
+   * @since 0.4.11
+   * @property {number} [timestamp]
+   */
+  timestamp?: number;
   /**
    * The identifier of the conversation thread this event belongs to.
    * @property {string} threadId
@@ -899,12 +935,23 @@ export interface CallOptions {
    */
   stream?: boolean;
   /**
-   * Provides context for the LLM call, allowing adapters to differentiate
-   * between agent-level thoughts and final synthesis calls for token typing.
-   * Agent Core MUST provide this.
-   * @property {'AGENT_THOUGHT' | 'FINAL_SYNTHESIS' | string} [callContext]
+   * Provides context for the LLM call, identifying which phase of agent execution
+   * is making the request. This determines the tokenType prefix in StreamEvents.
+   *
+   * @since 0.4.11 - Breaking change: Replaced 'AGENT_THOUGHT' and 'FINAL_SYNTHESIS'
+   *                 with phase-specific values.
+   * @property {'PLANNING_THOUGHTS' | 'EXECUTION_THOUGHTS' | 'SYNTHESIS_THOUGHTS' | string} [callContext]
    */
-  callContext?: 'AGENT_THOUGHT' | 'FINAL_SYNTHESIS' | string;
+  callContext?: 'PLANNING_THOUGHTS' | 'EXECUTION_THOUGHTS' | 'SYNTHESIS_THOUGHTS' | string;
+  /**
+   * Step context for execution phase, passed to StreamEvent for step identification.
+   * @since 0.4.11 - Only used during execution phase.
+   * @property {{ stepId: string; stepDescription: string }} [stepContext]
+   */
+  stepContext?: {
+    stepId: string;
+    stepDescription: string;
+  };
   /**
    * An optional callback function invoked when the LLM streams intermediate 'thoughts' or reasoning steps.
    * @deprecated Prefer using StreamEvent with appropriate tokenType for thoughts. Kept for potential transitional compatibility.

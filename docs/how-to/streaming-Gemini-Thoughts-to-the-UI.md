@@ -25,8 +25,11 @@ const response = await art.process({
 });
 ```
 
-- Planning stream tokens will be typed as `AGENT_THOUGHT_LLM_THINKING` / `AGENT_THOUGHT_LLM_RESPONSE`.
-- Synthesis stream tokens will be typed as `FINAL_SYNTHESIS_LLM_THINKING` / `FINAL_SYNTHESIS_LLM_RESPONSE`.
+- Planning stream tokens will be typed as `PLANNING_LLM_THINKING` / `PLANNING_LLM_RESPONSE`.
+- Execution stream tokens will be typed as `EXECUTION_LLM_THINKING` / `EXECUTION_LLM_RESPONSE`.
+- Synthesis stream tokens will be typed as `SYNTHESIS_LLM_THINKING` / `SYNTHESIS_LLM_RESPONSE`.
+
+> **Note (v0.4.11)**: The token types have been renamed from `AGENT_THOUGHT_LLM_*` and `FINAL_SYNTHESIS_LLM_*` to more descriptive phase-based names.
 
 ### 2) Stream thinking tokens to your UI with `LLMStreamSocket`
 Subscribe before you call `art.process()` to capture the full stream. Filter by `threadId` and check `tokenType`.
@@ -40,10 +43,14 @@ const unsubscribe = llm.subscribe(
     if (evt.type !== 'TOKEN') return;
     const text = String(evt.data ?? '');
 
-    if (evt.tokenType === 'AGENT_THOUGHT_LLM_THINKING') {
+    // v0.4.11: Use phase-specific tokenType values
+    if (evt.tokenType === 'PLANNING_LLM_THINKING') {
       // planning thoughts (internal reasoning during planning)
       renderPlanningThought(text);
-    } else if (evt.tokenType === 'FINAL_SYNTHESIS_LLM_THINKING') {
+    } else if (evt.tokenType === 'EXECUTION_LLM_THINKING') {
+      // execution thoughts (internal reasoning during task execution)
+      renderExecutionThought(text);
+    } else if (evt.tokenType === 'SYNTHESIS_LLM_THINKING') {
       // synthesis thoughts (internal reasoning while forming the final answer)
       renderSynthesisThought(text);
     }
@@ -65,6 +72,7 @@ Tip: If you need to isolate events to a specific UI tab/window, include `session
 You don’t need to write any code to persist thoughts if you’re using the default `PESAgent`. It automatically records `ObservationType.THOUGHTS` for any thinking tokens detected during planning and synthesis. These are saved through your configured storage adapter (e.g., `IndexedDBStorageAdapter`, `SupabaseStorageAdapter`).
 
 - Planning thinking tokens are stored with `metadata.phase = 'planning'`.
+- Execution thinking tokens are stored with `metadata.phase = 'execution'`, plus `stepId` and `stepDescription`.
 - Synthesis thinking tokens are stored with `metadata.phase = 'synthesis'`.
 
 Ensure you configured storage when creating your instance:
@@ -105,9 +113,10 @@ import { ObservationType } from 'art-framework';
 const obs = art.uiSystem.getObservationSocket();
 const history = await obs.getHistory(ObservationType.THOUGHTS, { threadId });
 
-// Each item includes content.text and metadata.phase ('planning' | 'synthesis')
+// Each item includes content.text and metadata.phase ('planning' | 'execution' | 'synthesis')
 history.forEach((o) => {
   if (o.metadata?.phase === 'planning') renderPlanningThought(o.content?.text);
+  if (o.metadata?.phase === 'execution') renderExecutionThought(o.content?.text);
   if (o.metadata?.phase === 'synthesis') renderSynthesisThought(o.content?.text);
 });
 ```

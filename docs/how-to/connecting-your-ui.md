@@ -220,8 +220,10 @@ const unsubscribe = llmStreamSocket.subscribe(
   (streamEvent) => {
     switch (streamEvent.type) {
       case 'TOKEN':
-        // Differentiate between thoughts and the final response
-        if (streamEvent.tokenType === 'FINAL_SYNTHESIS_LLM_RESPONSE') {
+        // v0.4.11: Differentiate between thoughts and the final response using phase-specific tokenTypes
+        // THINKING tokens: PLANNING_LLM_THINKING, EXECUTION_LLM_THINKING, SYNTHESIS_LLM_THINKING
+        // RESPONSE tokens: PLANNING_LLM_RESPONSE, EXECUTION_LLM_RESPONSE, SYNTHESIS_LLM_RESPONSE
+        if (streamEvent.tokenType === 'SYNTHESIS_LLM_RESPONSE') {
           const token = streamEvent.data;
           finalMessage += token;
           // Code to update the last message in the UI with the new token

@@ -13,9 +13,6 @@ import { ARTError, ErrorCode } from '@/errors'; // Import ARTError and ErrorCode
 // TODO: Implement streaming support for DeepSeek.
 // TODO: Implement support for 'tools' and 'tool_choice'.
 
-/**
- * Configuration options required for the `DeepSeekAdapter`.
- */
 export interface DeepSeekAdapterOptions {
   /** Your DeepSeek API key. Handle securely. */
   apiKey: string;
@@ -23,6 +20,38 @@ export interface DeepSeekAdapterOptions {
   model?: string;
   /** Optional: Override the base URL for the DeepSeek API. Defaults to 'https://api.deepseek.com/v1'. */
   apiBaseUrl?: string;
+}
+
+/**
+ * Helper to determine tokenType and phase based on callContext.
+ * @since 0.4.11
+ */
+function getTokenContext(callContext: string | undefined, isThinking: boolean): {
+  tokenType: string;
+  phase: 'planning' | 'execution' | 'synthesis' | undefined;
+} {
+  switch (callContext) {
+    case 'PLANNING_THOUGHTS':
+      return {
+        phase: 'planning',
+        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
+      };
+    case 'EXECUTION_THOUGHTS':
+      return {
+        phase: 'execution',
+        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
+      };
+    case 'SYNTHESIS_THOUGHTS':
+      return {
+        phase: 'synthesis',
+        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
+      };
+    default:
+      return {
+        phase: undefined,
+        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
+      };
+  }
 }
 
 // Use OpenAI-compatible structures
@@ -116,18 +145,19 @@ export class DeepSeekAdapter implements ProviderAdapter {
    */
   async call(prompt: ArtStandardPrompt, options: CallOptions): Promise<AsyncIterable<StreamEvent>> {
     const { threadId, traceId = `deepseek-trace-${Date.now()}`, sessionId, stream, callContext, model: modelOverride } = options;
+    const stepContext = (options as any).stepContext;
     const modelToUse = modelOverride || this.model;
 
     // --- Placeholder for Streaming ---
     // TODO: Implement streaming for DeepSeek
     if (stream) {
-        Logger.warn(`DeepSeekAdapter: Streaming requested but not implemented. Returning error stream.`, { threadId, traceId });
-        const errorGenerator = async function*(): AsyncIterable<StreamEvent> {
-            const err = new ARTError("Streaming is not yet implemented for the DeepSeekAdapter.", ErrorCode.LLM_PROVIDER_ERROR);
-            yield { type: 'ERROR', data: err, threadId: threadId ?? '', traceId: traceId ?? '', sessionId };
-            yield { type: 'END', data: null, threadId: threadId ?? '', traceId: traceId ?? '', sessionId };
-        };
-        return errorGenerator();
+      Logger.warn(`DeepSeekAdapter: Streaming requested but not implemented. Returning error stream.`, { threadId, traceId });
+      const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
+        const err = new ARTError("Streaming is not yet implemented for the DeepSeekAdapter.", ErrorCode.LLM_PROVIDER_ERROR);
+        yield { type: 'ERROR', data: err, threadId: threadId ?? '', traceId: traceId ?? '', sessionId };
+        yield { type: 'END', data: null, threadId: threadId ?? '', traceId: traceId ?? '', sessionId };
+      };
+      return errorGenerator();
     }
 
     // --- Non-Streaming Logic ---
@@ -139,10 +169,10 @@ export class DeepSeekAdapter implements ProviderAdapter {
       openAiMessages = this.translateToOpenAI(prompt);
     } catch (error: any) {
       Logger.error(`Error translating ArtStandardPrompt to DeepSeek/OpenAI format: ${error.message}`, { error, threadId, traceId });
-      const generator = async function*(): AsyncIterable<StreamEvent> {
-          const err = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
-          yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
-          yield { type: 'END', data: null, threadId, traceId, sessionId };
+      const generator = async function* (): AsyncIterable<StreamEvent> {
+        const err = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
+        yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
+        yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
       return generator();
     }
@@ -165,174 +195,174 @@ export class DeepSeekAdapter implements ProviderAdapter {
     Object.keys(payload).forEach(key => payload[key as keyof OpenAIChatCompletionPayload] === undefined && delete payload[key as keyof OpenAIChatCompletionPayload]);
 
     const headers: Record<string, string> = {
-         'Content-Type': 'application/json',
-         'Authorization': `Bearer ${this.apiKey}`,
-     };
-   
-     Logger.debug(`Calling DeepSeek API (non-streaming): ${apiUrl} with model ${this.model}`, { threadId, traceId });
-   
-     // Use an async generator for non-streaming case too
-     const generator = async function*(): AsyncIterable<StreamEvent> {
-         try {
-             const response = await fetch(apiUrl, {
-                 method: 'POST',
-                 headers: headers,
-                 body: JSON.stringify(payload),
-             });
-   
-             if (!response.ok) {
-                 const errorBody = await response.text();
-                 let errorMessage = errorBody;
-                 try {
-                     const parsedError = JSON.parse(errorBody);
-                     if (parsedError?.error?.message) errorMessage = parsedError.error.message;
-                 } catch (e) { /* Ignore */ }
-                 const err = new ARTError(
-                    `DeepSeek API request failed: ${response.status} ${response.statusText} - ${errorMessage}`,
-                    ErrorCode.LLM_PROVIDER_ERROR,
-                    new Error(errorBody) // Pass underlying error context
-                 );
-                 yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
-                 yield { type: 'END', data: null, threadId, traceId, sessionId };
-                 return; // Stop the generator on error
-             }
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.apiKey}`,
+    };
 
-             const data = await response.json() as OpenAIChatCompletionResponse;
-             const firstChoice = data.choices?.[0];
+    Logger.debug(`Calling DeepSeek API (non-streaming): ${apiUrl} with model ${this.model}`, { threadId, traceId });
 
-             if (!firstChoice?.message) {
-                 const err = new ARTError('Invalid response structure from DeepSeek API: No message found.', ErrorCode.LLM_PROVIDER_ERROR, new Error(JSON.stringify(data)));
-                 yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
-                 yield { type: 'END', data: null, threadId, traceId, sessionId };
-                 return; // Stop the generator
-             }
+    // Use an async generator for non-streaming case too
+    const generator = async function* (): AsyncIterable<StreamEvent> {
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(payload),
+        });
 
-             const responseMessage = firstChoice.message;
-             // TODO: Handle tool_calls in non-streaming response if needed by agent logic
-             if (responseMessage.tool_calls) {
-                 Logger.debug("DeepSeek response included tool calls (non-streaming)", { toolCalls: responseMessage.tool_calls, threadId, traceId });
-             }
-             Logger.debug(`DeepSeek API call successful. Finish reason: ${firstChoice.finish_reason}`, { threadId, traceId });
+        if (!response.ok) {
+          const errorBody = await response.text();
+          let errorMessage = errorBody;
+          try {
+            const parsedError = JSON.parse(errorBody);
+            if (parsedError?.error?.message) errorMessage = parsedError.error.message;
+          } catch (e) { /* Ignore */ }
+          const err = new ARTError(
+            `DeepSeek API request failed: ${response.status} ${response.statusText} - ${errorMessage}`,
+            ErrorCode.LLM_PROVIDER_ERROR,
+            new Error(errorBody) // Pass underlying error context
+          );
+          yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
+          yield { type: 'END', data: null, threadId, traceId, sessionId };
+          return; // Stop the generator on error
+        }
 
-             // Yield TOKEN
-             const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-             const responseContent = responseMessage.content ?? '';
-             yield { type: 'TOKEN', data: responseContent.trim(), threadId, traceId, sessionId, tokenType };
+        const data = await response.json() as OpenAIChatCompletionResponse;
+        const firstChoice = data.choices?.[0];
 
-             // Yield METADATA
-             const metadata: LLMMetadata = {
-                 inputTokens: data.usage?.prompt_tokens,
-                 outputTokens: data.usage?.completion_tokens,
-                 stopReason: firstChoice.finish_reason,
-                 providerRawUsage: { usage: data.usage, finish_reason: firstChoice.finish_reason },
-                 traceId: traceId,
-             };
-             yield { type: 'METADATA', data: metadata, threadId, traceId, sessionId };
+        if (!firstChoice?.message) {
+          const err = new ARTError('Invalid response structure from DeepSeek API: No message found.', ErrorCode.LLM_PROVIDER_ERROR, new Error(JSON.stringify(data)));
+          yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
+          yield { type: 'END', data: null, threadId, traceId, sessionId };
+          return; // Stop the generator
+        }
 
-             // Yield END
-             yield { type: 'END', data: null, threadId, traceId, sessionId };
+        const responseMessage = firstChoice.message;
+        // TODO: Handle tool_calls in non-streaming response if needed by agent logic
+        if (responseMessage.tool_calls) {
+          Logger.debug("DeepSeek response included tool calls (non-streaming)", { toolCalls: responseMessage.tool_calls, threadId, traceId });
+        }
+        Logger.debug(`DeepSeek API call successful. Finish reason: ${firstChoice.finish_reason}`, { threadId, traceId });
 
-         } catch (error: any) {
-             Logger.error(`Error during DeepSeek API call: ${error.message}`, { error, threadId, traceId });
-             const artError = error instanceof ARTError ? error : new ARTError(error.message, ErrorCode.LLM_PROVIDER_ERROR, error);
-             yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
-             yield { type: 'END', data: null, threadId, traceId, sessionId };
-         }
-     }; // No need for .bind(this)
+        // Yield TOKEN
+        const { tokenType, phase } = getTokenContext(callContext, false);
+        const responseContent = responseMessage.content ?? '';
+        yield { type: 'TOKEN', data: responseContent.trim(), tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
 
-     return generator();
-   }
+        // Yield METADATA
+        const metadata: LLMMetadata = {
+          inputTokens: data.usage?.prompt_tokens,
+          outputTokens: data.usage?.completion_tokens,
+          stopReason: firstChoice.finish_reason,
+          providerRawUsage: { usage: data.usage, finish_reason: firstChoice.finish_reason },
+          traceId: traceId,
+        };
+        yield { type: 'METADATA', data: metadata, threadId, traceId, sessionId };
 
-   /**
-    * Translates the provider-agnostic `ArtStandardPrompt` into the OpenAI API's `OpenAIMessage[]` format.
-    * (Copied from OpenAIAdapter - assumes DeepSeek compatibility)
-    *
-    * @private
-    * @param {ArtStandardPrompt} artPrompt - The input `ArtStandardPrompt` array.
-    * @returns {OpenAIMessage[]} The `OpenAIMessage[]` array formatted for the OpenAI API.
-    * @throws {ARTError} If translation encounters an issue (ErrorCode.PROMPT_TRANSLATION_FAILED).
-    */
-   private translateToOpenAI(artPrompt: ArtStandardPrompt): OpenAIMessage[] {
-     // Identical implementation to OpenAIAdapter's translateToOpenAI
-     return artPrompt.map((message: ArtStandardMessage): OpenAIMessage => {
-       switch (message.role) {
-         case 'system': {
-           if (typeof message.content !== 'string') {
-             Logger.warn(`DeepSeekAdapter: System message content is not a string. Stringifying.`, { content: message.content });
-             return { role: 'system', content: String(message.content) };
-           }
-           return { role: 'system', content: message.content };
-         }
-         case 'user': {
-           if (typeof message.content !== 'string') {
-             Logger.warn(`DeepSeekAdapter: User message content is not a string. Stringifying.`, { content: message.content });
-             return { role: 'user', content: String(message.content) };
-           }
-           return { role: 'user', content: message.content };
-         }
-         case 'assistant': {
-           const assistantMsg: OpenAIMessage = {
-             role: 'assistant',
-             content: typeof message.content === 'string' ? message.content : null,
-           };
-           if (message.tool_calls && message.tool_calls.length > 0) {
-             assistantMsg.tool_calls = message.tool_calls.map(tc => {
-                 if (tc.type !== 'function' || !tc.function?.name || typeof tc.function?.arguments !== 'string') {
-                      throw new ARTError(
-                         `DeepSeekAdapter: Invalid tool_call structure in assistant message. ID: ${tc.id}`,
-                         ErrorCode.PROMPT_TRANSLATION_FAILED
-                     );
-                 }
-                 return {
-                     id: tc.id,
-                     type: tc.type,
-                     function: {
-                         name: tc.function.name,
-                         arguments: tc.function.arguments,
-                     }
-                 };
-             });
-           }
-           if (assistantMsg.content === '' && !assistantMsg.tool_calls) {
-               assistantMsg.content = null;
-           }
-           if (assistantMsg.content === '' && assistantMsg.tool_calls) {
-               assistantMsg.content = null;
-           }
-           if (typeof assistantMsg.content !== 'string' && assistantMsg.content !== null) {
-               assistantMsg.content = null;
-           }
-           return assistantMsg;
-         }
-         case 'tool_result': {
-           if (!message.tool_call_id) {
-             throw new ARTError(
-               `DeepSeekAdapter: 'tool_result' message missing required 'tool_call_id'.`,
-               ErrorCode.PROMPT_TRANSLATION_FAILED
-             );
-           }
-           if (typeof message.content !== 'string') {
-              Logger.warn(`DeepSeekAdapter: Tool result content is not a string. Stringifying.`, { content: message.content });
-           }
-           return {
-             role: 'tool',
-             tool_call_id: message.tool_call_id,
-             content: String(message.content),
-           };
-         }
-         case 'tool_request': {
+        // Yield END
+        yield { type: 'END', data: null, threadId, traceId, sessionId };
+
+      } catch (error: any) {
+        Logger.error(`Error during DeepSeek API call: ${error.message}`, { error, threadId, traceId });
+        const artError = error instanceof ARTError ? error : new ARTError(error.message, ErrorCode.LLM_PROVIDER_ERROR, error);
+        yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+        yield { type: 'END', data: null, threadId, traceId, sessionId };
+      }
+    }; // No need for .bind(this)
+
+    return generator();
+  }
+
+  /**
+   * Translates the provider-agnostic `ArtStandardPrompt` into the OpenAI API's `OpenAIMessage[]` format.
+   * (Copied from OpenAIAdapter - assumes DeepSeek compatibility)
+   *
+   * @private
+   * @param {ArtStandardPrompt} artPrompt - The input `ArtStandardPrompt` array.
+   * @returns {OpenAIMessage[]} The `OpenAIMessage[]` array formatted for the OpenAI API.
+   * @throws {ARTError} If translation encounters an issue (ErrorCode.PROMPT_TRANSLATION_FAILED).
+   */
+  private translateToOpenAI(artPrompt: ArtStandardPrompt): OpenAIMessage[] {
+    // Identical implementation to OpenAIAdapter's translateToOpenAI
+    return artPrompt.map((message: ArtStandardMessage): OpenAIMessage => {
+      switch (message.role) {
+        case 'system': {
+          if (typeof message.content !== 'string') {
+            Logger.warn(`DeepSeekAdapter: System message content is not a string. Stringifying.`, { content: message.content });
+            return { role: 'system', content: String(message.content) };
+          }
+          return { role: 'system', content: message.content };
+        }
+        case 'user': {
+          if (typeof message.content !== 'string') {
+            Logger.warn(`DeepSeekAdapter: User message content is not a string. Stringifying.`, { content: message.content });
+            return { role: 'user', content: String(message.content) };
+          }
+          return { role: 'user', content: message.content };
+        }
+        case 'assistant': {
+          const assistantMsg: OpenAIMessage = {
+            role: 'assistant',
+            content: typeof message.content === 'string' ? message.content : null,
+          };
+          if (message.tool_calls && message.tool_calls.length > 0) {
+            assistantMsg.tool_calls = message.tool_calls.map(tc => {
+              if (tc.type !== 'function' || !tc.function?.name || typeof tc.function?.arguments !== 'string') {
+                throw new ARTError(
+                  `DeepSeekAdapter: Invalid tool_call structure in assistant message. ID: ${tc.id}`,
+                  ErrorCode.PROMPT_TRANSLATION_FAILED
+                );
+              }
+              return {
+                id: tc.id,
+                type: tc.type,
+                function: {
+                  name: tc.function.name,
+                  arguments: tc.function.arguments,
+                }
+              };
+            });
+          }
+          if (assistantMsg.content === '' && !assistantMsg.tool_calls) {
+            assistantMsg.content = null;
+          }
+          if (assistantMsg.content === '' && assistantMsg.tool_calls) {
+            assistantMsg.content = null;
+          }
+          if (typeof assistantMsg.content !== 'string' && assistantMsg.content !== null) {
+            assistantMsg.content = null;
+          }
+          return assistantMsg;
+        }
+        case 'tool_result': {
+          if (!message.tool_call_id) {
             throw new ARTError(
-               `DeepSeekAdapter: Unexpected 'tool_request' role encountered during translation.`,
-               ErrorCode.PROMPT_TRANSLATION_FAILED
-             );
-         }
-         default: {
-            throw new ARTError(
-               `DeepSeekAdapter: Unknown message role '${message.role}' encountered during translation.`,
-               ErrorCode.PROMPT_TRANSLATION_FAILED
-             );
-         }
-       }
-     });
-   }
- }
+              `DeepSeekAdapter: 'tool_result' message missing required 'tool_call_id'.`,
+              ErrorCode.PROMPT_TRANSLATION_FAILED
+            );
+          }
+          if (typeof message.content !== 'string') {
+            Logger.warn(`DeepSeekAdapter: Tool result content is not a string. Stringifying.`, { content: message.content });
+          }
+          return {
+            role: 'tool',
+            tool_call_id: message.tool_call_id,
+            content: String(message.content),
+          };
+        }
+        case 'tool_request': {
+          throw new ARTError(
+            `DeepSeekAdapter: Unexpected 'tool_request' role encountered during translation.`,
+            ErrorCode.PROMPT_TRANSLATION_FAILED
+          );
+        }
+        default: {
+          throw new ARTError(
+            `DeepSeekAdapter: Unknown message role '${message.role}' encountered during translation.`,
+            ErrorCode.PROMPT_TRANSLATION_FAILED
+          );
+        }
+      }
+    });
+  }
+}

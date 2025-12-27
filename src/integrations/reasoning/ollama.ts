@@ -14,6 +14,38 @@ import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
 // XmlMatcher removed, parsing of embedded XML is responsibility of OutputParser
 
+/**
+ * Helper to determine tokenType and phase based on callContext.
+ * @since 0.4.11
+ */
+function getTokenContext(callContext: string | undefined, isThinking: boolean): {
+  tokenType: string;
+  phase: 'planning' | 'execution' | 'synthesis' | undefined;
+} {
+  switch (callContext) {
+    case 'PLANNING_THOUGHTS':
+      return {
+        phase: 'planning',
+        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
+      };
+    case 'EXECUTION_THOUGHTS':
+      return {
+        phase: 'execution',
+        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
+      };
+    case 'SYNTHESIS_THOUGHTS':
+      return {
+        phase: 'synthesis',
+        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
+      };
+    default:
+      return {
+        phase: undefined,
+        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
+      };
+  }
+}
+
 // Define expected options for the Ollama adapter constructor
 /**
  * Configuration options required for the `OllamaAdapter`.
@@ -110,6 +142,7 @@ export class OllamaAdapter implements ProviderAdapter {
       tools: availableArtTools,
       providerConfig,
     } = options;
+    const stepContext = (options as any).stepContext;
 
     const modelToUse = providerConfig?.modelId || modelOverride || this.defaultModel;
 
@@ -176,7 +209,7 @@ export class OllamaAdapter implements ProviderAdapter {
           const streamInstance = await this.client.chat.completions.create(
             requestBody as OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming
           );
- 
+
           // let accumulatedText = ""; // Not strictly needed here as text is yielded token by token
           const accumulatedToolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[] = [];
 
@@ -192,8 +225,8 @@ export class OllamaAdapter implements ProviderAdapter {
               accumulatedOutputTokens++; // Approximation: count each content chunk as one token
               // If XML parsing is needed for <think> tags, it should be done by OutputParser
               // Adapter streams raw content.
-              const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-              yield { type: 'TOKEN', data: delta.content, threadId, traceId, sessionId, tokenType };
+              const { tokenType, phase } = getTokenContext(callContext, false);
+              yield { type: 'TOKEN', data: delta.content, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
             }
 
             if (delta?.tool_calls) {
@@ -215,32 +248,32 @@ export class OllamaAdapter implements ProviderAdapter {
                   if (tcDelta.function?.arguments) {
                     // Ensure function object exists if not initialized by name first
                     if (!accumulatedToolCalls[tcDelta.index].function) {
-                        accumulatedToolCalls[tcDelta.index].function = { name: '', arguments: ''};
+                      accumulatedToolCalls[tcDelta.index].function = { name: '', arguments: '' };
                     }
                     accumulatedToolCalls[tcDelta.index].function.arguments += tcDelta.function.arguments;
                   }
                 }
               });
             }
-             // Ollama's OpenAI compatible stream might not include usage per chunk.
-             // We'll rely on the final non-streaming call for accurate usage if possible,
-             // or estimate for streaming.
+            // Ollama's OpenAI compatible stream might not include usage per chunk.
+            // We'll rely on the final non-streaming call for accurate usage if possible,
+            // or estimate for streaming.
             if (chunk.usage) { // Check if usage is present in the chunk
-                finalApiResponseUsage = chunk.usage;
+              finalApiResponseUsage = chunk.usage;
             }
           }
-          
+
           // If streaming and stop reason is tool_calls, yield the accumulated tool calls.
           // Text content would have been yielded incrementally.
           if (finalStopReason === 'tool_calls' && accumulatedToolCalls.length > 0) {
-            const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
+            const { tokenType, phase } = getTokenContext(callContext, false);
             const toolData = accumulatedToolCalls.map(tc => ({
-                type: 'tool_use', // ART specific marker
-                id: tc.id,
-                name: tc.function.name,
-                input: JSON.parse(tc.function.arguments || '{}'),
+              type: 'tool_use', // ART specific marker
+              id: tc.id,
+              name: tc.function.name,
+              input: JSON.parse(tc.function.arguments || '{}'),
             }));
-            yield { type: 'TOKEN', data: toolData, threadId, traceId, sessionId, tokenType };
+            yield { type: 'TOKEN', data: toolData, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
           }
           // Note: accumulatedText is not explicitly yielded here as all text content from delta.content
           // was already yielded token by token. If there's a scenario where text needs to be combined
@@ -261,22 +294,22 @@ export class OllamaAdapter implements ProviderAdapter {
           finalApiResponseUsage = response.usage;
           const responseMessage = firstChoice.message;
 
-          const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
+          const { tokenType, phase } = getTokenContext(callContext, false);
 
           if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
             const toolData = responseMessage.tool_calls.map((tc: OpenAI.Chat.Completions.ChatCompletionMessageToolCall) => ({
-                type: 'tool_use',
-                id: tc.id,
-                name: tc.function.name,
-                input: JSON.parse(tc.function.arguments || '{}'),
+              type: 'tool_use',
+              id: tc.id,
+              name: tc.function.name,
+              input: JSON.parse(tc.function.arguments || '{}'),
             }));
             if (responseMessage.content) {
-                 yield { type: 'TOKEN', data: [{type: 'text', text: responseMessage.content.trim()}, ...toolData], threadId, traceId, sessionId, tokenType };
+              yield { type: 'TOKEN', data: [{ type: 'text', text: responseMessage.content.trim() }, ...toolData], tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
             } else {
-                yield { type: 'TOKEN', data: toolData, threadId, traceId, sessionId, tokenType };
+              yield { type: 'TOKEN', data: toolData, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
             }
           } else if (responseMessage.content) {
-            yield { type: 'TOKEN', data: responseMessage.content.trim(), threadId, traceId, sessionId, tokenType };
+            yield { type: 'TOKEN', data: responseMessage.content.trim(), tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
           }
         }
 
@@ -422,11 +455,11 @@ export class OllamaAdapter implements ProviderAdapter {
           // If content is empty string and no tool_calls, it might be an issue for some models.
           // However, OpenAI allows empty string content. For safety, can be null.
           // Let's stick to null if it was not a string initially or became empty.
-           if (typeof message.content !== 'string') assistantMsg.content = null;
+          if (typeof message.content !== 'string') assistantMsg.content = null;
         }
         // Ensure content is explicitly null if it's not a string and not empty (e.g. if it was an object that didn't become a string)
         if (typeof assistantMsg.content !== 'string' && assistantMsg.content !== null) {
-            assistantMsg.content = null;
+          assistantMsg.content = null;
         }
         return assistantMsg;
       }

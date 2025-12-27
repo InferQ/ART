@@ -37,6 +37,38 @@ const DEFAULT_MAX_DELAY_MS = 30000;
 const RETRYABLE_STATUS_CODES = [503, 429, 500, 502, 504];
 
 /**
+ * Helper to determine tokenType and phase based on callContext.
+ * @since 0.4.11
+ */
+function getTokenContext(callContext: string | undefined, isThinking: boolean): {
+  tokenType: string;
+  phase: 'planning' | 'execution' | 'synthesis' | undefined;
+} {
+  switch (callContext) {
+    case 'PLANNING_THOUGHTS':
+      return {
+        phase: 'planning',
+        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
+      };
+    case 'EXECUTION_THOUGHTS':
+      return {
+        phase: 'execution',
+        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
+      };
+    case 'SYNTHESIS_THOUGHTS':
+      return {
+        phase: 'synthesis',
+        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
+      };
+    default:
+      return {
+        phase: undefined,
+        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
+      };
+  }
+}
+
+/**
  * Helper function to check if an error is retryable
  */
 function isRetryableError(error: any): boolean {
@@ -48,10 +80,10 @@ function isRetryableError(error: any): boolean {
   // Check for common retryable error messages
   const message = String(error?.message || error?.error?.message || '').toLowerCase();
   return message.includes('overloaded') ||
-         message.includes('rate limit') ||
-         message.includes('temporarily unavailable') ||
-         message.includes('503') ||
-         message.includes('429');
+    message.includes('rate limit') ||
+    message.includes('temporarily unavailable') ||
+    message.includes('503') ||
+    message.includes('429');
 }
 
 /**
@@ -182,7 +214,7 @@ export class GeminiAdapter implements ProviderAdapter {
    * }
    */
   async call(prompt: ArtStandardPrompt, options: CallOptions): Promise<AsyncIterable<StreamEvent>> {
-    const { threadId, traceId = `gemini-trace-${Date.now()}`, sessionId, stream, callContext, model: modelOverride } = options;
+    const { threadId, traceId = `gemini-trace-${Date.now()}`, sessionId, stream, callContext, model: modelOverride, stepContext } = options;
     const modelToUse = modelOverride || this.defaultModel;
 
     // --- Format Payload for SDK ---
@@ -277,16 +309,34 @@ export class GeminiAdapter implements ProviderAdapter {
                   (part as any)?.metadata?.thought ||
                   (part as any)?.inlineMetadata?.thought
                 );
-                const tokenType = callContext === 'AGENT_THOUGHT'
-                  ? (isThought ? 'AGENT_THOUGHT_LLM_THINKING' : 'AGENT_THOUGHT_LLM_RESPONSE')
-                  : (isThought ? 'FINAL_SYNTHESIS_LLM_THINKING' : 'FINAL_SYNTHESIS_LLM_RESPONSE');
-                yield { type: 'TOKEN', data: partText, threadId, traceId, sessionId, tokenType };
+                const { tokenType, phase } = getTokenContext(callContext, isThought);
+                yield {
+                  type: 'TOKEN',
+                  data: partText,
+                  tokenType: tokenType as any,
+                  phase,
+                  timestamp: Date.now(),
+                  ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }),
+                  threadId,
+                  traceId,
+                  sessionId
+                };
               }
             } else {
               const textPart = (chunk as any).text; // Access as property (fallback)
               if (textPart) {
-                const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'FINAL_SYNTHESIS_LLM_RESPONSE';
-                yield { type: 'TOKEN', data: textPart, threadId, traceId, sessionId, tokenType };
+                const { tokenType, phase } = getTokenContext(callContext, false);
+                yield {
+                  type: 'TOKEN',
+                  data: textPart,
+                  tokenType: tokenType as any,
+                  phase,
+                  timestamp: Date.now(),
+                  ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }),
+                  threadId,
+                  traceId,
+                  sessionId
+                };
               }
             }
             // Log potential usage metadata if available in chunks (less common)
@@ -366,10 +416,18 @@ export class GeminiAdapter implements ProviderAdapter {
                 (part as any)?.metadata?.thought ||
                 (part as any)?.inlineMetadata?.thought
               );
-              const tokenType = callContext === 'AGENT_THOUGHT'
-                ? (isThought ? 'AGENT_THOUGHT_LLM_THINKING' : 'AGENT_THOUGHT_LLM_RESPONSE')
-                : (isThought ? 'FINAL_SYNTHESIS_LLM_THINKING' : 'FINAL_SYNTHESIS_LLM_RESPONSE');
-              yield { type: 'TOKEN', data: partText.trim(), threadId, traceId, sessionId, tokenType };
+              const { tokenType, phase } = getTokenContext(callContext, isThought);
+              yield {
+                type: 'TOKEN',
+                data: partText.trim(),
+                tokenType: tokenType as any,
+                phase,
+                timestamp: Date.now(),
+                ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }),
+                threadId,
+                traceId,
+                sessionId
+              };
             }
           } else if (!firstCandidate || !responseText) {
             if (result.promptFeedback?.blockReason) { // Access directly from result
@@ -382,8 +440,18 @@ export class GeminiAdapter implements ProviderAdapter {
             return;
           } else {
             // Yield TOKEN (fallback single text)
-            const tokenType = callContext === 'AGENT_THOUGHT' ? 'AGENT_THOUGHT_LLM_RESPONSE' : 'LLM_RESPONSE';
-            yield { type: 'TOKEN', data: responseText.trim(), threadId, traceId, sessionId, tokenType };
+            const { tokenType, phase } = getTokenContext(callContext, false);
+            yield {
+              type: 'TOKEN',
+              data: responseText.trim(),
+              tokenType: tokenType as any,
+              phase,
+              timestamp: Date.now(),
+              ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }),
+              threadId,
+              traceId,
+              sessionId
+            };
           }
 
           // Yield METADATA
