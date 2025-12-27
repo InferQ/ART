@@ -55,6 +55,9 @@ The `ObservationType` enum defines the vocabulary of events the system can expre
 | **`TOOL_CALL`** | The decision to call one or more tools. | `{ toolCalls: ParsedToolCall[] }` |
 | **`TOOL_EXECUTION`** | The result of a specific tool execution. | `{ callId: string; toolName: string; status: 'success' | 'error'; output?: any; error?: string }` |
 
+> [!NOTE]
+> For `TOOL_EXECUTION` observations, the `output` property is populated directly from the `output` key returned by the tool's `execute()` method. Ensure your custom tools return data using this key for it to be visible in observations and to the PES Agent.
+
 ### State & Status
 
 | Type | Description | Typical Content |

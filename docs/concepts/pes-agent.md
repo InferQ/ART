@@ -162,7 +162,18 @@ To bridge the gap between "planning" to do something and "actually" doing it, th
 *   **Strict Validation:** The agent enforces that *required* tools are actually called. If an LLM "hallucinates" a result without calling the tool, the framework intercepts it and issues an **Enforcement Prompt**, forcing a retry.
 *   **Token Separation:** Thinking tokens (for the UI stream) are rigorously separated from Response tokens (JSON), ensuring reliable parsing even with verbose models.
 
-### 2. Human-in-the-Loop (HITL) V2
+### 2. Smart Result Capture
+In recent versions (v0.4.7+), the PES Agent implements "Smart Result Capture" to ensure that data fetched by tools is correctly associated with the `TodoItem`.
+
+**The `output` Property Requirement:**
+The framework's internal logic specifically scans the object returned by a tool's `execute()` method for a property named exactly `output`. 
+
+*   **Success Scenario:** If a tool finishes and the LLM hasn't explicitly extracted a summary, the framework automatically populates `item.result` with `toolResult.output`.
+*   **Failure Scenario:** If your tool returns data in a differently named property (e.g., `{ data: [...] }` or `{ artifact: { ... } }`), the PES Agent will capture `undefined`. This leads to a "failure chain" where the agent believes information retrieval failed because the previous step's result appears empty in its prompt context.
+
+**Best Practice:** Always wrap your tool's success payload in an `output` key.
+
+### 3. Human-in-the-Loop (HITL) V2
 The PES Agent now supports **Blocking Tools**—actions that require explicit user approval (e.g., `confirmation_tool`) before proceeding.
 
 #### The Suspension Lifecycle

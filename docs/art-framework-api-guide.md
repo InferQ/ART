@@ -174,6 +174,16 @@ Each adapter comes with its own options type for specific configurations:
 A basic tool that allows the agent to evaluate mathematical expressions.
 -   **When to use**: A good example of a simple tool. Include it when you expect the agent to perform calculations.
 
+### Building Custom Tools
+
+To extend the agent's capabilities, you can create custom tools by implementing the `IToolExecutor` interface.
+
+> [!IMPORTANT]
+> **Tool Output Requirement**
+> All custom tools must return their success data inside an `output` property. Failure to do so will prevent the `PESAgent` from correctly capturing the result for subsequent steps.
+
+For a detailed guide on creating tools, see [Building Custom Tools](./how-to/building-custom-tools.md).
+
 ---
 
 ## 4. Advanced Systems & Managers

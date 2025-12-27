@@ -128,6 +128,20 @@ tools: [
 ]
 ```
 
+> [!IMPORTANT]
+> **The `output` Key Requirement**
+> For the PES Agent's "Smart Result Capture" to work correctly, every tool's `execute` method **must** return an object containing an `output` property. This property should hold the primary data the agent needs to see.
+> 
+> If your tool returns data in a different key (e.g., `data`, `results`, `artifact`), the framework will see a `null` or `undefined` result for the step, potentially causing the agent to believe the task failed even if the tool succeeded.
+> 
+> **Correct Result Shape:**
+> ```typescript
+> return {
+>   status: 'success',
+>   output: { /* your data here */ }
+> };
+> ```
+
 ### 5. Agent Identity & Persona (`persona`)
 
 **Purpose**: Defines the "character" of the agent. This deeply influences the system prompts used during the Planning and Synthesis phases.
