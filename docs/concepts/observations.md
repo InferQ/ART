@@ -118,7 +118,7 @@ The `ObservationManager` handles the details of ID generation and timestamping. 
 await this.observationManager.record({
     threadId: "thread-123",
     type: ObservationType.THOUGHTS,
-    content: { thought: "I should check the database for existing records." },
+    content: { text: "I should check the database for existing records." },
     metadata: { confidence: 0.9 }
 });
 ```

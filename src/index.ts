@@ -275,7 +275,6 @@ export { TaskDelegationService } from '@/systems/a2a/TaskDelegationService';
 export type { TaskDelegationConfig, TaskStatusResponse } from '@/systems/a2a/TaskDelegationService';
 export type { A2ATaskEvent, A2ATaskFilter } from '@/systems/ui/a2a-task-socket';
 
-
 // --- 5. Utilities ---
 
 // --- Managers & Registries (advanced) ---
@@ -291,6 +290,18 @@ export { ToolRegistry } from '@/systems/tool/ToolRegistry';
  * Provider manager implementation controlling adapter lifecycles and concurrency.
  */
 export { ProviderManagerImpl } from '@/systems/reasoning/ProviderManagerImpl';
+/**
+ * Reasoning engine implementation for LLM interactions.
+ */
+export { ReasoningEngine } from '@/systems/reasoning/ReasoningEngine';
+/**
+ * Output parser implementation for parsing structured LLM outputs.
+ */
+export { OutputParser } from '@/systems/reasoning/OutputParser';
+/**
+ * System prompt resolver implementation for layered prompt management.
+ */
+export { SystemPromptResolver } from '@/systems/reasoning/SystemPromptResolver';
 
 /**
  * A simple logging utility with configurable levels.
@@ -310,4 +321,4 @@ export { generateUUID } from '@/utils/uuid';
 /**
  * The current version of the ART Framework package.
  */
-export const VERSION = '0.4.10';
+export const VERSION = '0.4.11';

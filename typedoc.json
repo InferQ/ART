@@ -1,12 +1,12 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["src/index.ts"],
-  "out": "docs/components",
+  "out": "docs/markdown",
   "name": "ART Framework Component Reference",
   "readme": "none",
   "excludePrivate": true,
   "excludeProtected": true,
   "excludeExternals": true,
   "theme": "default",
-  "plugin": ["typedoc-plugin-markdown"] 
+  "plugin": ["typedoc-plugin-markdown"]
 }
