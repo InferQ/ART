@@ -5,13 +5,13 @@ import type { LogLevel } from '@/utils/logger'; // For ArtInstanceConfig
 import type { StorageAdapter } from '@/core/interfaces'; // For ArtInstanceConfig (storage property)
 // --- ART Error Types ---
 export {
-    ErrorCode,
-    ARTError,
-    UnknownProviderError,
-    LocalProviderConflictError,
-    LocalInstanceBusyError,
-    ApiQueueTimeoutError,
-    AdapterInstantiationError
+  ErrorCode,
+  ARTError,
+  UnknownProviderError,
+  LocalProviderConflictError,
+  LocalInstanceBusyError,
+  ApiQueueTimeoutError,
+  AdapterInstantiationError
 } from '@/errors';
 
 /**
@@ -37,7 +37,7 @@ export { A2ATaskSocket } from '@/systems/ui/a2a-task-socket';
 export type { UnsubscribeFunction } from '@/systems/ui/typed-socket';
 
 // --- PES Types ---
-export { TodoItemStatus, TodoItem, PESAgentStateData, ExecutionOutput } from './pes-types';
+export { TodoItemStatus, TodoItem, PESAgentStateData, ExecutionOutput, StepOutputEntry } from './pes-types';
 
 // --- Zod Schemas for Validation ---
 export { ArtStandardPromptSchema, ArtStandardMessageSchema } from './schemas';
@@ -45,11 +45,11 @@ export { ArtStandardPromptSchema, ArtStandardMessageSchema } from './schemas';
 
 // Re-export necessary types from submodules
 export type {
-    ProviderManagerConfig,
-    AvailableProviderEntry,
-    RuntimeProviderConfig,
-    ManagedAdapterAccessor,
-    IProviderManager
+  ProviderManagerConfig,
+  AvailableProviderEntry,
+  RuntimeProviderConfig,
+  ManagedAdapterAccessor,
+  IProviderManager
 } from './providers';
 
 /**
@@ -590,35 +590,35 @@ export interface ParsedToolCall {
  *
  * @interface ThreadConfig
  */
- export interface ThreadConfig {
-   /**
-    * Default provider configuration for this thread.
-    * @property {RuntimeProviderConfig} providerConfig
-    */
-   providerConfig: RuntimeProviderConfig;
-   /**
-    * An array of tool names (matching `ToolSchema.name`) that are permitted for use within this thread.
-    * @property {string[]} enabledTools
-    */
-   enabledTools: string[];
-   /**
-    * The maximum number of past messages (`ConversationMessage` objects) to retrieve for context.
-    * @property {number} historyLimit
-    */
-   historyLimit: number;
-   /**
-    * Optional system prompt override to be used for this thread, overriding instance or agent defaults.
-    * @property {string | SystemPromptOverride} [systemPrompt]
-    */
-   systemPrompt?: string | SystemPromptOverride;
-   /**
-    * Optional: Defines the identity and high-level guidance for the agent for this specific thread.
-    * This overrides the instance-level persona.
-    * @property {Partial<AgentPersona>} [persona]
-    */
-   persona?: Partial<AgentPersona>;
-   // TODO: Add other potential thread-specific settings (e.g., RAG configuration, default timeouts)
- }
+export interface ThreadConfig {
+  /**
+   * Default provider configuration for this thread.
+   * @property {RuntimeProviderConfig} providerConfig
+   */
+  providerConfig: RuntimeProviderConfig;
+  /**
+   * An array of tool names (matching `ToolSchema.name`) that are permitted for use within this thread.
+   * @property {string[]} enabledTools
+   */
+  enabledTools: string[];
+  /**
+   * The maximum number of past messages (`ConversationMessage` objects) to retrieve for context.
+   * @property {number} historyLimit
+   */
+  historyLimit: number;
+  /**
+   * Optional system prompt override to be used for this thread, overriding instance or agent defaults.
+   * @property {string | SystemPromptOverride} [systemPrompt]
+   */
+  systemPrompt?: string | SystemPromptOverride;
+  /**
+   * Optional: Defines the identity and high-level guidance for the agent for this specific thread.
+   * This overrides the instance-level persona.
+   * @property {Partial<AgentPersona>} [persona]
+   */
+  persona?: Partial<AgentPersona>;
+  // TODO: Add other potential thread-specific settings (e.g., RAG configuration, default timeouts)
+}
 
 /**
  * Represents non-configuration state associated with an agent or thread.
@@ -714,50 +714,56 @@ export interface AgentProps {
  *
  * @interface AgentOptions
  */
- export interface AgentOptions {
-   /**
-    * Override specific LLM parameters (e.g., temperature, max_tokens) for this call only.
-    * @property {Record<string, any>} [llmParams]
-    */
-   llmParams?: Record<string, any>;
-   /**
-    * Override provider configuration for this specific call.
-    * @property {RuntimeProviderConfig} [providerConfig]
-    */
-   providerConfig?: RuntimeProviderConfig; // Add this line
-   /**
-    * Force the use of specific tools, potentially overriding the thread's `enabledTools` for this call (use with caution).
-    * @property {string[]} [forceTools]
-    */
-   forceTools?: string[];
-   /**
-    * Specify a particular reasoning model to use for this call, overriding the thread's default.
-    * @property {{ provider: string; model: string }} [overrideModel]
-    */
-   overrideModel?: { provider: string; model: string };
-   /**
-    * Request a streaming response for this specific agent process call.
-    * @property {boolean} [stream]
-    */
-   stream?: boolean;
-   /**
-    * Override the prompt template used for this specific call.
-    * @property {string} [promptTemplateId]
-    */
-   promptTemplateId?: string;
-   /**
-    * Optional system prompt override/tag to override thread, instance, or agent defaults for this specific call.
-    * @property {string | SystemPromptOverride} [systemPrompt]
-    */
-   systemPrompt?: string | SystemPromptOverride;
-   /**
-    * Optional: Defines the identity and high-level guidance for the agent for this specific call.
-    * This overrides both the instance-level and thread-level persona.
-    * @property {Partial<AgentPersona>} [persona]
-    */
-   persona?: Partial<AgentPersona>;
-   // TODO: Add other potential runtime overrides (e.g., history length).
- }
+export interface AgentOptions {
+  /**
+   * Override specific LLM parameters (e.g., temperature, max_tokens) for this call only.
+   * @property {Record<string, any>} [llmParams]
+   */
+  llmParams?: Record<string, any>;
+  /**
+   * Override provider configuration for this specific call.
+   * @property {RuntimeProviderConfig} [providerConfig]
+   */
+  providerConfig?: RuntimeProviderConfig; // Add this line
+  /**
+   * Force the use of specific tools, potentially overriding the thread's `enabledTools` for this call (use with caution).
+   * @property {string[]} [forceTools]
+   */
+  forceTools?: string[];
+  /**
+   * Specify a particular reasoning model to use for this call, overriding the thread's default.
+   * @property {{ provider: string; model: string }} [overrideModel]
+   */
+  overrideModel?: { provider: string; model: string };
+  /**
+   * Request a streaming response for this specific agent process call.
+   * @property {boolean} [stream]
+   */
+  stream?: boolean;
+  /**
+   * Override the prompt template used for this specific call.
+   * @property {string} [promptTemplateId]
+   */
+  promptTemplateId?: string;
+  /**
+   * Optional system prompt override/tag to override thread, instance, or agent defaults for this specific call.
+   * @property {string | SystemPromptOverride} [systemPrompt]
+   */
+  systemPrompt?: string | SystemPromptOverride;
+  /**
+   * Optional: Defines the identity and high-level guidance for the agent for this specific call.
+   * This overrides both the instance-level and thread-level persona.
+   * @property {Partial<AgentPersona>} [persona]
+   */
+  persona?: Partial<AgentPersona>;
+  /**
+   * Optional: Configuration for execution phase behavior (TAEF parameters) for this specific call.
+   * Overrides thread and instance-level execution config.
+   * @property {ExecutionConfig} [executionConfig]
+   */
+  executionConfig?: ExecutionConfig;
+  // TODO: Add other potential runtime overrides (e.g., history length).
+}
 
 /**
  * The final structured response returned by the agent core after processing.
@@ -934,7 +940,7 @@ export interface CallOptions {
  *
  * @typedef {'system' | 'user' | 'assistant' | 'tool_request' | 'tool_result' | 'tool'} ArtStandardMessageRole
  */
- export type ArtStandardMessageRole = 'system' | 'user' | 'assistant' | 'tool_request' | 'tool_result' | 'tool'; // Added 'tool' role
+export type ArtStandardMessageRole = 'system' | 'user' | 'assistant' | 'tool_request' | 'tool_result' | 'tool'; // Added 'tool' role
 
 /**
  * Represents a single message in the standardized, provider-agnostic `ArtStandardPrompt` format.
@@ -1034,7 +1040,7 @@ export interface PromptContext {
    *
    * @property {Array<{ role: string; content: string; [key: string]: any }>} [history]
    */
-  history?: Array<{ role: string; content: string; [key: string]: any }>; // Flexible history format for blueprints
+  history?: Array<{ role: string; content: string;[key: string]: any }>; // Flexible history format for blueprints
   /**
    * The schemas of the tools available for use, potentially pre-formatted for the blueprint
    * (e.g., with `inputSchemaJson` pre-stringified).
@@ -1252,6 +1258,11 @@ export interface ArtInstanceConfig {
    * @property {AgentPersona} [persona]
    */
   persona?: AgentPersona;
+  /**
+   * Optional: Configuration for execution phase behavior (TAEF parameters).
+   * @property {ExecutionConfig} [execution]
+   */
+  execution?: ExecutionConfig;
   /**
    * Optional configuration for MCP (Model Context Protocol) manager.
    * Enables connection to external MCP servers for dynamic tool loading.
@@ -1522,13 +1533,13 @@ export interface A2ATask {
    * @property {string} threadId
    */
   threadId: string;
-  
+
   /**
    * Current status of the task.
    * @property {A2ATaskStatus} status
    */
   status: A2ATaskStatus;
-  
+
   /**
    * The data payload containing task parameters and context.
    * @property {object} payload
@@ -1555,43 +1566,43 @@ export interface A2ATask {
      */
     parameters?: Record<string, any>;
   };
-  
+
   /**
    * Information about the agent that created/requested this task.
    * @property {A2AAgentInfo} sourceAgent
    */
   sourceAgent: A2AAgentInfo;
-  
+
   /**
    * Information about the agent assigned to execute this task (if assigned).
    * @property {A2AAgentInfo} [targetAgent]
    */
   targetAgent?: A2AAgentInfo;
-  
+
   /**
    * Task priority level.
    * @property {A2ATaskPriority} priority
    */
   priority: A2ATaskPriority;
-  
+
   /**
    * Task execution metadata.
    * @property {A2ATaskMetadata} metadata
    */
   metadata: A2ATaskMetadata;
-  
+
   /**
    * The result of task execution (if completed).
    * @property {A2ATaskResult} [result]
    */
   result?: A2ATaskResult;
-  
+
   /**
    * Callback URL or identifier for task completion notifications.
    * @property {string} [callbackUrl]
    */
   callbackUrl?: string;
-  
+
   /**
    * Dependencies that must be completed before this task can start.
    * @property {string[]} [dependencies]
@@ -1723,6 +1734,44 @@ export interface AgentPersona {
 }
 
 /**
+ * Configuration options for the execution phase of the PES Agent.
+ * Controls TAEF (Tool-Aware Execution Framework) behavior.
+ *
+ * @interface ExecutionConfig
+ */
+export interface ExecutionConfig {
+  /**
+   * Maximum number of LLM iterations per todo item during execution.
+   * Default: 5
+   * @property {number} [maxIterations]
+   */
+  maxIterations?: number;
+
+  /**
+   * Maximum number of TAEF tool validation retries when required tools are not invoked.
+   * Default: 2
+   * @property {number} [taefMaxRetries]
+   */
+  taefMaxRetries?: number;
+
+  /**
+   * Maximum character length for tool result serialization in step context.
+   * Higher values preserve more data for the LLM but increase token usage.
+   * Default: 60000 (effectively no practical limit)
+   * @property {number} [toolResultMaxLength]
+   */
+  toolResultMaxLength?: number;
+
+  /**
+   * Whether to enable A2A (Agent-to-Agent) delegation during execution.
+   * When true, injects the delegate_to_agent tool into execution context.
+   * Default: false
+   * @property {boolean} [enableA2ADelegation]
+   */
+  enableA2ADelegation?: boolean;
+}
+
+/**
  * Defines stage-specific system prompts for planning and synthesis.
  *
  * @interface StageSpecificPrompts
@@ -1741,4 +1790,12 @@ export interface StageSpecificPrompts {
    * @property {string} [synthesis]
    */
   synthesis?: string;
+
+  /**
+   * Custom system prompt template for tool execution steps.
+   * If provided, overrides the default execution prompt.
+   * Supports variable interpolation: ${item.description}, ${completedItemsContext}, etc.
+   * @property {string} [execution]
+   */
+  execution?: string;
 }

@@ -55,9 +55,31 @@ export interface PESAgentStateData {
         iterationState: import('./index').ArtStandardPrompt; // Captured message history of the current iteration
     };
 
+    // Step Output Table - persisted for resume and synthesis access
+    stepOutputs?: Record<string, StepOutputEntry>;
+
     // Keep track of iterations for the overall process or per item?
     // The legacy executionHistory was per process call.
     // We might want to persist some history.
+}
+
+/**
+ * Structured entry for step output table.
+ * Persisted for resume capability and cross-step data access.
+ */
+export interface StepOutputEntry {
+    stepId: string;
+    description: string;
+    stepType: 'tool' | 'reasoning';
+    status: TodoItemStatus;
+    completedAt?: number;
+
+    // Raw outputs (no truncation - full data for downstream steps)
+    rawResult?: any;
+    toolResults?: ToolResult[];
+
+    // Optional summary for quick reference
+    summary?: string;
 }
 
 export interface ExecutionOutput {

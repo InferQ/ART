@@ -33,6 +33,7 @@ Every significant change in the agent's lifecycle (plan creation, item start, it
           toolCall: ParsedToolCall;
           iterationState: any[];
       };
+      stepOutputs?: Record<string, StepOutputEntry>; // New in v0.4.10
   }
   ```
 
@@ -178,3 +179,45 @@ The PES Agent now supports **Blocking Tools**—actions that require explicit us
     *   It feeds the user's input (e.g., "Approved") as the tool result and resumes the execution loop exactly where it left off.
 
 This ensures that sensitive actions are never taken without consent, and the agent doesn't "forget" what it was doing during the wait.
+
+---
+
+## Advanced: Execution Configuration (v0.4.10)
+
+### `ExecutionConfig`
+The PES Agent's execution behavior is now fully configurable via `ExecutionConfig`:
+
+```typescript
+interface ExecutionConfig {
+  maxIterations?: number;      // Default: 5 - max LLM calls per todo item
+  taefMaxRetries?: number;     // Default: 2 - max retries when required tools not called
+  toolResultMaxLength?: number; // Default: 60000 - max chars for tool result serialization
+  enableA2ADelegation?: boolean; // Default: false - must be true to use delegate_to_agent
+}
+```
+
+**Configuration Hierarchy:** Call options > Thread config > Instance config
+
+### Step Output Table (`stepOutputs`)
+
+*New in v0.4.10*
+
+The PES Agent now maintains a structured **step output table** that:
+-   **Persists all step outputs** without truncation for cross-step data access
+-   **Enables resume capability** - full state saved after each step
+-   **Provides data for synthesis** - complete outputs available (up to `toolResultMaxLength`)
+
+Each completed step is added to `state.stepOutputs` with:
+```typescript
+interface StepOutputEntry {
+  stepId: string;
+  description: string;
+  stepType: 'tool' | 'reasoning';
+  status: TodoItemStatus;
+  completedAt?: number;
+  rawResult?: any;           // Full result, no truncation
+  toolResults?: ToolResult[];
+}
+```
+
+This ensures the LLM can access data from **any** previous step during execution, not just the immediately preceding one.

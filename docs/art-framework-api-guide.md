@@ -68,6 +68,53 @@ These types are useful for advanced scenarios, such as dynamically configuring L
 -   `ManagedAdapterAccessor`
 -   `IProviderManager`
 
+### Execution Configuration (`ExecutionConfig`)
+
+*New in v0.4.10*
+
+Controls the execution phase behavior of the PES Agent:
+
+```typescript
+interface ExecutionConfig {
+  maxIterations?: number;      // Max LLM iterations per todo item (default: 5)
+  taefMaxRetries?: number;     // Max TAEF validation retries (default: 2)
+  toolResultMaxLength?: number; // Max chars for tool result serialization (default: 60000)
+  enableA2ADelegation?: boolean; // Enable delegate_to_agent tool (default: false)
+}
+```
+
+**Usage:**
+```typescript
+const config: ArtInstanceConfig = {
+  // ... other config
+  execution: {
+    maxIterations: 8,
+    taefMaxRetries: 3,
+    toolResultMaxLength: 100000,
+    enableA2ADelegation: true,
+  }
+};
+```
+
+### Step Output Entry (`StepOutputEntry`)
+
+*New in v0.4.10*
+
+Structured entry for the step output table, persisted for resume capability and cross-step data access:
+
+```typescript
+interface StepOutputEntry {
+  stepId: string;
+  description: string;
+  stepType: 'tool' | 'reasoning';
+  status: TodoItemStatus;
+  completedAt?: number;
+  rawResult?: any;           // Full result (no truncation)
+  toolResults?: ToolResult[];
+  summary?: string;
+}
+```
+
 ---
 
 ## 3. Built-in Components
@@ -449,4 +496,4 @@ A function to generate RFC4122 v4 compliant UUIDs.
 
 The current version of the ART Framework package.
 -   **Usage**: `console.log(VERSION);`
--   **Value**: `'0.4.4'` (at the time of writing)
+-   **Value**: `'0.4.10'` (at the time of writing)

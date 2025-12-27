@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.10] - 2025-12-27
+
+### 🔧 Configurable Execution Framework
+- **ExecutionConfig Interface**: New configuration options for PES Agent execution behavior:
+    - `maxIterations`: Max LLM calls per todo item (default: 5)
+    - `taefMaxRetries`: Max TAEF validation retries (default: 2)
+    - `toolResultMaxLength`: Max chars for tool result serialization (default: 60000)
+    - `enableA2ADelegation`: Opt-in for A2A delegation tool (default: false)
+- **Configuration Hierarchy**: Settings resolve from call options > thread config > instance config.
+
+### 📊 Step Output Table
+- **Structured Persistence**: New `StepOutputEntry` interface for structured step outputs.
+- **Cross-Step Data Access**: `stepOutputs` map added to `PESAgentStateData` for any step to access any previous step's data.
+- **Resume Capability**: Full state persisted after each step completion for reliable resume from failure/pause.
+- **Fixed Synthesis Truncation**: Changed from hardcoded 200 chars to configurable `toolResultMaxLength` (default: 60000).
+
+### 🛠️ Improvements
+- **A2A Delegation Opt-in**: `delegate_to_agent` tool now only injected when `enableA2ADelegation: true`.
+- **Removed Redundant Tool Injection**: Tools no longer duplicated in user message (already in system prompt via JIT).
+- **Generic Prompt Examples**: Removed tool-specific references (webSearch, webExtract) for framework-agnostic prompts.
+
+### 📖 Documentation
+- Updated `art-framework-api-guide.md` with `ExecutionConfig` and `StepOutputEntry` sections.
+- Updated `pes-agent.md` with execution configuration and step output table documentation.
+
 ## [0.4.7] - 2025-12-27
 
 ### 🛠️ Stability & Robustness (PES Agent)
