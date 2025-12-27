@@ -89,11 +89,41 @@ export class ToolSystem implements IToolSystem {
         // TODO: Implement basic timeout mechanism
         const executionResult = await executor.execute(call.arguments, executionContext);
 
+        // === INTERFACE CONTRACT VALIDATION ===
+        // Validate that the tool returns data in the `output` field as per IToolExecutor contract
+        if (executionResult.status === 'success') {
+          if (executionResult.output === undefined || executionResult.output === null) {
+            // Check for common incorrect patterns and warn
+            const resultObj = executionResult as unknown as Record<string, unknown>;
+            if ('data' in resultObj && resultObj.data !== undefined) {
+              Logger.warn(
+                `[DEPRECATED] Tool "${toolName}" returned data in 'data' field instead of 'output'. ` +
+                `This pattern is deprecated and will not be supported in future versions. ` +
+                `Update your tool to return { status: 'success', output: yourData, ... }. ` +
+                `See docs/concepts/interface-contracts.md for details.`,
+                { callId, threadId, traceId }
+              );
+            } else if ('result' in resultObj && resultObj.result !== undefined) {
+              Logger.warn(
+                `[DEPRECATED] Tool "${toolName}" returned data in 'result' field instead of 'output'. ` +
+                `Update your tool to use the 'output' field as per IToolExecutor interface contract.`,
+                { callId, threadId, traceId }
+              );
+            } else {
+              Logger.warn(
+                `Tool "${toolName}" returned success status but 'output' is undefined/null. ` +
+                `This may cause issues with result capture. Ensure your tool returns data in the 'output' field.`,
+                { callId, threadId, traceId }
+              );
+            }
+          }
+        }
+
         // Ensure the result has the correct callId and toolName (executor might not set it)
         result = {
-            ...executionResult,
-            callId: callId,
-            toolName: toolName,
+          ...executionResult,
+          callId: callId,
+          toolName: toolName,
         };
         Logger.debug(`Tool "${toolName}" execution result: ${result.status}`, { callId, threadId, traceId });
 
@@ -131,8 +161,8 @@ export class ToolSystem implements IToolSystem {
         // This is by design to ensure proper HITL flow - the user must approve each
         // blocking action before the agent proceeds.
         if (result.status === 'suspended') {
-            Logger.info(`Tool "${toolName}" (callId: ${callId}) triggered suspension. Halting subsequent tool calls in this batch.`);
-            break; // Stop processing remaining tools in this batch
+          Logger.info(`Tool "${toolName}" (callId: ${callId}) triggered suspension. Halting subsequent tool calls in this batch.`);
+          break; // Stop processing remaining tools in this batch
         }
       } else {
         // This case should ideally not happen if the try/catch always assigns to result

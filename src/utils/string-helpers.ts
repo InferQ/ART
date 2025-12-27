@@ -17,7 +17,7 @@
  * safeStringify(null); // 'null'
  * safeStringify({ long: '...' }, 50); // '{"long":"..."}...' (truncated)
  */
-export function safeStringify(value: unknown, maxLength: number = 200): string {
+export function safeStringify(value: unknown, maxLength: number = 10000): string {
   if (value === undefined) {
     return '[undefined]';
   }

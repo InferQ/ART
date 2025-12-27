@@ -650,7 +650,11 @@ Always wrap your JSON output with these markers exactly as shown.
                     if ((itemResult.output === undefined || itemResult.output === null || itemResult.output === '') && allToolResults.length > 0) {
                         const lastToolResult = allToolResults[allToolResults.length - 1];
                         Logger.debug(`[${traceId}] Falling back to last tool output for item ${pendingItem.id} (Tool: ${lastToolResult.toolName})`);
-                        pendingItem.result = lastToolResult.output;
+                        // Fallback chain: output > output.data > raw output object
+                        const rawOutput = lastToolResult.output;
+                        pendingItem.result = (rawOutput && typeof rawOutput === 'object' && 'data' in rawOutput)
+                            ? rawOutput.data
+                            : rawOutput;
                     } else {
                         pendingItem.result = itemResult.output;
                     }
@@ -689,7 +693,11 @@ Always wrap your JSON output with these markers exactly as shown.
             await this._saveState(props.threadId, pesState);
             await this.deps.observationManager.record({
                 threadId: props.threadId, traceId, type: ObservationType.ITEM_STATUS_CHANGE,
-                content: { itemId: pendingItem.id, status: pendingItem.status },
+                content: {
+                    itemId: pendingItem.id,
+                    status: pendingItem.status,
+                    stepOutput: pesState.stepOutputs?.[pendingItem.id] || null
+                },
                 parentId: pendingItem.id,
                 metadata: { timestamp: Date.now() }
             });

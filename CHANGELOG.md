@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.11] - 2025-12-27
+
+### 🔧 Tool Result Pattern Consistency
+- **Fallback Chain Enhancement**: Updated `_executeTodoList` to extract nested `data` properties from tool outputs, ensuring consistent result capture regardless of tool return patterns.
+- **Runtime Validation**: Added interface contract validation in `ToolSystem` that logs deprecation warnings when tools return `data` or `result` instead of the required `output` field.
+- **Observation Sync**: `ITEM_STATUS_CHANGE` observations now include `stepOutput` snapshot, mitigating UI race conditions.
+
+### 📖 Documentation
+- **New Interface Contracts Reference**: Added `docs/concepts/interface-contracts.md` with comprehensive coverage of `IToolExecutor`, `ToolResult` requirements, size limits, and common pitfalls.
+- **Updated Building Custom Tools**: Added cross-reference to interface contracts documentation.
+
+### 🛠️ Improvements
+- **Generous Default Truncation**: Increased `safeStringify` default from 200 to 10,000 characters to prevent unexpected truncation in edge cases.
+
 ## [0.4.10] - 2025-12-27
 
 ### 🔧 Configurable Execution Framework

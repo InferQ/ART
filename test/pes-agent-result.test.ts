@@ -1,10 +1,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { PESAgent } from '../src/core/agents/pes-agent';
-import { 
-    TodoItemStatus, 
-    TodoItem, 
-    ObservationType, 
+import {
+    TodoItemStatus,
+    TodoItem,
+    ObservationType,
     ToolResult,
     ModelCapability
 } from '../src/types';
@@ -85,7 +85,7 @@ describe('PESAgent Result Handling', () => {
             outputParser: mockOutputParser,
             systemPromptResolver: mockSystemPromptResolver,
             uiSystem: mockUISystem,
-            toolRegistry: { 
+            toolRegistry: {
                 getToolSchema: vi.fn(),
                 getAvailableTools: vi.fn().mockResolvedValue([])
             },
@@ -96,7 +96,7 @@ describe('PESAgent Result Handling', () => {
     it('should populate item.result with tool output if LLM content is missing', async () => {
         const threadId = 'test-thread';
         const traceId = 'test-trace';
-        
+
         const todoItem: TodoItem = {
             id: 'item-1',
             description: 'Call a tool',
@@ -164,21 +164,21 @@ describe('PESAgent Result Handling', () => {
         });
 
         const setAgentStateCalls = mockStateManager.setAgentState.mock.calls;
-        const finalStateUpdate = setAgentStateCalls.find((call: any) => 
+        const finalStateUpdate = setAgentStateCalls.find((call: any) =>
             call[1].data.todoList[0].status === TodoItemStatus.COMPLETED
         );
 
         expect(finalStateUpdate).toBeDefined();
         const updatedItem = finalStateUpdate[1].data.todoList[0];
-        
-        expect(updatedItem.result).toEqual({ data: 'tool-output-content' });
+
+        expect(updatedItem.result).toEqual('tool-output-content');
         expect(updatedItem.toolResults).toContainEqual(toolResult);
     });
 
     it('should fallback to last content if loop exceeds max iterations', async () => {
         const threadId = 'test-thread';
         const traceId = 'test-trace';
-        
+
         const todoItem: TodoItem = {
             id: 'item-1',
             description: 'Tool loop',
@@ -232,20 +232,20 @@ describe('PESAgent Result Handling', () => {
         await agent.process({ query: 'run', threadId, traceId });
 
         const setAgentStateCalls = mockStateManager.setAgentState.mock.calls;
-        const finalStateUpdate = setAgentStateCalls.find((call: any) => 
+        const finalStateUpdate = setAgentStateCalls.find((call: any) =>
             call[1].data.todoList[0].status === TodoItemStatus.COMPLETED
         );
 
         expect(finalStateUpdate).toBeDefined();
         const updatedItem = finalStateUpdate[1].data.todoList[0];
-        
+
         expect(updatedItem.result).toBe(`Intermediary result ${MAX_ITER - 1}`);
     });
 
     it('should populate item.result with A2A task output if LLM content is missing', async () => {
         const threadId = 'test-thread';
         const traceId = 'test-trace';
-        
+
         const todoItem: TodoItem = {
             id: 'item-a2a',
             description: 'Delegate a task',
@@ -289,9 +289,9 @@ describe('PESAgent Result Handling', () => {
 
         // Mock A2A Delegation
         (agent as any)._delegateA2ATasks = vi.fn().mockResolvedValue([{ taskId: 'task-1' }]);
-        (agent as any)._waitForA2ACompletion = vi.fn().mockResolvedValue([{ 
-            taskId: 'task-1', 
-            result: { success: true, data: { info: 'a2a-result-data' } } 
+        (agent as any)._waitForA2ACompletion = vi.fn().mockResolvedValue([{
+            taskId: 'task-1',
+            result: { success: true, data: { info: 'a2a-result-data' } }
         }]);
 
         // Mock Execution Iteration 2: LLM provides NO content and NO tool calls
@@ -312,13 +312,13 @@ describe('PESAgent Result Handling', () => {
         });
 
         const setAgentStateCalls = mockStateManager.setAgentState.mock.calls;
-        const finalStateUpdate = setAgentStateCalls.find((call: any) => 
+        const finalStateUpdate = setAgentStateCalls.find((call: any) =>
             call[1].data.todoList[0].status === TodoItemStatus.COMPLETED
         );
 
         expect(finalStateUpdate).toBeDefined();
         const updatedItem = finalStateUpdate[1].data.todoList[0];
-        
+
         expect(updatedItem.result).toEqual({ info: 'a2a-result-data' });
         expect(updatedItem.toolResults).toContainEqual(expect.objectContaining({
             toolName: 'delegate_to_agent',
@@ -328,7 +328,7 @@ describe('PESAgent Result Handling', () => {
 
     it('should prepare state correctly when isResume is true', async () => {
         const threadId = 'resume-thread';
-        
+
         const todoItem: TodoItem = {
             id: 'item-1',
             description: 'Suspended task',
@@ -371,11 +371,11 @@ describe('PESAgent Result Handling', () => {
         });
 
         // Verify that the state was reset correctly at some point
-        const preparedState = mockStateManager._capturedStates.find((s: any) => 
+        const preparedState = mockStateManager._capturedStates.find((s: any) =>
             s.isPaused === false && s.todoList[0].status === TodoItemStatus.IN_PROGRESS
         );
         expect(preparedState).toBeDefined();
-        
+
         // Finally it should be COMPLETED
         const lastCapturedState = mockStateManager._capturedStates[mockStateManager._capturedStates.length - 1];
         expect(lastCapturedState.todoList[0].status).toBe(TodoItemStatus.COMPLETED);

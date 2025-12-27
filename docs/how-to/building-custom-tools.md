@@ -141,3 +141,9 @@ return {
   output: [1, 2, 3] // Data is correctly captured and visible to the agent.
 };
 ```
+
+---
+
+## See Also
+
+For comprehensive details on interface contracts, size limits, and common pitfalls, see [Interface Contracts Reference](../concepts/interface-contracts.md).
