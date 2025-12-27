@@ -38,10 +38,9 @@ export default function HeroSection() {
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500/10 border border-indigo-500/20 rounded-full"
           >
             <Sparkles className="w-4 h-4 text-indigo-400" />
-            <span className="text-sm font-medium text-indigo-300">The Framework for Reliable AI</span>
-            <span className="px-2 py-0.5 bg-indigo-500/20 rounded text-xs font-bold text-indigo-300">v0.4.11</span>
-          </motion.div>
-
+                          <span className="text-sm font-medium text-indigo-300">The Framework for Reliable AI</span>
+                          <span className="px-2 py-0.5 bg-indigo-500/20 rounded text-xs font-bold text-indigo-300">v0.4.13</span>
+                        </motion.div>
           <div className="space-y-6">
             <motion.h1
               initial={{ opacity: 0, y: 30 }}
@@ -242,11 +241,10 @@ export default function HeroSection() {
 
                 {/* State Preview */}
                 <div className="bg-slate-950/50 rounded-2xl border border-slate-800/50 p-4 font-mono text-[10px] space-y-2 overflow-hidden">
-                  <div className="flex items-center justify-between text-slate-500 border-b border-slate-800 pb-2 mb-2">
-                    <span>THREAD_STATE</span>
-                    <span className="text-indigo-400">pes-agent-v0.4.11</span>
-                  </div>
-                  <div className="space-y-1.5">
+                                <div className="flex items-center justify-between text-slate-500 border-b border-slate-800 pb-2 mb-2">
+                                  <span>THREAD_STATE</span>
+                                  <span className="text-indigo-400">pes-agent-v0.4.13</span>
+                                </div>                  <div className="space-y-1.5">
                     <div className="flex gap-2">
                       <span className="text-purple-400">intent:</span>
                       <span className="text-slate-300">"Research and synthesize..."</span>

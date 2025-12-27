@@ -10,6 +10,33 @@ import { Tag, ExternalLink, Sparkles } from 'lucide-react';
 // Release information
 const RELEASES = [
   {
+    version: 'v0.4.13',
+    date: 'December 28, 2025',
+    highlights: [
+      {
+        title: 'HITL Execution Loop Fix',
+        description: 'Fixed critical bug where resuming from suspension failed to inject the user decision into the LLM context.',
+        category: 'Robustness',
+      },
+      {
+        title: 'Optimistic Resumption Locking',
+        description: 'New race condition protection prevents double-execution by atomically locking the thread state before processing resumes.',
+        category: 'Reliability',
+      },
+      {
+        title: 'Circular Reference Safety',
+        description: 'Implemented safeStringify for HITL payloads to prevent crashes when users input complex or circular JSON.',
+        category: 'Robustness',
+      },
+      {
+        title: 'Smart Rejection Handling',
+        description: 'Explicit system prompt injection when users reject a tool call, instructing the agent to find alternatives.',
+        category: 'Observability',
+      },
+    ],
+    releaseUrl: 'https://github.com/InferQ/ART/releases/tag/v0.4.13',
+  },
+  {
     version: 'v0.4.11',
     date: 'December 27, 2025',
     highlights: [
@@ -133,7 +160,7 @@ export default function ReleaseNotes() {
               What's New in{' '}
             </span>
             <span className="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
-              v0.4.11
+              v0.4.13
             </span>
           </h2>
           <p className="text-slate-400 text-lg">
