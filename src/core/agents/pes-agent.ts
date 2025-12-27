@@ -786,8 +786,8 @@ Always wrap your JSON output with these markers exactly as shown.
 
         // JIT Schema Injection: Only include full schemas for required tools to optimize tokens
         const requiredToolSchemas = item.requiredTools
-            ? executionTools.filter(t => item.requiredTools!.includes(t.name))
-            : executionTools;
+            ? _executionTools.filter(t => item.requiredTools!.includes(t.name))
+            : _executionTools;
 
         return `You are executing a TOOL STEP in a larger plan.
 
