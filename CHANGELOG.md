@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 ## [0.4.11] - 2025-12-27
 
+### 🛡️ Data Flow & Robustness Fixes
+- **HITL Result Preservation (Critical)**: Fixed data loss when a batch of tools includes a suspending tool - successful tool results from the same batch are now persisted in `partialToolResults` and restored on resumption.
+- **A2A State Persistence**: Added `pendingA2ATasks` to agent state for crash recovery during Agent-to-Agent delegation polling.
+- **Truncated Thought Detection**: OutputParser now detects unclosed `<think>` tags and treats content as regular output instead of discarding it.
+- **Tool Metadata Preservation**: `formatHistoryForPrompt` now preserves `tool_call_id` and `name` fields for correct provider translation.
+- **Full StepOutputs in Prompts**: Execution prompts now include ALL tool results from previous steps instead of just the last tool output.
+- **Execution Summary Persistence**: Added `_persistExecutionSummary` to record completed step information to ConversationManager for follow-up query context.
+- **THOUGHTS Metadata Consistency**: Execution-stage THOUGHTS observations now include explicit `stepId` and `stepDescription` for consistent step-specific identification.
+
 ### 🔧 Tool Result Pattern Consistency
 - **Fallback Chain Enhancement**: Updated `_executeTodoList` to extract nested `data` properties from tool outputs, ensuring consistent result capture regardless of tool return patterns.
 - **Runtime Validation**: Added interface contract validation in `ToolSystem` that logs deprecation warnings when tools return `data` or `result` instead of the required `output` field.

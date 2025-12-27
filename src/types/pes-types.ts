@@ -288,6 +288,16 @@ export interface PESAgentStateData {
      * @property {import('./index').ArtStandardPrompt} iterationState
      */
     iterationState: import('./index').ArtStandardPrompt;
+
+    /**
+     * Tool results from successful tools in the same batch that completed
+     * before the suspending tool was executed.
+     * This prevents data loss when a batch contains both successful and suspending tools.
+     * 
+     * @since 0.4.11
+     * @property {import('./index').ToolResult[]} [partialToolResults]
+     */
+    partialToolResults?: import('./index').ToolResult[];
   };
 
   /**
@@ -302,6 +312,31 @@ export interface PESAgentStateData {
    * @property {Record<string, StepOutputEntry>} [stepOutputs]
    */
   stepOutputs?: Record<string, StepOutputEntry>;
+
+  /**
+   * Pending A2A tasks that the agent is waiting for.
+   * This enables recovery after process restart by tracking submitted but incomplete A2A tasks.
+   * 
+   * @since 0.4.11
+   * @property {object} [pendingA2ATasks]
+   */
+  pendingA2ATasks?: {
+    /**
+     * The IDs of the A2A tasks being waited on.
+     * @property {string[]} taskIds
+     */
+    taskIds: string[];
+    /**
+     * When the tasks were submitted.
+     * @property {number} submittedAt
+     */
+    submittedAt: number;
+    /**
+     * The TodoItem ID that triggered the A2A delegation.
+     * @property {string} itemId
+     */
+    itemId: string;
+  };
 }
 
 /**

@@ -254,13 +254,30 @@ export class OutputParser implements IOutputParser {
     const chunks = xmlMatcher.final(output);
 
     let nonThinkingContent = '';
+
+    // Issue #4 fix: Detect truncation - if we have matched content but no closing tag exists
+    const hasOpenTag = output.includes('<think>');
+    const hasCloseTag = output.includes('</think>');
+    let hasTruncatedThinking = false;
+
     chunks.forEach((chunk) => {
       if (chunk.matched) {
-        thoughtsList.push(chunk.data.trim());
+        // Check for potential truncation: matched content at end without closing tag
+        if (hasOpenTag && !hasCloseTag) {
+          hasTruncatedThinking = true;
+          // Treat as content, not thought - the response was truncated mid-reasoning
+          nonThinkingContent += chunk.data;
+        } else {
+          thoughtsList.push(chunk.data.trim());
+        }
       } else {
         nonThinkingContent += chunk.data;
       }
     });
+
+    if (hasTruncatedThinking) {
+      Logger.warn('OutputParser: Detected truncated thinking block in planning output, treating as content');
+    }
 
     if (thoughtsList.length > 0) {
       result.thoughts = thoughtsList.join('\n\n---\n\n');
@@ -367,13 +384,30 @@ export class OutputParser implements IOutputParser {
     const chunks = xmlMatcher.final(output);
 
     let nonThinkingContent = '';
+
+    // Issue #4 fix: Detect truncation - if we have matched content but no closing tag exists
+    const hasOpenTag = output.includes('<think>');
+    const hasCloseTag = output.includes('</think>');
+    let hasTruncatedThinking = false;
+
     chunks.forEach((chunk) => {
       if (chunk.matched) {
-        thoughtsList.push(chunk.data.trim());
+        // Check for potential truncation: matched content at end without closing tag
+        if (hasOpenTag && !hasCloseTag) {
+          hasTruncatedThinking = true;
+          // Treat as content, not thought - the response was truncated mid-reasoning
+          nonThinkingContent += chunk.data;
+        } else {
+          thoughtsList.push(chunk.data.trim());
+        }
       } else {
         nonThinkingContent += chunk.data;
       }
     });
+
+    if (hasTruncatedThinking) {
+      Logger.warn('OutputParser: Detected truncated thinking block in execution output, treating as content');
+    }
 
     if (thoughtsList.length > 0) {
       result.thoughts = thoughtsList.join('\n\n---\n\n');
