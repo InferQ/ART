@@ -6,7 +6,7 @@
 
 # Class: OpenRouterAdapter
 
-Defined in: [src/integrations/reasoning/openrouter.ts:141](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/openrouter.ts#L141)
+Defined in: [src/integrations/reasoning/openrouter.ts:141](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openrouter.ts#L141)
 
 Adapter for OpenRouter, which acts as a proxy to a wide variety of models.
 
@@ -20,7 +20,7 @@ Adapter for OpenRouter, which acts as a proxy to a wide variety of models.
 
 > **new OpenRouterAdapter**(`options`): `OpenRouterAdapter`
 
-Defined in: [src/integrations/reasoning/openrouter.ts:149](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/openrouter.ts#L149)
+Defined in: [src/integrations/reasoning/openrouter.ts:149](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openrouter.ts#L149)
 
 #### Parameters
 
@@ -38,7 +38,7 @@ Defined in: [src/integrations/reasoning/openrouter.ts:149](https://github.com/ha
 
 > `readonly` **providerName**: `"openrouter"` = `'openrouter'`
 
-Defined in: [src/integrations/reasoning/openrouter.ts:142](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/openrouter.ts#L142)
+Defined in: [src/integrations/reasoning/openrouter.ts:142](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openrouter.ts#L142)
 
 The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
@@ -52,7 +52,7 @@ The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
 > **call**(`prompt`, `options`): `Promise`\<`AsyncIterable`\<[`StreamEvent`](../interfaces/StreamEvent.md), `any`, `any`\>\>
 
-Defined in: [src/integrations/reasoning/openrouter.ts:164](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/openrouter.ts#L164)
+Defined in: [src/integrations/reasoning/openrouter.ts:164](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openrouter.ts#L164)
 
 Executes a call to the configured Large Language Model (LLM).
 This method is typically implemented by a specific `ProviderAdapter`.

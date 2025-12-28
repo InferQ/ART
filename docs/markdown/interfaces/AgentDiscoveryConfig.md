@@ -6,7 +6,7 @@
 
 # Interface: AgentDiscoveryConfig
 
-Defined in: [src/systems/a2a/AgentDiscoveryService.ts:67](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/a2a/AgentDiscoveryService.ts#L67)
+Defined in: [src/systems/a2a/AgentDiscoveryService.ts:67](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/a2a/AgentDiscoveryService.ts#L67)
 
 Configuration for the AgentDiscoveryService
 
@@ -16,7 +16,7 @@ Configuration for the AgentDiscoveryService
 
 > `optional` **cacheTtlMs**: `number`
 
-Defined in: [src/systems/a2a/AgentDiscoveryService.ts:75](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/a2a/AgentDiscoveryService.ts#L75)
+Defined in: [src/systems/a2a/AgentDiscoveryService.ts:75](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/a2a/AgentDiscoveryService.ts#L75)
 
 Cache TTL in milliseconds
 
@@ -26,7 +26,7 @@ Cache TTL in milliseconds
 
 > `optional` **discoveryEndpoint**: `string`
 
-Defined in: [src/systems/a2a/AgentDiscoveryService.ts:69](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/a2a/AgentDiscoveryService.ts#L69)
+Defined in: [src/systems/a2a/AgentDiscoveryService.ts:69](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/a2a/AgentDiscoveryService.ts#L69)
 
 Base URL for the discovery endpoint. If not provided, a default will be used.
 
@@ -36,7 +36,7 @@ Base URL for the discovery endpoint. If not provided, a default will be used.
 
 > `optional` **enableCaching**: `boolean`
 
-Defined in: [src/systems/a2a/AgentDiscoveryService.ts:73](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/a2a/AgentDiscoveryService.ts#L73)
+Defined in: [src/systems/a2a/AgentDiscoveryService.ts:73](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/a2a/AgentDiscoveryService.ts#L73)
 
 Whether to cache discovered agents
 
@@ -46,6 +46,6 @@ Whether to cache discovered agents
 
 > `optional` **timeoutMs**: `number`
 
-Defined in: [src/systems/a2a/AgentDiscoveryService.ts:71](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/a2a/AgentDiscoveryService.ts#L71)
+Defined in: [src/systems/a2a/AgentDiscoveryService.ts:71](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/a2a/AgentDiscoveryService.ts#L71)
 
 Timeout for discovery requests in milliseconds

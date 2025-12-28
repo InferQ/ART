@@ -6,7 +6,7 @@
 
 # Interface: PESAgentStateData
 
-Defined in: [src/types/pes-types.ts:199](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L199)
+Defined in: [src/types/pes-types.ts:199](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L199)
 
 Represents the persistent state data for a PES Agent instance associated with a thread.
 This state is saved to storage and persists across multiple execution cycles.
@@ -19,7 +19,7 @@ This state is saved to storage and persists across multiple execution cycles.
 
 > **currentStepId**: `null` \| `string`
 
-Defined in: [src/types/pes-types.ts:240](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L240)
+Defined in: [src/types/pes-types.ts:240](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L240)
 
 The ID of the todo item currently being executed.
 If null, no item is currently active (e.g., planning phase, completed state).
@@ -30,7 +30,7 @@ If null, no item is currently active (e.g., planning phase, completed state).
 
 > **intent**: `string`
 
-Defined in: [src/types/pes-types.ts:212](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L212)
+Defined in: [src/types/pes-types.ts:212](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L212)
 
 The user's intent extracted from their query.
 This is a concise summary of what the user wants to accomplish.
@@ -41,7 +41,7 @@ This is a concise summary of what the user wants to accomplish.
 
 > **isPaused**: `boolean`
 
-Defined in: [src/types/pes-types.ts:247](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L247)
+Defined in: [src/types/pes-types.ts:247](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L247)
 
 Indicates whether the agent is currently paused.
 This flag is set when HITL (Human-in-the-Loop) is triggered.
@@ -52,7 +52,7 @@ This flag is set when HITL (Human-in-the-Loop) is triggered.
 
 > `optional` **pendingA2ATasks**: `object`
 
-Defined in: [src/types/pes-types.ts:323](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L323)
+Defined in: [src/types/pes-types.ts:323](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L323)
 
 Pending A2A tasks that the agent is waiting for.
 This enables recovery after process restart by tracking submitted but incomplete A2A tasks.
@@ -85,7 +85,7 @@ The IDs of the A2A tasks being waited on.
 
 > **plan**: `string`
 
-Defined in: [src/types/pes-types.ts:226](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L226)
+Defined in: [src/types/pes-types.ts:226](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L226)
 
 The high-level plan describing how the agent will address the user's intent.
 This is a human-readable description of the overall approach.
@@ -96,7 +96,7 @@ This is a human-readable description of the overall approach.
 
 > `optional` **stepOutputs**: `Record`\<`string`, [`StepOutputEntry`](StepOutputEntry.md)\>
 
-Defined in: [src/types/pes-types.ts:314](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L314)
+Defined in: [src/types/pes-types.ts:314](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L314)
 
 A table of outputs from completed steps.
 This persists step outputs for use during resume operations and synthesis.
@@ -113,7 +113,7 @@ has access to all relevant information from completed steps.
 
 > `optional` **suspension**: `object`
 
-Defined in: [src/types/pes-types.ts:263](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L263)
+Defined in: [src/types/pes-types.ts:263](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L263)
 
 Suspension context for HITL (Human-in-the-Loop) functionality.
 When a blocking tool is called, the agent suspends execution and stores
@@ -169,7 +169,7 @@ This field is only present when the agent is in a suspended state.
 
 > **threadId**: `string`
 
-Defined in: [src/types/pes-types.ts:205](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L205)
+Defined in: [src/types/pes-types.ts:205](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L205)
 
 The thread ID this state belongs to.
 Links the state to a specific conversation thread.
@@ -180,7 +180,7 @@ Links the state to a specific conversation thread.
 
 > **title**: `string`
 
-Defined in: [src/types/pes-types.ts:219](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L219)
+Defined in: [src/types/pes-types.ts:219](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L219)
 
 A concise title for the thread, typically <= 10 words.
 Generated based on the user's query and context.
@@ -191,7 +191,7 @@ Generated based on the user's query and context.
 
 > **todoList**: [`TodoItem`](TodoItem.md)[]
 
-Defined in: [src/types/pes-types.ts:233](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L233)
+Defined in: [src/types/pes-types.ts:233](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L233)
 
 The complete list of todo items representing the execution plan.
 This array contains all steps the agent needs to take, in execution order.

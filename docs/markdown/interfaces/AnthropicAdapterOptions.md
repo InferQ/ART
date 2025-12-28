@@ -6,7 +6,7 @@
 
 # Interface: AnthropicAdapterOptions
 
-Defined in: [src/integrations/reasoning/anthropic.ts:21](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L21)
+Defined in: [src/integrations/reasoning/anthropic.ts:21](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L21)
 
 Configuration options required for the `AnthropicAdapter`.
 
@@ -16,7 +16,7 @@ Configuration options required for the `AnthropicAdapter`.
 
 > `optional` **apiBaseUrl**: `string`
 
-Defined in: [src/integrations/reasoning/anthropic.ts:27](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L27)
+Defined in: [src/integrations/reasoning/anthropic.ts:27](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L27)
 
 Optional: Override the base URL for the Anthropic API.
 
@@ -26,7 +26,7 @@ Optional: Override the base URL for the Anthropic API.
 
 > **apiKey**: `string`
 
-Defined in: [src/integrations/reasoning/anthropic.ts:23](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L23)
+Defined in: [src/integrations/reasoning/anthropic.ts:23](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L23)
 
 Your Anthropic API key. Handle securely.
 
@@ -36,7 +36,7 @@ Your Anthropic API key. Handle securely.
 
 > `optional` **defaultMaxTokens**: `number`
 
-Defined in: [src/integrations/reasoning/anthropic.ts:29](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L29)
+Defined in: [src/integrations/reasoning/anthropic.ts:29](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L29)
 
 Optional: Default maximum tokens for responses.
 
@@ -46,7 +46,7 @@ Optional: Default maximum tokens for responses.
 
 > `optional` **defaultTemperature**: `number`
 
-Defined in: [src/integrations/reasoning/anthropic.ts:31](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L31)
+Defined in: [src/integrations/reasoning/anthropic.ts:31](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L31)
 
 Optional: Default temperature for responses.
 
@@ -56,6 +56,6 @@ Optional: Default temperature for responses.
 
 > `optional` **model**: `string`
 
-Defined in: [src/integrations/reasoning/anthropic.ts:25](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L25)
+Defined in: [src/integrations/reasoning/anthropic.ts:25](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L25)
 
 The default Anthropic model ID to use (e.g., 'claude-3-opus-20240229', 'claude-3-5-sonnet-20240620').

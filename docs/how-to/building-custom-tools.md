@@ -28,23 +28,23 @@ The schema tells the LLM what your tool does and what arguments it accepts. It u
 
 ```typescript
 const schema = {
-  name: "get_weather",
-  description: "Fetches current weather for a given city.",
+  name: 'get_weather',
+  description: 'Fetches current weather for a given city.',
   inputSchema: {
-    type: "object",
+    type: 'object',
     properties: {
       city: {
-        type: "string",
-        description: "The name of the city, e.g., 'San Francisco'."
+        type: 'string',
+        description: "The name of the city, e.g., 'San Francisco'.",
       },
       unit: {
-        type: "string",
-        enum: ["celsius", "fahrenheit"],
-        default: "celsius"
-      }
+        type: 'string',
+        enum: ['celsius', 'fahrenheit'],
+        default: 'celsius',
+      },
     },
-    required: ["city"]
-  }
+    required: ['city'],
+  },
 };
 ```
 
@@ -86,15 +86,15 @@ import { IToolExecutor, ToolSchema, ToolResult, ExecutionContext } from 'art-fra
 export class MySearchTool implements IToolExecutor {
   getSchema(): ToolSchema {
     return {
-      name: "web_search",
-      description: "Search the web for information.",
+      name: 'web_search',
+      description: 'Search the web for information.',
       inputSchema: {
-        type: "object",
+        type: 'object',
         properties: {
-          query: { type: "string" }
+          query: { type: 'string' },
         },
-        required: ["query"]
-      }
+        required: ['query'],
+      },
     };
   }
 
@@ -102,14 +102,79 @@ export class MySearchTool implements IToolExecutor {
     const results = await someSearchApi(args.query);
 
     return {
-      callId: "", // Framework populates this
-      toolName: "web_search",
+      callId: '', // Framework populates this
+      toolName: 'web_search',
       status: 'success',
-      output: results // Ensure results are placed in 'output'
+      output: results, // Ensure results are placed in 'output'
     };
   }
 }
 ```
+
+## Example: A Blocking Tool (HITL)
+
+Blocking tools require human input to complete. Use `executionMode: 'blocking'` and configure `blockingConfig`.
+
+```typescript
+import { IToolExecutor, ToolSchema, ToolResult, ExecutionContext } from 'art-framework';
+
+export class DeploymentTool implements IToolExecutor {
+  readonly schema: ToolSchema = {
+    name: 'deploy_application',
+    description: 'Deploys an application after getting user approval.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        app: { type: 'string', description: 'Application name' },
+        environment: { type: 'string' },
+      },
+      required: ['app', 'environment'],
+    },
+    executionMode: 'blocking', // CRITICAL: Enables HITL
+    blockingConfig: {
+      feedbackSchema: {
+        inputType: 'select',
+        prompt: 'Select deployment environment:',
+        options: [
+          { value: 'staging', label: 'Staging', description: 'Test environment' },
+          { value: 'production', label: 'Production', description: 'Live environment' },
+        ],
+        required: true,
+      },
+      approvalPrompt: 'Deploy {{app}} to {{environment}}?',
+      riskLevel: 'high',
+      category: 'destructive',
+    },
+  };
+
+  async execute(
+    input: { app: string; environment: string },
+    context: ExecutionContext
+  ): Promise<ToolResult> {
+    // Return 'suspended' to request user input
+    return {
+      callId: context.callId,
+      toolName: 'deploy_application',
+      status: 'suspended',
+      output: {
+        message: `Ready to deploy ${input.app} to ${input.environment}`,
+        app: input.app,
+        environment: input.environment,
+      },
+    };
+  }
+}
+```
+
+### Tool Execution Modes
+
+The ART Framework supports three tool execution modes:
+
+| Mode             | Description                                                                             | Use Cases                                      |
+| ---------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| **`functional`** | Default. Executes synchronously and returns results immediately.                        | API calls, calculations, data retrieval        |
+| **`blocking`**   | Returns `'suspended'` status, waits for user feedback, then completes programmatically. | Confirmations, approvals, sensitive operations |
+| **`display`**    | Completes immediately but output is meant for rendering (generative UI).                | Charts, modals, visualizations                 |
 
 ## Registering Your Tool
 
@@ -118,7 +183,7 @@ Once your tool is built, register it in your `ArtInstanceConfig`:
 ```typescript
 const art = await createArtInstance({
   // ...
-  tools: [new MySearchTool()]
+  tools: [new MySearchTool()],
 });
 ```
 
@@ -127,18 +192,20 @@ const art = await createArtInstance({
 If your agent successfully calls a tool but then claims it "couldn't find any information," check your tool's return object.
 
 **Incorrect (Common Mistake):**
+
 ```typescript
 return {
   status: 'success',
-  results: [1, 2, 3] // PESAgent will not see this data!
+  results: [1, 2, 3], // PESAgent will not see this data!
 };
 ```
 
 **Correct:**
+
 ```typescript
 return {
   status: 'success',
-  output: [1, 2, 3] // Data is correctly captured and visible to the agent.
+  output: [1, 2, 3], // Data is correctly captured and visible to the agent.
 };
 ```
 

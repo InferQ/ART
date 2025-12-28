@@ -4,7 +4,7 @@
 
 # ART Framework Component Reference
 
-ART (Agentic Reasoning & Tool-use) Framework - Main Entry Point
+ART (Agentic Runtime) Framework - Main Entry Point
 -----------------------------------------------------------------
 
 Welcome to the ART framework! This file is the primary public API surface for the library.
@@ -119,11 +119,15 @@ const response = await art.process({ query: "Hello, world!" });
 - [ArtInstanceConfig](interfaces/ArtInstanceConfig.md)
 - [ArtStandardMessage](interfaces/ArtStandardMessage.md)
 - [AvailableProviderEntry](interfaces/AvailableProviderEntry.md)
+- [BlockingToolCompletedResult](interfaces/BlockingToolCompletedResult.md)
+- [BlockingToolConfig](interfaces/BlockingToolConfig.md)
+- [BlockingToolSuspendedResult](interfaces/BlockingToolSuspendedResult.md)
 - [CallOptions](interfaces/CallOptions.md)
 - [ConversationManager](interfaces/ConversationManager.md)
 - [ConversationMessage](interfaces/ConversationMessage.md)
 - [CreateA2ATaskRequest](interfaces/CreateA2ATaskRequest.md)
 - [DeepSeekAdapterOptions](interfaces/DeepSeekAdapterOptions.md)
+- [DisplayToolConfig](interfaces/DisplayToolConfig.md)
 - [ExecutionConfig](interfaces/ExecutionConfig.md)
 - [ExecutionContext](interfaces/ExecutionContext.md)
 - [ExecutionMetadata](interfaces/ExecutionMetadata.md)
@@ -131,6 +135,11 @@ const response = await art.process({ query: "Hello, world!" });
 - [FilterOptions](interfaces/FilterOptions.md)
 - [GeminiAdapterOptions](interfaces/GeminiAdapterOptions.md)
 - [GroqAdapterOptions](interfaces/GroqAdapterOptions.md)
+- [HITLContext](interfaces/HITLContext.md)
+- [HITLFeedback](interfaces/HITLFeedback.md)
+- [HITLFeedbackSchema](interfaces/HITLFeedbackSchema.md)
+- [HITLInputValidation](interfaces/HITLInputValidation.md)
+- [HITLSelectOption](interfaces/HITLSelectOption.md)
 - [IA2ATaskRepository](interfaces/IA2ATaskRepository.md)
 - [IAgentCore](interfaces/IAgentCore.md)
 - [IAuthStrategy](interfaces/IAuthStrategy.md)
@@ -188,11 +197,13 @@ const response = await art.process({ query: "Hello, world!" });
 - [ArtStandardMessageRole](type-aliases/ArtStandardMessageRole.md)
 - [ArtStandardPrompt](type-aliases/ArtStandardPrompt.md)
 - [~~FormattedPrompt~~](type-aliases/FormattedPrompt.md)
+- [HITLInputType](type-aliases/HITLInputType.md)
 - [JsonSchema](type-aliases/JsonSchema.md)
 - [McpServerConfig](type-aliases/McpServerConfig.md)
 - [StateSavingStrategy](type-aliases/StateSavingStrategy.md)
 - [StreamEventTypeFilter](type-aliases/StreamEventTypeFilter.md)
 - [SystemPromptMergeStrategy](type-aliases/SystemPromptMergeStrategy.md)
+- [ToolExecutionMode](type-aliases/ToolExecutionMode.md)
 - [UnsubscribeFunction](type-aliases/UnsubscribeFunction.md)
 
 ## Variables
@@ -204,4 +215,7 @@ const response = await art.process({ query: "Hello, world!" });
 ## Functions
 
 - [createArtInstance](functions/createArtInstance.md)
+- [createHITLSuccessResult](functions/createHITLSuccessResult.md)
 - [generateUUID](functions/generateUUID.md)
+- [isBlockingSuspendedResult](functions/isBlockingSuspendedResult.md)
+- [isFeedbackApproved](functions/isFeedbackApproved.md)

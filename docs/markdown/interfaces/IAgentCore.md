@@ -6,7 +6,7 @@
 
 # Interface: IAgentCore
 
-Defined in: [src/core/interfaces.ts:57](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/interfaces.ts#L57)
+Defined in: [src/core/interfaces.ts:56](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L56)
 
 Interface for the central agent orchestrator.
 
@@ -16,7 +16,7 @@ Interface for the central agent orchestrator.
 
 > **process**(`props`): `Promise`\<[`AgentFinalResponse`](AgentFinalResponse.md)\>
 
-Defined in: [src/core/interfaces.ts:65](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/interfaces.ts#L65)
+Defined in: [src/core/interfaces.ts:64](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L64)
 
 Processes a user query through the configured agent reasoning pattern (e.g., PES).
 Orchestrates interactions between various ART subsystems.

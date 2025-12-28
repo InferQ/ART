@@ -6,7 +6,7 @@
 
 # Class: AgentFactory
 
-Defined in: [src/core/agent-factory.ts:123](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L123)
+Defined in: [src/core/agent-factory.ts:123](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L123)
 
 Handles the instantiation and wiring of all core ART framework components based on provided configuration.
 This class performs the dependency injection needed to create a functional `ArtInstance`.
@@ -18,7 +18,7 @@ It's typically used internally by the `createArtInstance` function.
 
 > **new AgentFactory**(`config`): `AgentFactory`
 
-Defined in: [src/core/agent-factory.ts:151](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L151)
+Defined in: [src/core/agent-factory.ts:151](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L151)
 
 Creates a new AgentFactory instance.
 
@@ -40,7 +40,7 @@ The configuration specifying which adapters and components to use.
 
 > **createAgent**(): [`IAgentCore`](../interfaces/IAgentCore.md)
 
-Defined in: [src/core/agent-factory.ts:284](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L284)
+Defined in: [src/core/agent-factory.ts:284](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L284)
 
 Creates an instance of the configured Agent Core (e.g., `PESAgent`) and injects
 all necessary initialized dependencies (managers, systems, etc.).
@@ -62,7 +62,7 @@ If `initialize()` was not called or if essential components failed to initialize
 
 > **getAuthManager**(): `null` \| [`AuthManager`](AuthManager.md)
 
-Defined in: [src/core/agent-factory.ts:334](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L334)
+Defined in: [src/core/agent-factory.ts:334](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L334)
 
 Gets the initialized Auth Manager instance.
 
@@ -76,7 +76,7 @@ Gets the initialized Auth Manager instance.
 
 > **getConversationManager**(): `null` \| [`ConversationManager`](../interfaces/ConversationManager.md)
 
-Defined in: [src/core/agent-factory.ts:330](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L330)
+Defined in: [src/core/agent-factory.ts:330](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L330)
 
 Gets the initialized Conversation Manager instance.
 
@@ -90,7 +90,7 @@ Gets the initialized Conversation Manager instance.
 
 > **getMcpManager**(): `null` \| [`McpManager`](McpManager.md)
 
-Defined in: [src/core/agent-factory.ts:336](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L336)
+Defined in: [src/core/agent-factory.ts:336](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L336)
 
 Gets the initialized MCP Manager instance.
 
@@ -104,7 +104,7 @@ Gets the initialized MCP Manager instance.
 
 > **getObservationManager**(): `null` \| [`ObservationManager`](../interfaces/ObservationManager.md)
 
-Defined in: [src/core/agent-factory.ts:332](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L332)
+Defined in: [src/core/agent-factory.ts:332](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L332)
 
 Gets the initialized Observation Manager instance.
 
@@ -118,7 +118,7 @@ Gets the initialized Observation Manager instance.
 
 > **getStateManager**(): `null` \| `StateManager`
 
-Defined in: [src/core/agent-factory.ts:328](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L328)
+Defined in: [src/core/agent-factory.ts:328](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L328)
 
 Gets the initialized State Manager instance.
 
@@ -132,7 +132,7 @@ Gets the initialized State Manager instance.
 
 > **getStorageAdapter**(): `null` \| [`StorageAdapter`](../interfaces/StorageAdapter.md)
 
-Defined in: [src/core/agent-factory.ts:322](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L322)
+Defined in: [src/core/agent-factory.ts:322](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L322)
 
 Gets the initialized Storage Adapter instance.
 
@@ -146,7 +146,7 @@ Gets the initialized Storage Adapter instance.
 
 > **getToolRegistry**(): `null` \| `ToolRegistry`
 
-Defined in: [src/core/agent-factory.ts:326](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L326)
+Defined in: [src/core/agent-factory.ts:326](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L326)
 
 Gets the initialized Tool Registry instance.
 
@@ -160,7 +160,7 @@ Gets the initialized Tool Registry instance.
 
 > **getUISystem**(): `null` \| `UISystem`
 
-Defined in: [src/core/agent-factory.ts:324](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L324)
+Defined in: [src/core/agent-factory.ts:324](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L324)
 
 Gets the initialized UI System instance.
 
@@ -174,7 +174,7 @@ Gets the initialized UI System instance.
 
 > **initialize**(): `Promise`\<`void`\>
 
-Defined in: [src/core/agent-factory.ts:166](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/agent-factory.ts#L166)
+Defined in: [src/core/agent-factory.ts:166](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agent-factory.ts#L166)
 
 Asynchronously initializes all core components based on the configuration.
 This includes setting up the storage adapter, repositories, managers, tool registry,

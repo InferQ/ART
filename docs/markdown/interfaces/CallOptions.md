@@ -6,7 +6,7 @@
 
 # Interface: CallOptions
 
-Defined in: [src/types/index.ts:910](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L910)
+Defined in: [src/types/index.ts:983](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L983)
 
 Options for configuring an LLM call, including streaming and context information.
 
@@ -24,7 +24,7 @@ Additional key-value pairs representing provider-specific parameters (e.g., `tem
 
 > `optional` **callContext**: `string`
 
-Defined in: [src/types/index.ts:945](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L945)
+Defined in: [src/types/index.ts:1018](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1018)
 
 Provides context for the LLM call, identifying which phase of agent execution
 is making the request. This determines the tokenType prefix in StreamEvents.
@@ -40,7 +40,7 @@ is making the request. This determines the tokenType prefix in StreamEvents.
 
 > **providerConfig**: [`RuntimeProviderConfig`](RuntimeProviderConfig.md)
 
-Defined in: [src/types/index.ts:964](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L964)
+Defined in: [src/types/index.ts:1037](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1037)
 
 Carries the specific target provider and configuration for this call.
 
@@ -50,7 +50,7 @@ Carries the specific target provider and configuration for this call.
 
 > `optional` **sessionId**: `string`
 
-Defined in: [src/types/index.ts:930](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L930)
+Defined in: [src/types/index.ts:1003](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1003)
 
 Optional session ID.
 
@@ -60,7 +60,7 @@ Optional session ID.
 
 > `optional` **stepContext**: `object`
 
-Defined in: [src/types/index.ts:951](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L951)
+Defined in: [src/types/index.ts:1024](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1024)
 
 Step context for execution phase, passed to StreamEvent for step identification.
 
@@ -82,7 +82,7 @@ Step context for execution phase, passed to StreamEvent for step identification.
 
 > `optional` **stream**: `boolean`
 
-Defined in: [src/types/index.ts:936](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L936)
+Defined in: [src/types/index.ts:1009](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1009)
 
 Request a streaming response from the LLM provider.
 Adapters MUST check this flag.
@@ -93,7 +93,7 @@ Adapters MUST check this flag.
 
 > **threadId**: `string`
 
-Defined in: [src/types/index.ts:915](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L915)
+Defined in: [src/types/index.ts:988](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L988)
 
 The mandatory thread ID, used by the ReasoningEngine to fetch thread-specific configuration (e.g., model, params) via StateManager.
 
@@ -103,7 +103,7 @@ The mandatory thread ID, used by the ReasoningEngine to fetch thread-specific co
 
 > `optional` **traceId**: `string`
 
-Defined in: [src/types/index.ts:920](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L920)
+Defined in: [src/types/index.ts:993](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L993)
 
 Optional trace ID for correlation.
 
@@ -113,6 +113,6 @@ Optional trace ID for correlation.
 
 > `optional` **userId**: `string`
 
-Defined in: [src/types/index.ts:925](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L925)
+Defined in: [src/types/index.ts:998](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L998)
 
 Optional user ID.

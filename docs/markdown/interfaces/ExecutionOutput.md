@@ -6,7 +6,7 @@
 
 # Interface: ExecutionOutput
 
-Defined in: [src/types/pes-types.ts:420](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L420)
+Defined in: [src/types/pes-types.ts:420](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L420)
 
 Represents the structured output from an LLM execution call during the PES Agent's
 execution phase. This is parsed from the raw LLM response.
@@ -19,7 +19,7 @@ execution phase. This is parsed from the raw LLM response.
 
 > `optional` **content**: `string`
 
-Defined in: [src/types/pes-types.ts:433](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L433)
+Defined in: [src/types/pes-types.ts:433](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L433)
 
 The main response content from the LLM.
 This is the primary textual output from the execution step.
@@ -30,7 +30,7 @@ This is the primary textual output from the execution step.
 
 > `optional` **nextStepDecision**: `"continue"` \| `"wait"` \| `"complete_item"` \| `"update_plan"`
 
-Defined in: [src/types/pes-types.ts:451](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L451)
+Defined in: [src/types/pes-types.ts:451](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L451)
 
 The agent's decision on how to proceed after this execution.
 - 'continue': Proceed to the next iteration or step.
@@ -44,7 +44,7 @@ The agent's decision on how to proceed after this execution.
 
 > `optional` **thoughts**: `string`
 
-Defined in: [src/types/pes-types.ts:426](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L426)
+Defined in: [src/types/pes-types.ts:426](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L426)
 
 The agent's thoughts or reasoning for this execution step.
 This may include decision-making logic or reflections.
@@ -55,7 +55,7 @@ This may include decision-making logic or reflections.
 
 > `optional` **toolCalls**: [`ParsedToolCall`](ParsedToolCall.md)[]
 
-Defined in: [src/types/pes-types.ts:440](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L440)
+Defined in: [src/types/pes-types.ts:440](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L440)
 
 Any tool calls the LLM decided to make during execution.
 These are parsed and will be executed by the ToolSystem.
@@ -66,7 +66,7 @@ These are parsed and will be executed by the ToolSystem.
 
 > `optional` **updatedPlan**: `object`
 
-Defined in: [src/types/pes-types.ts:462](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/pes-types.ts#L462)
+Defined in: [src/types/pes-types.ts:462](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L462)
 
 Updates to the plan if the agent decided to modify it.
 This can include changes to intent, plan description, or the todo list.

@@ -6,7 +6,7 @@
 
 # Interface: LoggerConfig
 
-Defined in: [src/utils/logger.ts:28](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/utils/logger.ts#L28)
+Defined in: [src/utils/logger.ts:28](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/utils/logger.ts#L28)
 
 Configuration options for the static Logger class.
 
@@ -18,7 +18,7 @@ Configuration options for the static Logger class.
 
 > **level**: [`LogLevel`](../enumerations/LogLevel.md)
 
-Defined in: [src/utils/logger.ts:33](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/utils/logger.ts#L33)
+Defined in: [src/utils/logger.ts:33](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/utils/logger.ts#L33)
 
 The minimum log level to output messages for. Messages below this level will be ignored.
 
@@ -28,6 +28,6 @@ The minimum log level to output messages for. Messages below this level will be 
 
 > `optional` **prefix**: `string`
 
-Defined in: [src/utils/logger.ts:38](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/utils/logger.ts#L38)
+Defined in: [src/utils/logger.ts:38](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/utils/logger.ts#L38)
 
 An optional prefix string to prepend to all log messages (e.g., '[MyApp]'). Defaults to '[ART]'.

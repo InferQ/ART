@@ -6,7 +6,7 @@
 
 # Enumeration: A2ATaskStatus
 
-Defined in: [src/types/index.ts:1361](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1361)
+Defined in: [src/types/index.ts:1434](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1434)
 
 Represents the possible states of an A2A (Agent-to-Agent) task.
 
@@ -16,7 +16,7 @@ Represents the possible states of an A2A (Agent-to-Agent) task.
 
 > **CANCELLED**: `"CANCELLED"`
 
-Defined in: [src/types/index.ts:1371](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1371)
+Defined in: [src/types/index.ts:1444](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1444)
 
 Task has been cancelled before completion.
 
@@ -26,7 +26,7 @@ Task has been cancelled before completion.
 
 > **COMPLETED**: `"COMPLETED"`
 
-Defined in: [src/types/index.ts:1367](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1367)
+Defined in: [src/types/index.ts:1440](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1440)
 
 Task has been completed successfully.
 
@@ -36,7 +36,7 @@ Task has been completed successfully.
 
 > **FAILED**: `"FAILED"`
 
-Defined in: [src/types/index.ts:1369](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1369)
+Defined in: [src/types/index.ts:1442](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1442)
 
 Task has failed during execution.
 
@@ -46,7 +46,7 @@ Task has failed during execution.
 
 > **IN\_PROGRESS**: `"IN_PROGRESS"`
 
-Defined in: [src/types/index.ts:1365](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1365)
+Defined in: [src/types/index.ts:1438](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1438)
 
 Task has been assigned to an agent and is being processed.
 
@@ -56,7 +56,7 @@ Task has been assigned to an agent and is being processed.
 
 > **PENDING**: `"PENDING"`
 
-Defined in: [src/types/index.ts:1363](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1363)
+Defined in: [src/types/index.ts:1436](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1436)
 
 Task has been created but not yet assigned to an agent.
 
@@ -66,7 +66,7 @@ Task has been created but not yet assigned to an agent.
 
 > **REVIEW**: `"REVIEW"`
 
-Defined in: [src/types/index.ts:1375](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1375)
+Defined in: [src/types/index.ts:1448](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1448)
 
 Task is being reviewed for quality assurance.
 
@@ -76,6 +76,6 @@ Task is being reviewed for quality assurance.
 
 > **WAITING**: `"WAITING"`
 
-Defined in: [src/types/index.ts:1373](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1373)
+Defined in: [src/types/index.ts:1446](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1446)
 
 Task is waiting for external dependencies or manual intervention.

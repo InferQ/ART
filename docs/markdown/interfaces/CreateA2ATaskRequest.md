@@ -6,7 +6,7 @@
 
 # Interface: CreateA2ATaskRequest
 
-Defined in: [src/types/index.ts:1665](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1665)
+Defined in: [src/types/index.ts:1738](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1738)
 
 Represents a request to create a new A2A task.
 
@@ -18,7 +18,7 @@ Represents a request to create a new A2A task.
 
 > `optional` **callbackUrl**: `string`
 
-Defined in: [src/types/index.ts:1710](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1710)
+Defined in: [src/types/index.ts:1783](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1783)
 
 Callback URL for notifications.
 
@@ -28,7 +28,7 @@ Callback URL for notifications.
 
 > `optional` **dependencies**: `string`[]
 
-Defined in: [src/types/index.ts:1705](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1705)
+Defined in: [src/types/index.ts:1778](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1778)
 
 Task dependencies.
 
@@ -38,7 +38,7 @@ Task dependencies.
 
 > **input**: `any`
 
-Defined in: [src/types/index.ts:1675](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1675)
+Defined in: [src/types/index.ts:1748](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1748)
 
 Input data for the task.
 
@@ -48,7 +48,7 @@ Input data for the task.
 
 > `optional` **instructions**: `string`
 
-Defined in: [src/types/index.ts:1680](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1680)
+Defined in: [src/types/index.ts:1753](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1753)
 
 Instructions for task execution.
 
@@ -58,7 +58,7 @@ Instructions for task execution.
 
 > `optional` **maxRetries**: `number`
 
-Defined in: [src/types/index.ts:1720](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1720)
+Defined in: [src/types/index.ts:1793](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1793)
 
 Maximum retry attempts.
 
@@ -68,7 +68,7 @@ Maximum retry attempts.
 
 > `optional` **parameters**: `Record`\<`string`, `any`\>
 
-Defined in: [src/types/index.ts:1685](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1685)
+Defined in: [src/types/index.ts:1758](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1758)
 
 Task parameters.
 
@@ -78,7 +78,7 @@ Task parameters.
 
 > `optional` **preferredTargetAgent**: [`A2AAgentInfo`](A2AAgentInfo.md)
 
-Defined in: [src/types/index.ts:1700](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1700)
+Defined in: [src/types/index.ts:1773](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1773)
 
 Preferred target agent (if any).
 
@@ -88,7 +88,7 @@ Preferred target agent (if any).
 
 > `optional` **priority**: [`A2ATaskPriority`](../enumerations/A2ATaskPriority.md)
 
-Defined in: [src/types/index.ts:1690](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1690)
+Defined in: [src/types/index.ts:1763](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1763)
 
 Task priority.
 
@@ -98,7 +98,7 @@ Task priority.
 
 > **sourceAgent**: [`A2AAgentInfo`](A2AAgentInfo.md)
 
-Defined in: [src/types/index.ts:1695](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1695)
+Defined in: [src/types/index.ts:1768](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1768)
 
 Source agent information.
 
@@ -108,7 +108,7 @@ Source agent information.
 
 > `optional` **tags**: `string`[]
 
-Defined in: [src/types/index.ts:1725](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1725)
+Defined in: [src/types/index.ts:1798](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1798)
 
 Task tags.
 
@@ -118,7 +118,7 @@ Task tags.
 
 > **taskType**: `string`
 
-Defined in: [src/types/index.ts:1670](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1670)
+Defined in: [src/types/index.ts:1743](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1743)
 
 The type of task to be executed.
 
@@ -128,6 +128,6 @@ The type of task to be executed.
 
 > `optional` **timeoutMs**: `number`
 
-Defined in: [src/types/index.ts:1715](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1715)
+Defined in: [src/types/index.ts:1788](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1788)
 
 Task timeout in milliseconds.

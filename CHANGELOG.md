@@ -2,6 +2,36 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.14] - 2025-12-28
+
+### 🚀 HITL Contract Redesign
+
+This release fundamentally redesigns how blocking (HITL) tools are handled, eliminating the infinite loop bug where the LLM would re-call the same blocking tool after receiving user feedback.
+
+**Core Insight**: User feedback IS the tool result. The framework now programmatically completes blocking tools without re-execution.
+
+### 🏗️ Tool Categorization Architecture
+- **Three Tool Categories**: Tools are now classified as `functional`, `blocking`, or `display`:
+  - `functional`: Regular tools that execute and return results
+  - `blocking`: HITL tools that suspend execution for user input
+  - `display`: Placeholder for future generative UI tools
+- **New `ToolSchema` Fields**: Added `executionMode` and `blockingConfig` to tool definitions
+
+### 📋 HITL Feedback Contract (`src/types/hitl-types.ts`)
+- **`HITLFeedback` Interface**: Standardized schema for user responses (boolean, text, select, multiselect, number, date, file, confirm, custom)
+- **`HITLFeedbackSchema`**: Defines expected input type, validation rules, and UI hints
+- **`BlockingToolConfig`**: Per-tool HITL configuration (timeout, risk level, retry behavior)
+- **`createHITLSuccessResult()`**: Helper to convert user feedback into a SUCCESS tool result
+
+### 🛡️ Programmatic Success Handling
+- **No Re-execution**: When user provides feedback, the PES agent creates a SUCCESS `tool_result` directly from the feedback without calling the tool again
+- **System Message Injection**: Adds explicit "action COMPLETED" message to prevent LLM from re-calling
+- **Duplicate Call Safeguard**: Filters out any LLM attempts to re-invoke the same blocking tool after completion
+
+### 🧪 Test Coverage
+- Updated `hitl-robustness.test.ts` to validate new structured output format
+- All HITL tests passing
+
 ## [0.4.13] - 2025-12-28
 
 ### 🛡️ HITL & Data Safety Fixes

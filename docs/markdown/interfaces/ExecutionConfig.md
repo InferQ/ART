@@ -6,7 +6,7 @@
 
 # Interface: ExecutionConfig
 
-Defined in: [src/types/index.ts:1789](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1789)
+Defined in: [src/types/index.ts:1862](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1862)
 
 Configuration options for the execution phase of the PES Agent.
 Controls TAEF (Tool-Aware Execution Framework) behavior.
@@ -19,7 +19,7 @@ Controls TAEF (Tool-Aware Execution Framework) behavior.
 
 > `optional` **enableA2ADelegation**: `boolean`
 
-Defined in: [src/types/index.ts:1818](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1818)
+Defined in: [src/types/index.ts:1891](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1891)
 
 Whether to enable A2A (Agent-to-Agent) delegation during execution.
 When true, injects the delegate_to_agent tool into execution context.
@@ -31,7 +31,7 @@ Default: false
 
 > `optional` **maxIterations**: `number`
 
-Defined in: [src/types/index.ts:1795](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1795)
+Defined in: [src/types/index.ts:1868](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1868)
 
 Maximum number of LLM iterations per todo item during execution.
 Default: 5
@@ -42,7 +42,7 @@ Default: 5
 
 > `optional` **taefMaxRetries**: `number`
 
-Defined in: [src/types/index.ts:1802](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1802)
+Defined in: [src/types/index.ts:1875](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1875)
 
 Maximum number of TAEF tool validation retries when required tools are not invoked.
 Default: 2
@@ -53,7 +53,7 @@ Default: 2
 
 > `optional` **toolResultMaxLength**: `number`
 
-Defined in: [src/types/index.ts:1810](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1810)
+Defined in: [src/types/index.ts:1883](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1883)
 
 Maximum character length for tool result serialization in step context.
 Higher values preserve more data for the LLM but increase token usage.

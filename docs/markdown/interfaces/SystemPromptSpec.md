@@ -6,7 +6,7 @@
 
 # Interface: SystemPromptSpec
 
-Defined in: [src/types/index.ts:531](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L531)
+Defined in: [src/types/index.ts:577](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L577)
 
 Named preset for system prompts, supporting variables and a default merge strategy.
 
@@ -18,7 +18,7 @@ Named preset for system prompts, supporting variables and a default merge strate
 
 > `optional` **defaultVariables**: `Record`\<`string`, `any`\>
 
-Defined in: [src/types/index.ts:546](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L546)
+Defined in: [src/types/index.ts:592](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L592)
 
 Default variables applied if not provided at use time.
 
@@ -28,7 +28,7 @@ Default variables applied if not provided at use time.
 
 > `optional` **id**: `string`
 
-Defined in: [src/types/index.ts:536](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L536)
+Defined in: [src/types/index.ts:582](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L582)
 
 Optional explicit ID; when in a registry map, the key is typically the tag.
 
@@ -38,7 +38,7 @@ Optional explicit ID; when in a registry map, the key is typically the tag.
 
 > `optional` **mergeStrategy**: [`SystemPromptMergeStrategy`](../type-aliases/SystemPromptMergeStrategy.md)
 
-Defined in: [src/types/index.ts:551](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L551)
+Defined in: [src/types/index.ts:597](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L597)
 
 Default strategy to combine this spec with lower levels. Defaults to 'append'.
 
@@ -48,6 +48,6 @@ Default strategy to combine this spec with lower levels. Defaults to 'append'.
 
 > **template**: `string`
 
-Defined in: [src/types/index.ts:541](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L541)
+Defined in: [src/types/index.ts:587](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L587)
 
 Template string. Supports simple {{variable}} placeholders and {{fragment:name}} for PromptManager fragments.

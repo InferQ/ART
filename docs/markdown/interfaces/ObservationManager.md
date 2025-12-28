@@ -6,7 +6,7 @@
 
 # Interface: ObservationManager
 
-Defined in: [src/core/interfaces.ts:371](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/interfaces.ts#L371)
+Defined in: [src/core/interfaces.ts:370](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L370)
 
 Interface for managing the recording and retrieval of observations.
 
@@ -16,7 +16,7 @@ Interface for managing the recording and retrieval of observations.
 
 > **getObservations**(`threadId`, `filter?`): `Promise`\<[`Observation`](Observation.md)[]\>
 
-Defined in: [src/core/interfaces.ts:387](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/interfaces.ts#L387)
+Defined in: [src/core/interfaces.ts:386](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L386)
 
 Retrieves historical observations stored for a specific thread.
 
@@ -46,7 +46,7 @@ A promise resolving to an array of `Observation` objects matching the criteria.
 
 > **record**(`observationData`): `Promise`\<`void`\>
 
-Defined in: [src/core/interfaces.ts:379](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/interfaces.ts#L379)
+Defined in: [src/core/interfaces.ts:378](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L378)
 
 Creates, persists, and broadcasts a new observation record.
 This is the primary method used by other systems to log significant events.

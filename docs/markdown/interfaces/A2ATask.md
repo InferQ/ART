@@ -6,7 +6,7 @@
 
 # Interface: A2ATask
 
-Defined in: [src/types/index.ts:1572](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1572)
+Defined in: [src/types/index.ts:1645](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1645)
 
 Represents a task for Agent-to-Agent (A2A) communication and delegation.
 Used for asynchronous task delegation between AI agents in distributed systems.
@@ -19,7 +19,7 @@ Used for asynchronous task delegation between AI agents in distributed systems.
 
 > `optional` **callbackUrl**: `string`
 
-Defined in: [src/types/index.ts:1651](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1651)
+Defined in: [src/types/index.ts:1724](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1724)
 
 Callback URL or identifier for task completion notifications.
 
@@ -29,7 +29,7 @@ Callback URL or identifier for task completion notifications.
 
 > `optional` **dependencies**: `string`[]
 
-Defined in: [src/types/index.ts:1657](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1657)
+Defined in: [src/types/index.ts:1730](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1730)
 
 Dependencies that must be completed before this task can start.
 
@@ -39,7 +39,7 @@ Dependencies that must be completed before this task can start.
 
 > **metadata**: [`A2ATaskMetadata`](A2ATaskMetadata.md)
 
-Defined in: [src/types/index.ts:1639](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1639)
+Defined in: [src/types/index.ts:1712](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1712)
 
 Task execution metadata.
 
@@ -49,7 +49,7 @@ Task execution metadata.
 
 > **payload**: `object`
 
-Defined in: [src/types/index.ts:1594](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1594)
+Defined in: [src/types/index.ts:1667](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1667)
 
 The data payload containing task parameters and context.
 
@@ -83,7 +83,7 @@ The type of task to be executed (e.g., 'analyze', 'synthesize', 'transform').
 
 > **priority**: [`A2ATaskPriority`](../enumerations/A2ATaskPriority.md)
 
-Defined in: [src/types/index.ts:1633](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1633)
+Defined in: [src/types/index.ts:1706](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1706)
 
 Task priority level.
 
@@ -93,7 +93,7 @@ Task priority level.
 
 > `optional` **result**: [`A2ATaskResult`](A2ATaskResult.md)
 
-Defined in: [src/types/index.ts:1645](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1645)
+Defined in: [src/types/index.ts:1718](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1718)
 
 The result of task execution (if completed).
 
@@ -103,7 +103,7 @@ The result of task execution (if completed).
 
 > **sourceAgent**: [`A2AAgentInfo`](A2AAgentInfo.md)
 
-Defined in: [src/types/index.ts:1621](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1621)
+Defined in: [src/types/index.ts:1694](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1694)
 
 Information about the agent that created/requested this task.
 
@@ -113,7 +113,7 @@ Information about the agent that created/requested this task.
 
 > **status**: [`A2ATaskStatus`](../enumerations/A2ATaskStatus.md)
 
-Defined in: [src/types/index.ts:1588](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1588)
+Defined in: [src/types/index.ts:1661](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1661)
 
 Current status of the task.
 
@@ -123,7 +123,7 @@ Current status of the task.
 
 > `optional` **targetAgent**: [`A2AAgentInfo`](A2AAgentInfo.md)
 
-Defined in: [src/types/index.ts:1627](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1627)
+Defined in: [src/types/index.ts:1700](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1700)
 
 Information about the agent assigned to execute this task (if assigned).
 
@@ -133,7 +133,7 @@ Information about the agent assigned to execute this task (if assigned).
 
 > **taskId**: `string`
 
-Defined in: [src/types/index.ts:1577](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1577)
+Defined in: [src/types/index.ts:1650](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1650)
 
 Unique identifier for the task.
 
@@ -143,6 +143,6 @@ Unique identifier for the task.
 
 > **threadId**: `string`
 
-Defined in: [src/types/index.ts:1582](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1582)
+Defined in: [src/types/index.ts:1655](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1655)
 
 The thread this task belongs to (top-level for efficient filtering).

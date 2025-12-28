@@ -6,7 +6,7 @@
 
 # Class: ProviderManagerImpl
 
-Defined in: [src/systems/reasoning/ProviderManagerImpl.ts:148](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/reasoning/ProviderManagerImpl.ts#L148)
+Defined in: [src/systems/reasoning/ProviderManagerImpl.ts:148](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/ProviderManagerImpl.ts#L148)
 
 Default implementation of the IProviderManager interface.
 
@@ -94,7 +94,7 @@ IProviderManager
 
 > **new ProviderManagerImpl**(`config`): `ProviderManagerImpl`
 
-Defined in: [src/systems/reasoning/ProviderManagerImpl.ts:194](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/reasoning/ProviderManagerImpl.ts#L194)
+Defined in: [src/systems/reasoning/ProviderManagerImpl.ts:194](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/ProviderManagerImpl.ts#L194)
 
 Creates a new ProviderManagerImpl instance.
 
@@ -123,7 +123,7 @@ The configuration must include:
 
 > **getAdapter**(`config`): `Promise`\<[`ManagedAdapterAccessor`](../interfaces/ManagedAdapterAccessor.md)\>
 
-Defined in: [src/systems/reasoning/ProviderManagerImpl.ts:304](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/reasoning/ProviderManagerImpl.ts#L304)
+Defined in: [src/systems/reasoning/ProviderManagerImpl.ts:304](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/ProviderManagerImpl.ts#L304)
 
 Gets a managed adapter instance based on runtime configuration.
 
@@ -214,7 +214,7 @@ const accessor2 = await manager.getAdapter({
 
 > **getAvailableProviders**(): `string`[]
 
-Defined in: [src/systems/reasoning/ProviderManagerImpl.ts:240](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/reasoning/ProviderManagerImpl.ts#L240)
+Defined in: [src/systems/reasoning/ProviderManagerImpl.ts:240](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/ProviderManagerImpl.ts#L240)
 
 Returns an array of all registered provider names.
 

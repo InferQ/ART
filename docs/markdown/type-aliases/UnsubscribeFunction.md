@@ -8,7 +8,7 @@
 
 > **UnsubscribeFunction** = () => `void`
 
-Defined in: [src/systems/ui/typed-socket.ts:6](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/ui/typed-socket.ts#L6)
+Defined in: [src/systems/ui/typed-socket.ts:6](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/ui/typed-socket.ts#L6)
 
 ## Returns
 

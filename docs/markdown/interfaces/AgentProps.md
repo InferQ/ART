@@ -6,7 +6,7 @@
 
 # Interface: AgentProps
 
-Defined in: [src/types/index.ts:706](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L706)
+Defined in: [src/types/index.ts:752](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L752)
 
 Properties required to initiate an agent processing cycle.
 
@@ -18,7 +18,7 @@ Properties required to initiate an agent processing cycle.
 
 > `optional` **isResume**: `boolean`
 
-Defined in: [src/types/index.ts:743](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L743)
+Defined in: [src/types/index.ts:789](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L789)
 
 Internal flag indicating this is a resume from a suspended state.
 Set automatically by `resumeExecution()` - do not set manually for regular queries.
@@ -30,7 +30,7 @@ When true, the agent continues from the suspended step without triggering plan r
 
 > `optional` **options**: [`AgentOptions`](AgentOptions.md)
 
-Defined in: [src/types/index.ts:736](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L736)
+Defined in: [src/types/index.ts:782](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L782)
 
 Optional runtime options that can override default behaviors for this specific `process` call.
 
@@ -40,9 +40,32 @@ Optional runtime options that can override default behaviors for this specific `
 
 > **query**: `string`
 
-Defined in: [src/types/index.ts:711](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L711)
+Defined in: [src/types/index.ts:757](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L757)
 
 The user's input query or request to the agent.
+
+***
+
+### resumeDecision?
+
+> `optional` **resumeDecision**: `object`
+
+Defined in: [src/types/index.ts:795](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L795)
+
+The decision payload provided by the user when resuming from a HITL suspension.
+Passed automatically by `resumeExecution()`.
+
+#### approved
+
+> **approved**: `boolean`
+
+#### modifiedArgs?
+
+> `optional` **modifiedArgs**: `Record`\<`string`, `unknown`\>
+
+#### reason?
+
+> `optional` **reason**: `string`
 
 ***
 
@@ -50,7 +73,7 @@ The user's input query or request to the agent.
 
 > `optional` **sessionId**: `string`
 
-Defined in: [src/types/index.ts:721](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L721)
+Defined in: [src/types/index.ts:767](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L767)
 
 An optional identifier for the specific UI session, useful for targeting UI updates.
 
@@ -60,7 +83,7 @@ An optional identifier for the specific UI session, useful for targeting UI upda
 
 > **threadId**: `string`
 
-Defined in: [src/types/index.ts:716](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L716)
+Defined in: [src/types/index.ts:762](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L762)
 
 The mandatory identifier for the conversation thread. All context is scoped to this ID.
 
@@ -70,7 +93,7 @@ The mandatory identifier for the conversation thread. All context is scoped to t
 
 > `optional` **traceId**: `string`
 
-Defined in: [src/types/index.ts:731](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L731)
+Defined in: [src/types/index.ts:777](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L777)
 
 An optional identifier used for tracing a request across multiple systems or services.
 
@@ -80,6 +103,6 @@ An optional identifier used for tracing a request across multiple systems or ser
 
 > `optional` **userId**: `string`
 
-Defined in: [src/types/index.ts:726](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L726)
+Defined in: [src/types/index.ts:772](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L772)
 
 An optional identifier for the user interacting with the agent.

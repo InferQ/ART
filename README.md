@@ -1,4 +1,4 @@
-# ✨ ART: Agentic Runtime Framework <img src="https://img.shields.io/badge/Version-v0.4.13-blue" alt="Version 0.4.13">
+# ✨ ART: Agentic Runtime Framework <img src="https://img.shields.io/badge/Version-v0.4.14-blue" alt="Version 0.4.14">
 
 <p align="center">
   <img src="docs/art-logo.jpeg" alt="ART Framework Logo" width="200"/>
@@ -27,22 +27,25 @@ ART is architected around three core nodes that ensure your agents are productio
 ## Key Features
 
 #### 🧠 Advanced Reasoning (PES Agent)
-*   **Structured Planning:** Decomposes user intent into a discrete `TodoList` with dependency mapping.
-*   **TAEF (Tool-Aware Execution Framework):** Strictly validates tool usage to eliminate hallucinations and ensure protocol adherence.
-*   **Dynamic Refinement:** Self-correcting plans that adapt in real-time based on tool outputs.
-*   **Synthesis Engine:** Aggregates task results into rich responses with UI metadata and citations.
+
+- **Structured Planning:** Decomposes user intent into a discrete `TodoList` with dependency mapping.
+- **TAEF (Tool-Aware Execution Framework):** Strictly validates tool usage to eliminate hallucinations and ensure protocol adherence.
+- **Dynamic Refinement:** Self-correcting plans that adapt in real-time based on tool outputs.
+- **Synthesis Engine:** Aggregates task results into rich responses with UI metadata and citations.
 
 #### 🛡️ Production Robustness
-*   **HITL V2 (Human-in-the-Loop):** Seamlessly pause execution for human approval with full state preservation and resumption.
-*   **Crash Recovery:** Automatic state hydration ensures agents resume exactly where they left off.
-*   **A2A (Agent-to-Agent) Delegation:** Coordinate complex workflows by delegating sub-tasks to specialized agents.
-*   **Step Output Table:** Persists all historical tool results for consistent cross-step data access.
+
+- **HITL V2 (Human-in-the-Loop):** Seamlessly pause execution for human approval with full state preservation and resumption.
+- **Crash Recovery:** Automatic state hydration ensures agents resume exactly where they left off.
+- **A2A (Agent-to-Agent) Delegation:** Coordinate complex workflows by delegating sub-tasks to specialized agents.
+- **Step Output Table:** Persists all historical tool results for consistent cross-step data access.
 
 #### 🔌 Universal Connectivity
-*   **Multi-Provider Support:** First-class support for Gemini (Thinking), Claude (Extended Thinking), GPT (Reasoning), DeepSeek, Groq, and local models via Ollama.
-*   **MCP (Model Context Protocol):** Dynamically discover and execute tools from any MCP-compliant server.
-*   **Pluggable Storage:** Integrated adapters for IndexedDB (Browser), Supabase (Backend), and In-Memory.
-*   **OAuth & Auth Strategies:** Built-in support for PKCE, Generic OAuth, and API key management.
+
+- **Multi-Provider Support:** First-class support for Gemini (Thinking), Claude (Extended Thinking), GPT (Reasoning), DeepSeek, Groq, and local models via Ollama.
+- **MCP (Model Context Protocol):** Dynamically discover and execute tools from any MCP-compliant server.
+- **Pluggable Storage:** Integrated adapters for IndexedDB (Browser), Supabase (Backend), and In-Memory.
+- **OAuth & Auth Strategies:** Built-in support for PKCE, Generic OAuth, and API key management.
 
 ## Installation
 
@@ -55,20 +58,15 @@ pnpm install art-framework
 ## Quick Start
 
 ```typescript
-import { 
-  createArtInstance, 
-  PESAgent,
-  OpenAIAdapter, 
-  CalculatorTool 
-} from 'art-framework';
+import { createArtInstance, PESAgent, OpenAIAdapter, CalculatorTool } from 'art-framework';
 
 const art = await createArtInstance({
   storage: { type: 'indexedDB', dbName: 'AgentDB' },
   providers: {
-    availableProviders: [{ name: 'openai', adapter: OpenAIAdapter }]
+    availableProviders: [{ name: 'openai', adapter: OpenAIAdapter }],
   },
   tools: [new CalculatorTool()],
-  agentCore: PESAgent // Default flagship agent
+  agentCore: PESAgent, // Default flagship agent
 });
 
 // Configure the thread (Where API keys live)
@@ -76,15 +74,15 @@ await art.stateManager.setThreadConfig('my-thread', {
   providerConfig: {
     providerName: 'openai',
     modelId: 'gpt-4o',
-    adapterOptions: { apiKey: process.env.OPENAI_API_KEY }
+    adapterOptions: { apiKey: process.env.OPENAI_API_KEY },
   },
-  enabledTools: ['CalculatorTool']
+  enabledTools: ['CalculatorTool'],
 });
 
 // Process a request
 const result = await art.process({
   query: 'Calculate the compound interest for $1000 at 5% over 10 years.',
-  threadId: 'my-thread'
+  threadId: 'my-thread',
 });
 
 console.log(result.response.content);
@@ -92,10 +90,10 @@ console.log(result.response.content);
 
 ## Documentation
 
-*   **[Concepts Guide](docs/concepts/pes-agent.md):** Deep dive into the PES Agent and Reactive Triad.
-*   **[How-To Guides](./docs/how-to):** Practical tutorials for [HITL](./docs/how-to/using-hitl-pausing.md), [MCP](./docs/concepts/mcp-system.md), and [Custom UI](./docs/how-to/connecting-your-ui.md).
-*   **[API Reference](https://inferq.github.io/ART/components/index.html):** Full technical documentation.
-*   **[Website](https://inferq.github.io/ART/):** Marketing site & Live Demos.
+- **[Concepts Guide](docs/concepts/pes-agent.md):** Deep dive into the PES Agent and Reactive Triad.
+- **[How-To Guides](./docs/how-to):** Practical tutorials for [HITL](./docs/how-to/using-hitl-pausing.md), [MCP](./docs/concepts/mcp-system.md), and [Custom UI](./docs/how-to/connecting-your-ui.md).
+- **[API Reference](https://inferq.github.io/ART/components/index.html):** Full technical documentation.
+- **[Website](https://inferq.github.io/ART/):** Marketing site & Live Demos.
 
 ## Contributing
 

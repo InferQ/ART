@@ -6,7 +6,7 @@
 
 # Class: ReasoningEngine
 
-Defined in: [src/systems/reasoning/ReasoningEngine.ts:51](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/reasoning/ReasoningEngine.ts#L51)
+Defined in: [src/systems/reasoning/ReasoningEngine.ts:51](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/ReasoningEngine.ts#L51)
 
 Default implementation of the ReasoningEngine interface.
 
@@ -47,7 +47,7 @@ IReasoningEngine
 
 > **new ReasoningEngine**(`providerManager`): `ReasoningEngine`
 
-Defined in: [src/systems/reasoning/ReasoningEngine.ts:70](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/reasoning/ReasoningEngine.ts#L70)
+Defined in: [src/systems/reasoning/ReasoningEngine.ts:70](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/ReasoningEngine.ts#L70)
 
 Creates a new ReasoningEngine instance.
 
@@ -76,7 +76,7 @@ and concurrency control.
 
 > **call**(`prompt`, `options`): `Promise`\<`AsyncIterable`\<[`StreamEvent`](../interfaces/StreamEvent.md), `any`, `any`\>\>
 
-Defined in: [src/systems/reasoning/ReasoningEngine.ts:135](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/reasoning/ReasoningEngine.ts#L135)
+Defined in: [src/systems/reasoning/ReasoningEngine.ts:135](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/ReasoningEngine.ts#L135)
 
 Executes an LLM call using a dynamically selected provider adapter.
 

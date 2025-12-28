@@ -33,7 +33,9 @@ import {
     TodoItem,
     TodoItemStatus,
     PESAgentStateData,
-    ExecutionConfig
+    ExecutionConfig,
+    HITLFeedback,
+    createHITLSuccessResult
 } from '@/types';
 import { RuntimeProviderConfig } from '@/types/providers';
 import { generateUUID } from '@/utils/uuid';
@@ -992,37 +994,79 @@ Try again. Call the required tools now.
 
         // Load existing messages if resuming from suspension, otherwise start new
         let messages: ArtStandardPrompt;
+        // Track the suspended tool to prevent duplicate calls
+        let resumedBlockingToolName: string | undefined;
+
         if (state.suspension && state.suspension.itemId === item.id) {
             Logger.info(`[${traceId}] Resuming execution for item ${item.id} from suspension state.`);
             messages = [...state.suspension.iterationState];
+            resumedBlockingToolName = state.suspension.toolCall.toolName;
 
-            // Fix for Issue #2: Inject user decision into message history during resumption
-            // This ensures the LLM sees the tool_result and doesn't re-trigger the tool.
+            // HITL FIX: Programmatically complete the blocking tool with user feedback
+            // The key insight: User feedback IS the tool result. We don't need the LLM to
+            // re-invoke the tool. We create a proper SUCCESS result with the feedback.
             if (props.isResume && props.resumeDecision && state.suspension.toolCall) {
-                Logger.info(`[${traceId}] Injecting resume decision into message history.`);
+                Logger.info(`[${traceId}] Programmatically completing blocking tool "${state.suspension.toolCall.toolName}" with user feedback.`);
 
-                // 1. Add tool_result message
+                // Convert resumeDecision to proper HITLFeedback format
+                const feedback: HITLFeedback = {
+                    approved: props.resumeDecision.approved,
+                    value: props.resumeDecision.modifiedArgs ?? props.resumeDecision.reason,
+                    modifiedArgs: props.resumeDecision.modifiedArgs,
+                    reason: props.resumeDecision.reason,
+                    timestamp: Date.now()
+                };
+
+                // Create a proper SUCCESS result using the standard helper
+                const completedResult = createHITLSuccessResult(
+                    state.suspension.toolCall,
+                    feedback,
+                    state.suspension.suspensionId
+                );
+
+                // 1. Add tool_result message with clear SUCCESS indication
+                // The content clearly shows the tool COMPLETED with user feedback
+                const resultContent = {
+                    status: 'completed',
+                    approved: feedback.approved,
+                    message: completedResult.output.message,
+                    userFeedback: feedback.value ?? (feedback.approved ? 'User approved' : `User rejected: ${feedback.reason || 'No reason provided'}`),
+                    ...(feedback.modifiedArgs && { modifiedArgs: feedback.modifiedArgs })
+                };
+
                 messages.push({
                     role: 'tool_result',
-                    content: safeStringify(props.resumeDecision, executionConfig.toolResultMaxLength),
+                    content: safeStringify(resultContent, executionConfig.toolResultMaxLength),
                     name: state.suspension.toolCall.toolName,
                     tool_call_id: state.suspension.toolCall.callId
                 });
 
                 // 2. Add to allToolResults for TAEF validation (so it counts as executed)
-                allToolResults.push({
-                    callId: state.suspension.toolCall.callId,
-                    toolName: state.suspension.toolCall.toolName,
-                    status: 'success', // Considered a successful interaction (even if rejected)
-                    output: props.resumeDecision,
-                    metadata: { suspensionId: state.suspension.suspensionId }
-                });
+                allToolResults.push(completedResult as ToolResult);
 
-                // 3. Handle Rejection (System Prompt Injection)
-                if (typeof props.resumeDecision === 'object' && 'approved' in props.resumeDecision && !props.resumeDecision.approved) {
+                // 3. Add system message to guide LLM behavior
+                if (feedback.approved) {
+                    // APPROVAL: Tell LLM the action is DONE, don't re-call the tool
                     messages.push({
                         role: 'system',
-                        content: `IMPORTANT: The user has REJECTED the previous action "${state.suspension.toolCall.toolName}".
+                        content: `IMPORTANT: The blocking tool "${state.suspension.toolCall.toolName}" has been COMPLETED successfully.
+
+The user provided their input/approval and the action has been processed.
+- Status: COMPLETED
+- User Response: ${feedback.value ?? 'Approved'}
+${feedback.modifiedArgs ? `- Modified Arguments: ${JSON.stringify(feedback.modifiedArgs)}` : ''}
+
+DO NOT call "${state.suspension.toolCall.toolName}" again for this same request.
+Continue with the task using the feedback provided above.
+If the step is complete, respond with "nextStepDecision": "complete_item".`
+                    });
+                } else {
+                    // REJECTION: Tell LLM to find alternative
+                    messages.push({
+                        role: 'system',
+                        content: `IMPORTANT: The user has REJECTED the action "${state.suspension.toolCall.toolName}".
+Reason: ${feedback.reason || 'No reason provided'}
+
 Do NOT retry this tool call. You must:
 1. Acknowledge the rejection
 2. Either mark this step as failed and proceed to the next step, OR
@@ -1276,8 +1320,37 @@ Respond with a JSON object containing "content" explaining the situation and "ne
                     });
                 }
 
-                if (localCalls.length > 0) {
-                    const toolResults = await this.deps.toolSystem.executeTools(localCalls, props.threadId, traceId);
+                // HITL SAFEGUARD: Filter out duplicate calls to the blocking tool we just completed
+                // Even with improved prompting, LLMs may occasionally try to re-call the tool.
+                // This programmatic safeguard prevents infinite suspension loops.
+                let filteredLocalCalls = localCalls;
+                if (resumedBlockingToolName) {
+                    const originalCount = localCalls.length;
+                    filteredLocalCalls = localCalls.filter(tc => tc.toolName !== resumedBlockingToolName);
+
+                    if (filteredLocalCalls.length < originalCount) {
+                        const skippedCount = originalCount - filteredLocalCalls.length;
+                        Logger.warn(`[${traceId}] HITL Safeguard: Blocked ${skippedCount} duplicate call(s) to "${resumedBlockingToolName}" (tool already completed via user feedback)`);
+
+                        // Add synthetic results for the skipped calls so the LLM knows they weren't executed
+                        localCalls
+                            .filter(tc => tc.toolName === resumedBlockingToolName)
+                            .forEach(tc => {
+                                messages.push({
+                                    role: 'tool_result',
+                                    content: JSON.stringify({
+                                        error: `Tool "${resumedBlockingToolName}" was already completed in this step via user feedback. Do not call it again.`,
+                                        hint: 'Continue with the task using the feedback already provided.'
+                                    }),
+                                    name: tc.toolName,
+                                    tool_call_id: tc.callId
+                                });
+                            });
+                    }
+                }
+
+                if (filteredLocalCalls.length > 0) {
+                    const toolResults = await this.deps.toolSystem.executeTools(filteredLocalCalls, props.threadId, traceId);
                     toolCallsCount += toolResults.length;
                     allToolResults.push(...toolResults);
 

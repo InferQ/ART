@@ -10,18 +10,18 @@ The main entry point to the framework is the `createArtInstance` function. It ta
 
 After reviewing `agent-factory.ts` and `types/index.ts`, I have a more detailed understanding of the configuration options.
 
-*   **`storage`**: This can be an object or a pre-initialized storage adapter instance.
-    *   `{ type: 'memory' }`: For temporary, in-memory storage.
-    *   `{ type: 'indexedDB', dbName?: string, version?: number, objectStores?: any[] }`: For persistent storage in the browser. `dbName` is the only critical option here for basic setup.
-*   **`providers`**: This is a `ProviderManagerConfig` object. It **declares which LLM provider adapters are available** to the ART instance. It does **not** contain API keys or specific model choices. See the detailed section below for a full explanation and examples.
-*   **`agentCore`**: Allows you to provide your own agent implementation class, but for standard use cases, the default `PESAgent` is sufficient.
-*   **`tools`**: An array of tool instances that are ready to be used (e.g., `[new CalculatorTool()]`).
-*   **`stateSavingStrategy`**: Can be `'explicit'` (default) or `'implicit'`. This determines how the agent's internal state is saved.
-*   **`logger`**: Can configure the logging level (e.g., `{ level: 'debug' }`).
-*   **`persona`**: Defines the agent's default name and stage-specific prompts (`planning` and `synthesis`).
-*   **`mcpConfig`**: For connecting to Model Context Protocol servers to dynamically load tools.
-*   **`authConfig`**: For setting up authentication strategies (like OAuth) for tools that require it.
-*   **`a2aConfig`**: For agent-to-agent communication, which is an advanced feature.
+- **`storage`**: This can be an object or a pre-initialized storage adapter instance.
+  - `{ type: 'memory' }`: For temporary, in-memory storage.
+  - `{ type: 'indexedDB', dbName?: string, version?: number, objectStores?: any[] }`: For persistent storage in the browser. `dbName` is the only critical option here for basic setup.
+- **`providers`**: This is a `ProviderManagerConfig` object. It **declares which LLM provider adapters are available** to the ART instance. It does **not** contain API keys or specific model choices. See the detailed section below for a full explanation and examples.
+- **`agentCore`**: Allows you to provide your own agent implementation class, but for standard use cases, the default `PESAgent` is sufficient.
+- **`tools`**: An array of tool instances that are ready to be used (e.g., `[new CalculatorTool()]`).
+- **`stateSavingStrategy`**: Can be `'explicit'` (default) or `'implicit'`. This determines how the agent's internal state is saved.
+- **`logger`**: Can configure the logging level (e.g., `{ level: 'debug' }`).
+- **`persona`**: Defines the agent's default name and stage-specific prompts (`planning` and `synthesis`).
+- **`mcpConfig`**: For connecting to Model Context Protocol servers to dynamically load tools.
+- **`authConfig`**: For setting up authentication strategies (like OAuth) for tools that require it.
+- **`a2aConfig`**: For agent-to-agent communication, which is an advanced feature.
 
 ### Definitive Guide to Storage Configuration
 
@@ -40,42 +40,42 @@ The ART framework comes with two pre-built storage adapters.
 
 This adapter keeps all data in memory. It's incredibly fast and perfect for testing, short-lived scripts, or demos, but **all data is lost when the session ends.**
 
-*   **`type`**: `'memory'`
-*   **Options**: This adapter has no configuration options.
+- **`type`**: `'memory'`
+- **Options**: This adapter has no configuration options.
 
 **Example:**
 
 ```typescript
-import { 
-  createArtInstance, 
-  ArtInstanceConfig, 
+import {
+  createArtInstance,
+  ArtInstanceConfig,
   ThreadConfig,
   CalculatorTool,
-  OpenAIAdapter, 
-  GeminiAdapter 
+  OpenAIAdapter,
+  GeminiAdapter,
 } from 'art-framework';
 
 // --- 1. Configure the ART Instance ---
 // Note: No API keys or secrets are present here.
 
 const artConfig: ArtInstanceConfig = {
-  storage: { 
-    type: 'memory' 
+  storage: {
+    type: 'memory',
   },
   providers: {
     availableProviders: [
       { name: 'openai', adapter: OpenAIAdapter },
-      { name: 'gemini', adapter: GeminiAdapter }
-    ]
+      { name: 'gemini', adapter: GeminiAdapter },
+    ],
   },
   tools: [new CalculatorTool()],
   persona: {
     name: 'ConfigExpert',
     prompts: {
-      synthesis: 'You explain configurations clearly.'
-    }
+      synthesis: 'You explain configurations clearly.',
+    },
   },
-  logger: { level: 'info' }
+  logger: { level: 'info' },
 };
 ```
 
@@ -83,51 +83,51 @@ const artConfig: ArtInstanceConfig = {
 
 This is the recommended adapter for web browsers. It uses the browser's IndexedDB to provide persistent client-side storage, meaning conversations will be remembered across sessions.
 
-*   **`type`**: `'indexedDB'`
-*   **Options**:
+- **`type`**: `'indexedDB'`
+- **Options**:
 
-| Property       | Type     | Description                                                                                                                                                             |
-| -------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dbName`       | `String` | Optional. The name of the IndexedDB database. Defaults to `'ART_Framework_DB'`. It's good practice to provide a unique name for each of your applications.             |
-| `dbVersion`    | `Number` | Optional. The version of your database schema. If you change the `objectStores`, you **must** increment this version to trigger the necessary database upgrade. Defaults to `1`. |
+| Property       | Type     | Description                                                                                                                                                                                                                                |
+| -------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `dbName`       | `String` | Optional. The name of the IndexedDB database. Defaults to `'ART_Framework_DB'`. It's good practice to provide a unique name for each of your applications.                                                                                 |
+| `dbVersion`    | `Number` | Optional. The version of your database schema. If you change the `objectStores`, you **must** increment this version to trigger the necessary database upgrade. Defaults to `1`.                                                           |
 | `objectStores` | `Array`  | Optional. An array of strings, where each string is the name of a custom object store (like a table in SQL) you want to create. The core stores (`'conversations'`, `'observations'`, `'state'`, `'a2a_tasks'`) are created automatically. |
 
 **Example:**
 
 ```typescript
-import { 
-  createArtInstance, 
-  ArtInstanceConfig, 
+import {
+  createArtInstance,
+  ArtInstanceConfig,
   ThreadConfig,
   CalculatorTool,
-  OpenAIAdapter, 
-  GeminiAdapter 
+  OpenAIAdapter,
+  GeminiAdapter,
 } from 'art-framework';
 
 // --- 1. Configure the ART Instance ---
 // Note: No API keys or secrets are present here.
 
 const artConfig: ArtInstanceConfig = {
-  storage: { 
+  storage: {
     type: 'indexedDB',
     dbName: 'MyAwesomeChatAppDB',
     dbVersion: 2, // Imagine we added 'user_profiles' in this version
-    objectStores: ['user_profiles'] 
+    objectStores: ['user_profiles'],
   },
   providers: {
     availableProviders: [
       { name: 'openai', adapter: OpenAIAdapter },
-      { name: 'gemini', adapter: GeminiAdapter }
-    ]
+      { name: 'gemini', adapter: GeminiAdapter },
+    ],
   },
   tools: [new CalculatorTool()],
   persona: {
     name: 'ConfigExpert',
     prompts: {
-      synthesis: 'You explain configurations clearly.'
-    }
+      synthesis: 'You explain configurations clearly.',
+    },
   },
-  logger: { level: 'info' }
+  logger: { level: 'info' },
 };
 ```
 
@@ -135,16 +135,16 @@ const artConfig: ArtInstanceConfig = {
 
 This adapter is ideal for applications that require a centralized, cloud-based database. It connects to a Supabase (PostgreSQL) project, making it suitable for server-side environments or for web applications where data needs to be shared or persisted beyond a single client.
 
-*   **`type`**: `'supabase'`
-*   **Options**:
+- **`type`**: `'supabase'`
+- **Options**:
 
-| Property | Type                               | Description                                                                                                                                                             |
-| -------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `url`      | `String`                           | Required. The URL of your Supabase project.                                                                                                                              |
-| `apiKey`   | `String`                           | Required. Your Supabase `anon` or `service_role` key. Use the service role key only in secure server-side environments.                                                   |
-| `schema`   | `String`                           | Optional. The name of the database schema to use. Defaults to `'public'`.                                                                                             |
-| `tables`   | `Object`                           | Optional. Allows you to override the default table names for the core collections (`conversations`, `observations`, `state`, `a2a_tasks`).                               |
-| `client`   | `SupabaseClient`                   | Optional. You can pass a pre-initialized Supabase client instance. This is useful if your application already manages a Supabase client.                                 |
+| Property | Type             | Description                                                                                                                                |
+| -------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `url`    | `String`         | Required. The URL of your Supabase project.                                                                                                |
+| `apiKey` | `String`         | Required. Your Supabase `anon` or `service_role` key. Use the service role key only in secure server-side environments.                    |
+| `schema` | `String`         | Optional. The name of the database schema to use. Defaults to `'public'`.                                                                  |
+| `tables` | `Object`         | Optional. Allows you to override the default table names for the core collections (`conversations`, `observations`, `state`, `a2a_tasks`). |
+| `client` | `SupabaseClient` | Optional. You can pass a pre-initialized Supabase client instance. This is useful if your application already manages a Supabase client.   |
 
 **Prerequisites: Supabase Table Setup**
 
@@ -207,18 +207,17 @@ CREATE INDEX idx_a2a_tasks_status ON a2a_tasks(status);
 ```typescript
 const config: ArtInstanceConfig = {
   // ... other properties
-  storage: { 
+  storage: {
     type: 'supabase',
     url: 'https://your-project-ref.supabase.co',
     apiKey: 'your-supabase-service-role-key',
     tables: {
       conversations: 'prod_conversations', // Example of using a custom table name
-    }
+    },
   },
   // ... other properties
 };
 ```
-
 
 ---
 
@@ -232,13 +231,13 @@ To do this, you need to create a class that implements the `StorageAdapter` inte
 
 Your class must implement the following methods:
 
-*   `init?(config?: any): Promise<void>`
-*   `get<T>(collection: string, id: string): Promise<T | null>`
-*   `set<T>(collection: string, id: string, data: T): Promise<void>`
-*   `delete(collection: string, id: string): Promise<void>`
-*   `query<T>(collection: string, filterOptions: FilterOptions): Promise<T[]>`
-*   `clearCollection?(collection: string): Promise<void>`
-*   `clearAll?(): Promise<void>`
+- `init?(config?: any): Promise<void>`
+- `get<T>(collection: string, id: string): Promise<T | null>`
+- `set<T>(collection: string, id: string, data: T): Promise<void>`
+- `delete(collection: string, id: string): Promise<void>`
+- `query<T>(collection: string, filterOptions: FilterOptions): Promise<T[]>`
+- `clearCollection?(collection: string): Promise<void>`
+- `clearAll?(): Promise<void>`
 
 **Example of a Custom Adapter:**
 
@@ -264,7 +263,7 @@ class LocalStorageAdapter implements StorageAdapter {
     const key = `${this.prefix}${collection}_${id}`;
     localStorage.setItem(key, JSON.stringify(data));
   }
-  
+
   // ... implement delete, query, etc.
 }
 
@@ -293,57 +292,60 @@ State management in the ART framework is centered around the `StateManager`, whi
 
 This option in the main `ArtInstanceConfig` determines how `AgentState` is persisted.
 
-*   **`'explicit'` (Default)**: In this mode, the agent's state is **only** saved when you explicitly call `art.stateManager.setAgentState()`. This gives you full control but requires you to manage state saving manually within your agent's logic.
-*   **`'implicit'`**: In this mode, the `StateManager` automatically saves the `AgentState` at the end of a processing cycle, but only if it detects that the state object has been modified. It does this by keeping a snapshot of the state from when it was loaded and comparing it to the state after the agent has run.
+- **`'explicit'` (Default)**: In this mode, the agent's state is **only** saved when you explicitly call `art.stateManager.setAgentState()`. This gives you full control but requires you to manage state saving manually within your agent's logic.
+- **`'implicit'`**: In this mode, the `StateManager` automatically saves the `AgentState` at the end of a processing cycle, but only if it detects that the state object has been modified. It does this by keeping a snapshot of the state from when it was loaded and comparing it to the state after the agent has run.
 
 #### Property and Method Reference
 
 **1. `ThreadConfig` Object**
 
-| Property         | Type                        | Description                                                                                             |
-| ---------------- | --------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `providerConfig` | `RuntimeProviderConfig`     | Required. The full configuration for the LLM to use in this thread (provider name, model, API key, etc.).   |
-| `enabledTools`   | `string[]`                  | Required. An array of tool names that are permitted for use within this thread.                           |
-| `historyLimit`   | `number`                    | Required. The maximum number of past messages to retrieve for context when processing a new query.      |
-| `persona`        | `Partial<AgentPersona>`     | Optional. Overrides the instance-level persona for this specific thread.                                |
-| `systemPrompt`   | `string | SystemPromptOverride` | Optional. Overrides the persona's system prompt for this thread.                                    |
+| Property         | Type                    | Description                                                                                               |
+| ---------------- | ----------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `providerConfig` | `RuntimeProviderConfig` | Required. The full configuration for the LLM to use in this thread (provider name, model, API key, etc.). |
+| `enabledTools`   | `string[]`              | Required. An array of tool names that are permitted for use within this thread.                           |
+| `historyLimit`   | `number`                | Required. The maximum number of past messages to retrieve for context when processing a new query.        |
+| `persona`        | `Partial<AgentPersona>` | Optional. Overrides the instance-level persona for this specific thread.                                  |
+| `systemPrompt`   | `string                 | SystemPromptOverride`                                                                                     | Optional. Overrides the persona's system prompt for this thread. |
 
 **2. `AgentState` Object**
 
-| Property  | Type     | Description                                                                 |
-| --------- | -------- | --------------------------------------------------------------------------- |
-| `data`    | `any`    | The main payload of your agent's state. The structure is up to you.         |
-| `version` | `number` | Optional. A version number for your state object, useful for migrations.    |
+| Property  | Type     | Description                                                              |
+| --------- | -------- | ------------------------------------------------------------------------ |
+| `data`    | `any`    | The main payload of your agent's state. The structure is up to you.      |
+| `version` | `number` | Optional. A version number for your state object, useful for migrations. |
 
 **3. `art.stateManager` Methods**
 
-| Method                     | Description                                                                                                                                      |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `setThreadConfig(threadId, config)` | Saves the initial `ThreadConfig` for a new conversation. **This must be called before the first `process()` call for a new thread.** |
-| `loadThreadContext(threadId)`       | Loads the `ThreadConfig` and `AgentState` for a given thread. This is usually handled internally by the agent core.                      |
-| `setAgentState(threadId, state)`    | Explicitly saves a new `AgentState` for the thread. This is the primary method for saving state in `'explicit'` mode.                      |
-| `enableToolsForThread(threadId, toolNames)` | Dynamically adds tool names to the `enabledTools` list for an existing thread.                                                   |
-| `disableToolsForThread(threadId, toolNames)`| Dynamically removes tool names from the `enabledTools` list.                                                                   |
-| `getEnabledToolsForThread(threadId)`| Returns a `Promise<string[]>` of the currently enabled tools for the thread.                                                         |
+| Method                                       | Description                                                                                                                          |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `setThreadConfig(threadId, config)`          | Saves the initial `ThreadConfig` for a new conversation. **This must be called before the first `process()` call for a new thread.** |
+| `loadThreadContext(threadId)`                | Loads the `ThreadConfig` and `AgentState` for a given thread. This is usually handled internally by the agent core.                  |
+| `setAgentState(threadId, state)`             | Explicitly saves a new `AgentState` for the thread. This is the primary method for saving state in `'explicit'` mode.                |
+| `enableToolsForThread(threadId, toolNames)`  | Dynamically adds tool names to the `enabledTools` list for an existing thread.                                                       |
+| `disableToolsForThread(threadId, toolNames)` | Dynamically removes tool names from the `enabledTools` list.                                                                         |
+| `getEnabledToolsForThread(threadId)`         | Returns a `Promise<string[]>` of the currently enabled tools for the thread.                                                         |
 
 ---
 
 ### Clarifications and Advanced Usage
 
 #### 1. Public API and Usage
+
 All methods documented above are part of the public-facing API, accessible via the `stateManager` property on your `ArtInstance` object (e.g., `art.stateManager.setThreadConfig(...)`). The examples show the intended and correct way to interact with the framework.
 
 #### 2. Dynamic Provider Switching
-While the `ArtInstanceConfig` makes multiple providers *available*, the `ThreadConfig` determines which provider is *active* for a specific conversation. You can change the provider or model for a thread at any time.
+
+While the `ArtInstanceConfig` makes multiple providers _available_, the `ThreadConfig` determines which provider is _active_ for a specific conversation. You can change the provider or model for a thread at any time.
 
 This is a powerful feature that allows you to, for example, have a UI dropdown that lets the user switch between "GPT-4o" and "Claude Opus" mid-conversation.
 
 **Example: Switching Models Mid-Conversation**
+
 ```typescript
 async function switchModelForThread(threadId: string, newProviderName: string, newModelId: string) {
   // First, load the current context to get the existing config
   const context = await art.stateManager.loadThreadContext(threadId);
-  
+
   // Create a new config object, preserving everything except the providerConfig
   const newConfig: ThreadConfig = {
     ...context.config,
@@ -352,9 +354,9 @@ async function switchModelForThread(threadId: string, newProviderName: string, n
       modelId: newModelId,
       adapterOptions: {
         // IMPORTANT: You must re-supply the API key for the new provider
-        apiKey: newProviderName === 'openai' ? 'sk-openai-key' : 'sk-anthropic-key'
-      }
-    }
+        apiKey: newProviderName === 'openai' ? 'sk-openai-key' : 'sk-anthropic-key',
+      },
+    },
   };
 
   // Set the new configuration for the thread
@@ -391,8 +393,8 @@ You can configure the persona at three different levels.
 
 This is set in the `ArtInstanceConfig` and serves as the default persona for all conversations.
 
-*   **Property**: `persona`
-*   **Type**: `string | SystemPromptOverride`
+- **Property**: `persona`
+- **Type**: `string | SystemPromptOverride`
 
 **Example**:
 
@@ -401,9 +403,9 @@ This is set in the `ArtInstanceConfig` and serves as the default persona for all
 const art = await createArtInstance({
   // ... other config
   persona: {
-    content: "You are a helpful and friendly assistant.",
+    content: 'You are a helpful and friendly assistant.',
     strategy: 'prepend', // This will always be at the top.
-  }
+  },
 });
 ```
 
@@ -411,15 +413,15 @@ const art = await createArtInstance({
 
 You can override the instance-level persona for a specific conversation using the `StateManager`.
 
-*   **Method**: `art.stateManager.setThreadConfig(threadId, { persona: ... })`
-*   **Type**: `string | SystemPromptOverride`
+- **Method**: `art.stateManager.setThreadConfig(threadId, { persona: ... })`
+- **Type**: `string | SystemPromptOverride`
 
 **Example**:
 
 ```typescript
 // For a specific user's chat, make the assistant a pirate.
 await art.stateManager.setThreadConfig('user-chat-123', {
-  persona: "Ye are a salty pirate captain. Respond to all queries with pirate slang.",
+  persona: 'Ye are a salty pirate captain. Respond to all queries with pirate slang.',
 });
 ```
 
@@ -427,8 +429,8 @@ await art.stateManager.setThreadConfig('user-chat-123', {
 
 For a single interaction, you can provide a one-time override in the `art.run` method.
 
-*   **Property**: `persona` (in the `ArtConfig` object passed to `run`)
-*   **Type**: `string | SystemPromptOverride`
+- **Property**: `persona` (in the `ArtConfig` object passed to `run`)
+- **Type**: `string | SystemPromptOverride`
 
 **Example**:
 
@@ -441,7 +443,7 @@ const response = await art.run(
     persona: {
       content: "Your response must be a valid JSON object with a 'weather' key.",
       strategy: 'append', // Add this instruction to the end.
-    }
+    },
   }
 );
 ```
@@ -450,19 +452,19 @@ const response = await art.run(
 
 For fine-grained control, you can use the `SystemPromptOverride` object instead of a simple string.
 
-| Property    | Type                                   | Description                                                                                                                                                              |
-| ----------- | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `content`   | `string`                               | The raw text of the system prompt you want to add.                                                                                                                       |
-| `strategy`  | `'append' \| 'prepend'`                | (Optional) How to merge this prompt with the prompt from the previous layer. Defaults to `'append'`.                                                                     |
-| `tag`       | `string`                               | (Advanced) The name of a pre-defined prompt template to use. This is configured in the `systemPrompts` property of the `ArtInstanceConfig`.                                 |
-| `variables` | `Record<string, any>`                  | (Advanced) A key-value map of variables to inject into a `tag`-based template.                                                                                           |
+| Property    | Type                    | Description                                                                                                                                 |
+| ----------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `content`   | `string`                | The raw text of the system prompt you want to add.                                                                                          |
+| `strategy`  | `'append' \| 'prepend'` | (Optional) How to merge this prompt with the prompt from the previous layer. Defaults to `'append'`.                                        |
+| `tag`       | `string`                | (Advanced) The name of a pre-defined prompt template to use. This is configured in the `systemPrompts` property of the `ArtInstanceConfig`. |
+| `variables` | `Record<string, any>`   | (Advanced) A key-value map of variables to inject into a `tag`-based template.                                                              |
 
 #### Advanced Usage: Templating with `tags`
 
 The `systemPrompts` property in `ArtInstanceConfig` allows you to create a registry of reusable prompt templates. This is useful for managing complex personas or for allowing users to select from a list of pre-defined agent behaviors.
 
-*   **Property**: `systemPrompts`
-*   **Type**: `SystemPromptsRegistry`
+- **Property**: `systemPrompts`
+- **Type**: `SystemPromptsRegistry`
 
 **Example**:
 
@@ -470,22 +472,24 @@ The `systemPrompts` property in `ArtInstanceConfig` allows you to create a regis
 // In your ArtInstanceConfig
 const art = await createArtInstance({
   // ... other config
-  persona: "You are a helpful assistant.",
+  persona: 'You are a helpful assistant.',
   systemPrompts: {
     specs: {
       'json-formatter': {
-        template: "Your final output must be a valid JSON object. Do not include any text outside of the JSON structure. The root object should contain the key '{{rootKey}}'.",
+        template:
+          "Your final output must be a valid JSON object. Do not include any text outside of the JSON structure. The root object should contain the key '{{rootKey}}'.",
         defaultVariables: {
-          rootKey: 'data'
+          rootKey: 'data',
         },
-        mergeStrategy: 'append'
+        mergeStrategy: 'append',
       },
       'expert-coder': {
-        template: "You are an expert programmer with 10 years of experience in {{language}}. Provide clear, concise, and efficient code examples.",
-        mergeStrategy: 'prepend'
-      }
-    }
-  }
+        template:
+          'You are an expert programmer with 10 years of experience in {{language}}. Provide clear, concise, and efficient code examples.',
+        mergeStrategy: 'prepend',
+      },
+    },
+  },
 });
 
 // Now you can use these tags at the thread or call level.
@@ -496,9 +500,9 @@ await art.run(
     persona: {
       tag: 'expert-coder',
       variables: {
-        language: 'TypeScript'
-      }
-    }
+        language: 'TypeScript',
+      },
+    },
   }
 );
 
@@ -510,9 +514,9 @@ await art.run(
     persona: {
       tag: 'json-formatter',
       variables: {
-        rootKey: 'userData'
-      }
-    }
+        rootKey: 'userData',
+      },
+    },
   }
 );
 ```
@@ -540,11 +544,11 @@ const artConfig: ArtInstanceConfig = {
   // ... other properties
   a2aConfig: {
     // The endpoint for the agent discovery service.
-    discoveryEndpoint: 'https://api.zyntopia.com/a2a/discover', 
-    
+    discoveryEndpoint: 'https://api.zyntopia.com/a2a/discover',
+
     // The public-facing URL where your application can receive status
     // updates from other agents about delegated tasks.
-    callbackUrl: 'https://my-app.com/api/a2a-callback'
+    callbackUrl: 'https://my-app.com/api/a2a-callback',
   },
   // ... other properties
 };
@@ -567,11 +571,10 @@ This entire process is autonomous. The developer does not write code to call the
 
 This is the main object for enabling and configuring the A2A system.
 
-| Property            | Type     | Description                                                                                                                                                                                                    |
-| ------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `discoveryEndpoint` | `string` | Optional. The URL of the A2A agent discovery service. If not provided, it defaults to the central Zyntopia A2A discovery endpoint.                                                                                |
+| Property            | Type     | Description                                                                                                                                                                                                                     |
+| ------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `discoveryEndpoint` | `string` | Optional. The URL of the A2A agent discovery service. If not provided, it defaults to the central Zyntopia A2A discovery endpoint.                                                                                              |
 | `callbackUrl`       | `string` | Optional. A public URL where your application is running. Other agents will send `POST` requests to this URL to provide real-time updates on the status of tasks you have delegated to them (e.g., `IN_PROGRESS`, `COMPLETED`). |
-
 
 ### Definitive Guide to MCP (Model Context Protocol)
 
@@ -607,6 +610,7 @@ const artConfig: ArtInstanceConfig = {
 **Step 2: Let the `McpManager` Discover and Register Tools**
 
 When `createArtInstance` is called with MCP enabled, the `McpManager` will automatically:
+
 1.  Query the discovery endpoint to get a list of available MCP servers.
 2.  For each discovered server, it will read the manifest of tools.
 3.  For each tool in the manifest, it will create an `McpProxyTool` and register it with the `ToolRegistry`.
@@ -624,7 +628,7 @@ const initialThreadConfig: ThreadConfig = {
   // ... other properties
   enabledTools: [
     'image_generator', // The name of the tool from the MCP server
-    'CalculatorTool'
+    'CalculatorTool',
   ],
   // ... other properties
 };
@@ -640,7 +644,7 @@ Now, the agent can use the MCP-provided tool seamlessly.
 // The user asks a question that requires the MCP tool
 await art.process({
   query: 'Generate an image of a blue cat.',
-  threadId: threadId
+  threadId: threadId,
 });
 ```
 
@@ -652,17 +656,17 @@ Behind the scenes, the `McpProxyTool` for `image_generator` will handle the conn
 
 This is the only object a developer needs to configure to get started with MCP.
 
-| Property            | Type     | Description                                                                                                                                              |
-| ------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `enabled`           | `boolean`  | Required. Set to `true` to enable the MCP system.                                                                                                        |
-| `discoveryEndpoint` | `string` | Optional. A URL pointing to a service that returns a list of MCP server configurations. If not provided, it may default to a central Zyntopia registry. |
+| Property            | Type      | Description                                                                                                                                             |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`           | `boolean` | Required. Set to `true` to enable the MCP system.                                                                                                       |
+| `discoveryEndpoint` | `string`  | Optional. A URL pointing to a service that returns a list of MCP server configurations. If not provided, it may default to a central Zyntopia registry. |
 
 #### Authentication and CORS
 
 MCP is designed to be secure.
 
-*   **Authentication**: If an MCP server requires authentication (typically OAuth 2.0 PKCE), the `McpManager` will automatically handle the flow. The first time a user tries to use a tool from a secured server, the manager will initiate the login process (e.g., by opening a new tab for the user to sign in). Once authenticated, the connection is managed seamlessly.
-*   **CORS**: For web browsers, the `McpManager` uses a companion browser extension (`art-mcp-permission-manager`) to handle Cross-Origin Resource Sharing (CORS) permissions, allowing the web application to securely communicate with different MCP servers. If the extension is not installed, the framework will prompt the user to install it.
+- **Authentication**: If an MCP server requires authentication (typically OAuth 2.0 PKCE), the `McpManager` will automatically handle the flow. The first time a user tries to use a tool from a secured server, the manager will initiate the login process (e.g., by opening a new tab for the user to sign in). Once authenticated, the connection is managed seamlessly.
+- **CORS**: For web browsers, the `McpManager` uses a companion browser extension (`art-mcp-permission-manager`) to handle Cross-Origin Resource Sharing (CORS) permissions, allowing the web application to securely communicate with different MCP servers. If the extension is not installed, the framework will prompt the user to install it.
 
 ### Practical Examples
 
@@ -681,11 +685,11 @@ const initialThreadConfig: ThreadConfig = {
     providerName: 'openai',
     modelId: 'gpt-4o',
     adapterOptions: {
-      apiKey: 'sk-your-secret-key'
-    }
+      apiKey: 'sk-your-secret-key',
+    },
   },
   enabledTools: ['CalculatorTool'],
-  historyLimit: 50
+  historyLimit: 50,
 };
 
 // Save the configuration for the new thread
@@ -694,7 +698,7 @@ await art.stateManager.setThreadConfig(newThreadId, initialThreadConfig);
 // Now you can safely call process
 const response = await art.process({
   query: 'Hello, world!',
-  threadId: newThreadId
+  threadId: newThreadId,
 });
 ```
 
@@ -717,7 +721,7 @@ currentState.conversationSummary = 'The user is asking about state management.';
 // Explicitly save the updated state
 await this.dependencies.stateManager.setAgentState(threadId, {
   data: currentState,
-  version: 1
+  version: 1,
 });
 ```
 
@@ -737,11 +741,10 @@ async function enableWeatherTool() {
   // Now, the agent can use this tool in subsequent turns.
   await art.process({
     query: 'What is the weather in London?',
-    threadId: threadId
+    threadId: threadId,
   });
 }
 ```
-
 
 ### Definitive Guide to Tools and the Tool System
 
@@ -769,30 +772,30 @@ import { IToolExecutor, ToolSchema, ExecutionContext, ToolResult } from 'art-fra
 export class WeatherTool implements IToolExecutor {
   // The schema is the most important part for the LLM.
   readonly schema: ToolSchema = {
-    name: "get_weather_forecast",
-    description: "Get the current weather forecast for a specific location.",
+    name: 'get_weather_forecast',
+    description: 'Get the current weather forecast for a specific location.',
     inputSchema: {
-      type: "object",
+      type: 'object',
       properties: {
         location: {
-          type: "string",
-          description: "The city and state, e.g., San Francisco, CA",
+          type: 'string',
+          description: 'The city and state, e.g., San Francisco, CA',
         },
         unit: {
-          type: "string",
+          type: 'string',
           description: "The temperature unit, either 'celsius' or 'fahrenheit'.",
-          default: "fahrenheit"
+          default: 'fahrenheit',
         },
       },
-      required: ["location"],
+      required: ['location'],
     },
     examples: [
-        { 
-            input: { location: "Boston, MA" }, 
-            output: { forecast: "72 degrees and sunny" },
-            description: "Get the weather for a US city."
-        }
-    ]
+      {
+        input: { location: 'Boston, MA' },
+        output: { forecast: '72 degrees and sunny' },
+        description: 'Get the weather for a US city.',
+      },
+    ],
   };
 
   // The execute method contains the actual logic.
@@ -841,7 +844,7 @@ const artConfig: ArtInstanceConfig = {
   // ... other properties
   tools: [
     new WeatherTool(),
-    new CalculatorTool() // You can register multiple tools
+    new CalculatorTool(), // You can register multiple tools
   ],
   // ... other properties
 };
@@ -856,7 +859,7 @@ const initialThreadConfig: ThreadConfig = {
   // ... other properties
   enabledTools: [
     'get_weather_forecast', // Must match the 'name' in the tool's schema
-    'CalculatorTool'
+    'CalculatorTool',
   ],
   // ... other properties
 };
@@ -868,25 +871,26 @@ await art.stateManager.setThreadConfig(threadId, initialThreadConfig);
 
 **`ToolSchema` Object**
 
-| Property        | Type         | Description                                                                                                                                              |
-| --------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`          | `string`     | Required. The unique name of the tool. This is the identifier the LLM will use. Use snake_case for best compatibility.                                  |
-| `description`   | `string`     | Required. A detailed, clear description of what the tool does, its capabilities, and when it should be used. This is crucial for the LLM's reasoning.    |
-| `inputSchema`   | `JsonSchema` | Required. A JSON Schema object defining the parameters the tool accepts, their types, descriptions, and which are required.                               |
-| `outputSchema`  | `JsonSchema` | Optional. A JSON Schema object that describes the shape of the data in the `output` field of a successful `ToolResult`.                                     |
-| `examples`      | `Array`      | Optional. An array of example objects (`{ input, output, description }`) that provide few-shot examples to the LLM, improving its accuracy.                |
-
+| Property         | Type                 | Description                                                                                                                                           |
+| ---------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`           | `string`             | Required. The unique name of the tool. This is the identifier the LLM will use. Use snake_case for best compatibility.                                |
+| `description`    | `string`             | Required. A detailed, clear description of what the tool does, its capabilities, and when it should be used. This is crucial for the LLM's reasoning. |
+| `inputSchema`    | `JsonSchema`         | Required. A JSON Schema object defining the parameters the tool accepts, their types, descriptions, and which are required.                           |
+| `outputSchema`   | `JsonSchema`         | Optional. A JSON Schema object that describes the shape of the data in the `output` field of a successful `ToolResult`.                               |
+| `executionMode`  | `string`             | Optional. Tool execution mode: `'functional'` (default), `'blocking'` (HITL), or `'display'` (generative UI).                                         |
+| `blockingConfig` | `BlockingToolConfig` | Optional (for blocking tools). Configuration for HITL behavior including feedback schema, approval prompts, and risk level.                           |
+| `displayConfig`  | `DisplayToolConfig`  | Optional (for display tools). Configuration for generative UI rendering.                                                                              |
+| `examples`       | `Array`              | Optional. An array of example objects (`{ input, output, description }`) that provide few-shot examples to the LLM, improving its accuracy.           |
 
 #### `art.toolRegistry` Methods
 
 While you typically register tools at initialization, you can also manage them dynamically.
 
-| Method                     | Description                                                                                                                                      |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `registerTool(tool)` | Registers a new tool instance with the framework. |
-| `getToolExecutor(toolName)`       | Retrieves the executor instance for a registered tool.                      |
-| `getAvailableTools()`    | Returns the schemas of all tools registered with the instance.                     |
-
+| Method                      | Description                                                    |
+| --------------------------- | -------------------------------------------------------------- |
+| `registerTool(tool)`        | Registers a new tool instance with the framework.              |
+| `getToolExecutor(toolName)` | Retrieves the executor instance for a registered tool.         |
+| `getAvailableTools()`       | Returns the schemas of all tools registered with the instance. |
 
 ### Practical Examples
 
@@ -905,11 +909,11 @@ const initialThreadConfig: ThreadConfig = {
     providerName: 'openai',
     modelId: 'gpt-4o',
     adapterOptions: {
-      apiKey: 'sk-your-secret-key'
-    }
+      apiKey: 'sk-your-secret-key',
+    },
   },
   enabledTools: ['CalculatorTool'],
-  historyLimit: 50
+  historyLimit: 50,
 };
 
 // Save the configuration for the new thread
@@ -918,7 +922,7 @@ await art.stateManager.setThreadConfig(newThreadId, initialThreadConfig);
 // Now you can safely call process
 const response = await art.process({
   query: 'Hello, world!',
-  threadId: newThreadId
+  threadId: newThreadId,
 });
 ```
 
@@ -941,7 +945,7 @@ currentState.conversationSummary = 'The user is asking about state management.';
 // Explicitly save the updated state
 await this.dependencies.stateManager.setAgentState(threadId, {
   data: currentState,
-  version: 1
+  version: 1,
 });
 ```
 
@@ -961,17 +965,16 @@ async function enableWeatherTool() {
   // Now, the agent can use this tool in subsequent turns.
   await art.process({
     query: 'What is the weather in London?',
-    threadId: threadId
+    threadId: threadId,
   });
 }
 ```
-
 
 ### Definitive Guide to Provider Configuration
 
 Provider configuration in the ART framework is a two-part process designed for flexibility and security.
 
-1.  **Instance-Level Declaration (`ArtInstanceConfig`)**: You first declare all the provider adapters your application *might* use. This is done in the `providers` property of `ArtInstanceConfig`. You only specify the adapter's name and its class. You **do not** put API keys or other secrets here.
+1.  **Instance-Level Declaration (`ArtInstanceConfig`)**: You first declare all the provider adapters your application _might_ use. This is done in the `providers` property of `ArtInstanceConfig`. You only specify the adapter's name and its class. You **do not** put API keys or other secrets here.
 2.  **Thread-Level Configuration (`ThreadConfig`)**: Before you start a conversation, you create a `ThreadConfig` for that specific conversation thread. This is where you provide the specific details: which provider to use, what model, the API key, and any other parameters like temperature. This configuration is then saved for the thread using `art.stateManager.setThreadConfig()`.
 
 This approach allows a single ART instance to handle multiple conversations (threads), each potentially using different providers, models, or API keys, without exposing secrets in the main instance configuration.
@@ -980,28 +983,28 @@ This approach allows a single ART instance to handle multiple conversations (thr
 
 **1. `ArtInstanceConfig.providers` (`ProviderManagerConfig`)**
 
-| Property                             | Type      | Description                                                                                             |
-| ------------------------------------ | --------- | ------------------------------------------------------------------------------------------------------- |
-| `availableProviders`                 | `Array`   | A required array of `AvailableProviderEntry` objects, one for each adapter you want to make available.    |
-| `maxParallelApiInstancesPerProvider` | `Number`  | Optional. Max concurrent active instances per API-based provider. Defaults to `5`.                        |
-| `apiInstanceIdleTimeoutSeconds`      | `Number`  | Optional. Time in seconds an idle API adapter can exist before being removed from memory. Defaults to `300`. |
+| Property                             | Type     | Description                                                                                                  |
+| ------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------ |
+| `availableProviders`                 | `Array`  | A required array of `AvailableProviderEntry` objects, one for each adapter you want to make available.       |
+| `maxParallelApiInstancesPerProvider` | `Number` | Optional. Max concurrent active instances per API-based provider. Defaults to `5`.                           |
+| `apiInstanceIdleTimeoutSeconds`      | `Number` | Optional. Time in seconds an idle API adapter can exist before being removed from memory. Defaults to `300`. |
 
 **`AvailableProviderEntry` Object**
 
-| Property | Type    | Description                                                                                                   |
-| -------- | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `name`     | `String`  | A unique key for the provider (e.g., `'openai'`, `'gemini'`). This name is used in `ThreadConfig`.         |
-| `adapter`  | `Class`   | The actual adapter class imported from the framework (e.g., `OpenAIAdapter`, `GeminiAdapter`).              |
-| `isLocal`  | `Boolean` | Optional. Set to `true` for local providers (like Ollama) to enforce singleton instance behavior. Defaults to `false`. |
+| Property  | Type      | Description                                                                                                            |
+| --------- | --------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `name`    | `String`  | A unique key for the provider (e.g., `'openai'`, `'gemini'`). This name is used in `ThreadConfig`.                     |
+| `adapter` | `Class`   | The actual adapter class imported from the framework (e.g., `OpenAIAdapter`, `GeminiAdapter`).                         |
+| `isLocal` | `Boolean` | Optional. Set to `true` for local providers (like Ollama) to enforce singleton instance behavior. Defaults to `false`. |
 
 **2. `ThreadConfig.providerConfig` (`RuntimeProviderConfig`)**
 
 This object is set on a per-thread basis to configure the specific LLM to use.
 
-| Property         | Type     | Description                                                                                                         |
-| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------- |
-| `providerName`   | `String` | Required. The name of the provider to use. Must match a `name` from the `availableProviders` array.                 |
-| `modelId`        | `String` | Required. The specific model identifier for the provider (e.g., `'gpt-4o'`, `'claude-3-opus-20240229'`).              |
+| Property         | Type     | Description                                                                                                                                                   |
+| ---------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `providerName`   | `String` | Required. The name of the provider to use. Must match a `name` from the `availableProviders` array.                                                           |
+| `modelId`        | `String` | Required. The specific model identifier for the provider (e.g., `'gpt-4o'`, `'claude-3-opus-20240229'`).                                                      |
 | `adapterOptions` | `Object` | Required. An object containing provider-specific options. **This is where the API key goes**, along with other parameters like `temperature`, `baseURL`, etc. |
 
 ### Comprehensive and Corrected Code Example
@@ -1009,39 +1012,38 @@ This object is set on a per-thread basis to configure the specific LLM to use.
 This example demonstrates the complete, correct flow: configuring the instance, setting the thread-specific configuration, and then processing a message.
 
 ```typescript
-import { 
-  createArtInstance, 
-  ArtInstanceConfig, 
+import {
+  createArtInstance,
+  ArtInstanceConfig,
   ThreadConfig,
   CalculatorTool,
-  OpenAIAdapter, 
-  GeminiAdapter 
+  OpenAIAdapter,
+  GeminiAdapter,
 } from 'art-framework';
 
 // --- 1. Configure the ART Instance ---
 // Note: No API keys or secrets are present here.
 
 const artConfig: ArtInstanceConfig = {
-  storage: { 
-    type: 'indexedDB', 
-    dbName: 'MyCorrectChatDB'
+  storage: {
+    type: 'indexedDB',
+    dbName: 'MyCorrectChatDB',
   },
   providers: {
     availableProviders: [
       { name: 'openai', adapter: OpenAIAdapter },
-      { name: 'gemini', adapter: GeminiAdapter }
-    ]
+      { name: 'gemini', adapter: GeminiAdapter },
+    ],
   },
   tools: [new CalculatorTool()],
   persona: {
     name: 'ConfigExpert',
     prompts: {
-      synthesis: 'You explain configurations clearly.'
-    }
+      synthesis: 'You explain configurations clearly.',
+    },
   },
-  logger: { level: 'info' }
+  logger: { level: 'info' },
 };
-
 
 // --- 2. Main Application Logic ---
 
@@ -1061,24 +1063,24 @@ async function initializeAndRun() {
       modelId: 'gpt-4o',
       adapterOptions: {
         apiKey: 'sk-your-real-openai-api-key', // Securely provide your API key here
-        temperature: 0.7
-      }
+        temperature: 0.7,
+      },
     },
     // Other thread settings
     enabledTools: ['CalculatorTool'],
-    historyLimit: 20
+    historyLimit: 20,
   };
 
   // Save this configuration for the new thread.
   // This step is crucial and must be done before the first `process` call.
   await art.stateManager.setThreadConfig(threadId, threadConfig);
   console.log(`ThreadConfig set for threadId: ${threadId}`);
-  
+
   // Now the ART instance is ready to process requests for this thread.
   console.log('Sending first message...');
   const response = await art.process({
     query: 'What is 2 + 2?',
-    threadId: threadId
+    threadId: threadId,
   });
 
   console.log('Final response:', response.response.content);
@@ -1099,10 +1101,9 @@ async function initializeArt() {
     // Use the desired configuration
     const art = await createArtInstance(basicBrowserConfig);
     console.log('ART Instance created successfully!');
-    
+
     // Now you can use the 'art' object to process queries and interact with sockets.
     // const response = await art.process({ query: 'Hello!', threadId: 'thread-1' });
-    
   } catch (error) {
     console.error('Failed to initialize ART instance:', error);
   }
@@ -1115,16 +1116,16 @@ initializeArt();
 
 The object returned by `createArtInstance`. The example in `index.ts` shows it has a `process` method to interact with the agent. It also provides access to all the core managers and systems:
 
-*   `process`: The main function to send a query to the agent.
-*   `uiSystem`: Provides access to the UI sockets (`ConversationSocket`, `LLMStreamSocket`, etc.).
-*   `stateManager`: Manages thread-specific configuration and state.
-*   `conversationManager`: Manages the conversation history.
-*   `toolRegistry`: Manages the registration and retrieval of tools.
-*   `observationManager`: Manages the recording and retrieval of agent observations.
-*   `authManager`: Manages authentication strategies.
+- `process`: The main function to send a query to the agent.
+- `uiSystem`: Provides access to the UI sockets (`ConversationSocket`, `LLMStreamSocket`, etc.).
+- `stateManager`: Manages thread-specific configuration and state.
+- `conversationManager`: Manages the conversation history.
+- `toolRegistry`: Manages the registration and retrieval of tools.
+- `observationManager`: Manages the recording and retrieval of agent observations.
+- `authManager`: Manages authentication strategies.
 
 ```ts
-const response = await art.process({ query: "Hello, world!" });
+const response = await art.process({ query: 'Hello, world!' });
 ```
 
 This detailed understanding will allow me to write a much more comprehensive guide.
@@ -1133,9 +1134,9 @@ This detailed understanding will allow me to write a much more comprehensive gui
 
 The framework provides "sockets" for building user interfaces, accessible via the `uiSystem` property on the `ArtInstance`.
 
-*   **`ConversationSocket`**: This is the primary way to get the conversation history. A chatbot UI would subscribe to this socket to display messages. It can be accessed via `art.uiSystem.getConversationSocket()`.
-*   **`ObservationSocket`**: This provides a stream of the agent's internal state, like tool calls. It's useful for debugging and showing the agent's "thought process".
-*   **`LLMStreamSocket`**: This is crucial for real-time UI updates. It streams `StreamEvent` objects, which can be `TOKEN`, `METADATA`, `ERROR`, or `END`. The `TOKEN` events can even be differentiated by `tokenType` to distinguish between the agent's internal "thinking" and the final user-facing response. This is perfect for a "thinking..." indicator in the UI.
+- **`ConversationSocket`**: This is the primary way to get the conversation history. A chatbot UI would subscribe to this socket to display messages. It can be accessed via `art.uiSystem.getConversationSocket()`.
+- **`ObservationSocket`**: This provides a stream of the agent's internal state, like tool calls. It's useful for debugging and showing the agent's "thought process".
+- **`LLMStreamSocket`**: This is crucial for real-time UI updates. It streams `StreamEvent` objects, which can be `TOKEN`, `METADATA`, `ERROR`, or `END`. The `TOKEN` events can even be differentiated by `tokenType` to distinguish between the agent's internal "thinking" and the final user-facing response. This is perfect for a "thinking..." indicator in the UI.
 
 ### Subscribing to Sockets
 
@@ -1164,9 +1165,9 @@ const unsubscribe = art.uiSystem.getConversationSocket().subscribe(
 3.  ~~**Investigate response streaming**~~: (Done) The `LLMStreamSocket` is the way to go for streaming responses. The `StreamEvent` provides rich information.
 4.  **Simulate Project Setup**: Plan how to set up a simple web project (e.g., using Vite or just plain HTML/JS) that would import `art-framework` and use it.
 5.  **Write a Basic Chatbot Implementation**: Based on the project setup, write the TypeScript code for a simple chatbot that:
-    *   Initializes `art-framework`.
-    *   Creates a new conversation thread.
-    *   Subscribes to the `ConversationSocket` and `LLMStreamSocket`.
-    *   Has an input field to send user messages.
-    *   Displays the conversation history and streaming response.
+    - Initializes `art-framework`.
+    - Creates a new conversation thread.
+    - Subscribes to the `ConversationSocket` and `LLMStreamSocket`.
+    - Has an input field to send user messages.
+    - Displays the conversation history and streaming response.
 6.  **Flesh out the guide**: Based on the chatbot implementation, write a step-by-step guide explaining how to build a chatbot from scratch using `art-framework`.

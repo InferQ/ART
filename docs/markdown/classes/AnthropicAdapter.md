@@ -6,7 +6,7 @@
 
 # Class: AnthropicAdapter
 
-Defined in: [src/integrations/reasoning/anthropic.ts:81](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L81)
+Defined in: [src/integrations/reasoning/anthropic.ts:81](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L81)
 
 Implements the `ProviderAdapter` interface for interacting with Anthropic's
 Messages API (Claude models) using the official SDK.
@@ -28,7 +28,7 @@ Handles formatting requests, parsing responses, streaming, and tool use.
 
 > **new AnthropicAdapter**(`options`): `AnthropicAdapter`
 
-Defined in: [src/integrations/reasoning/anthropic.ts:93](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L93)
+Defined in: [src/integrations/reasoning/anthropic.ts:93](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L93)
 
 Creates an instance of the AnthropicAdapter.
 
@@ -54,7 +54,7 @@ If the API key is missing.
 
 > `readonly` **providerName**: `"anthropic"` = `'anthropic'`
 
-Defined in: [src/integrations/reasoning/anthropic.ts:82](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L82)
+Defined in: [src/integrations/reasoning/anthropic.ts:82](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L82)
 
 The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
@@ -68,7 +68,7 @@ The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
 > **call**(`prompt`, `options`): `Promise`\<`AsyncIterable`\<[`StreamEvent`](../interfaces/StreamEvent.md), `any`, `any`\>\>
 
-Defined in: [src/integrations/reasoning/anthropic.ts:120](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L120)
+Defined in: [src/integrations/reasoning/anthropic.ts:120](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L120)
 
 Sends a request to the Anthropic Messages API.
 Translates `ArtStandardPrompt` to the Anthropic format and handles streaming and tool use.
@@ -105,7 +105,7 @@ A promise resolving to an AsyncIterable of StreamEvent objects.
 
 > **shutdown**(): `Promise`\<`void`\>
 
-Defined in: [src/integrations/reasoning/anthropic.ts:487](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/integrations/reasoning/anthropic.ts#L487)
+Defined in: [src/integrations/reasoning/anthropic.ts:487](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/anthropic.ts#L487)
 
 Optional: Method for graceful shutdown
 

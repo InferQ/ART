@@ -428,6 +428,27 @@ export interface LLMMetadata {
   traceId?: string; // Include traceId if this object might be stored or passed independently.
 }
 
+// --- HITL TYPES ---
+export type {
+  ToolExecutionMode,
+  HITLInputType,
+  HITLFeedbackSchema,
+  HITLSelectOption,
+  HITLInputValidation,
+  HITLFeedback,
+  BlockingToolConfig,
+  DisplayToolConfig,
+  HITLContext,
+  BlockingToolSuspendedResult,
+  BlockingToolCompletedResult,
+} from './hitl-types';
+
+export {
+  isBlockingSuspendedResult,
+  isFeedbackApproved,
+  createHITLSuccessResult,
+} from './hitl-types';
+
 /**
  * Defines the schema for a tool, including its input parameters.
  * Uses JSON Schema format for inputSchema.
@@ -461,13 +482,38 @@ export interface ToolSchema {
    */
   examples?: Array<{ input: any; output?: any; description?: string }>;
   /**
-   * Defines the execution mode of the tool.
-   * - 'immediate': The tool executes and returns a result immediately (default).
-   * - 'blocking': The tool initiates a process that requires human intervention (HITL).
-   *               The agent will suspend execution until resumed.
-   * @property {'immediate' | 'blocking'} [executionMode]
+   * Defines the execution mode (category) of the tool.
+   *
+   * @remarks
+   * Tools are categorized into three modes with different framework handling:
+   *
+   * - `functional` (default, also 'immediate' for backward compat): Regular tools that
+   *   execute synchronously and return results immediately.
+   *
+   * - `blocking`: HITL tools that require human input to complete. They return 'suspended'
+   *   status initially. When user provides feedback, the framework programmatically
+   *   completes the tool with the feedback as output - no re-execution needed.
+   *
+   * - `display`: Generative UI tools that render visual content. They complete immediately
+   *   but their output is meant for rendering rather than LLM consumption.
+   *
+   * @property {'functional' | 'immediate' | 'blocking' | 'display'} [executionMode]
    */
-  executionMode?: 'immediate' | 'blocking';
+  executionMode?: 'functional' | 'immediate' | 'blocking' | 'display';
+
+  /**
+   * Configuration for blocking tools (HITL).
+   * Only applicable when executionMode is 'blocking'.
+   * @property {import('./hitl-types').BlockingToolConfig} [blockingConfig]
+   */
+  blockingConfig?: import('./hitl-types').BlockingToolConfig;
+
+  /**
+   * Configuration for display tools (Generative UI).
+   * Only applicable when executionMode is 'display'.
+   * @property {import('./hitl-types').DisplayToolConfig} [displayConfig]
+   */
+  displayConfig?: import('./hitl-types').DisplayToolConfig;
 }
 /**
  * Represents the structured result of a tool execution.
@@ -908,6 +954,23 @@ export interface ExecutionContext {
    * @property {string} [userId]
    */
   userId?: string;
+
+  /**
+   * HITL context for blocking tools.
+   *
+   * @remarks
+   * This enables blocking tools to differentiate between:
+   * - Initial invocation (should return 'suspended' to request user input)
+   * - Post-approval invocation (if completesOnApproval is false, tool is re-executed)
+   *
+   * For most blocking tools with completesOnApproval=true (default), the tool is NOT
+   * re-executed after approval - the framework creates the success result programmatically.
+   * This field is only populated when completesOnApproval=false and the tool needs
+   * to perform actual work after user approval.
+   *
+   * @property {import('./hitl-types').HITLContext} [hitlContext]
+   */
+  hitlContext?: import('./hitl-types').HITLContext;
   // TODO: Potentially include access tokens or credentials scoped to this execution, if needed securely.
   // TODO: Consider providing limited access to StateManager or other relevant context if required by complex tools.
 }

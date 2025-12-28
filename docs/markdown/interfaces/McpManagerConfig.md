@@ -6,7 +6,7 @@
 
 # Interface: McpManagerConfig
 
-Defined in: [src/systems/mcp/types.ts:287](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/mcp/types.ts#L287)
+Defined in: [src/systems/mcp/types.ts:287](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/mcp/types.ts#L287)
 
 Defines the configuration for the McpManager.
 
@@ -18,7 +18,7 @@ Defines the configuration for the McpManager.
 
 > `optional` **discoveryEndpoint**: `string`
 
-Defined in: [src/systems/mcp/types.ts:298](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/mcp/types.ts#L298)
+Defined in: [src/systems/mcp/types.ts:298](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/mcp/types.ts#L298)
 
 An optional endpoint URL for discovering MCP servers.
 Defaults to the Zyntopia API if not provided.
@@ -29,6 +29,6 @@ Defaults to the Zyntopia API if not provided.
 
 > **enabled**: `boolean`
 
-Defined in: [src/systems/mcp/types.ts:292](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/mcp/types.ts#L292)
+Defined in: [src/systems/mcp/types.ts:292](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/mcp/types.ts#L292)
 
 Whether to enable MCP functionality. Defaults to false.

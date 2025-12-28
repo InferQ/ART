@@ -6,7 +6,7 @@
 
 # Class: SystemPromptResolver
 
-Defined in: [src/systems/reasoning/SystemPromptResolver.ts:121](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/reasoning/SystemPromptResolver.ts#L121)
+Defined in: [src/systems/reasoning/SystemPromptResolver.ts:121](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/SystemPromptResolver.ts#L121)
 
 Default implementation of ISystemPromptResolver interface.
 
@@ -78,7 +78,7 @@ ISystemPromptResolver
 
 > **new SystemPromptResolver**(`registry?`): `SystemPromptResolver`
 
-Defined in: [src/systems/reasoning/SystemPromptResolver.ts:135](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/reasoning/SystemPromptResolver.ts#L135)
+Defined in: [src/systems/reasoning/SystemPromptResolver.ts:135](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/SystemPromptResolver.ts#L135)
 
 Creates a new SystemPromptResolver instance.
 
@@ -101,7 +101,7 @@ Optional registry of prompt preset templates indexed by tag name.
 
 > **resolve**(`input`, `traceId?`): `Promise`\<`string`\>
 
-Defined in: [src/systems/reasoning/SystemPromptResolver.ts:188](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/systems/reasoning/SystemPromptResolver.ts#L188)
+Defined in: [src/systems/reasoning/SystemPromptResolver.ts:188](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/SystemPromptResolver.ts#L188)
 
 Resolves the final system prompt by applying overrides in precedence order.
 

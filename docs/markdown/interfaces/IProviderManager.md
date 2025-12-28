@@ -6,7 +6,7 @@
 
 # Interface: IProviderManager
 
-Defined in: [src/types/providers.ts:98](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/providers.ts#L98)
+Defined in: [src/types/providers.ts:98](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/providers.ts#L98)
 
 Interface for the ProviderManager.
 
@@ -18,7 +18,7 @@ Interface for the ProviderManager.
 
 > **getAdapter**(`config`): `Promise`\<[`ManagedAdapterAccessor`](ManagedAdapterAccessor.md)\>
 
-Defined in: [src/types/providers.ts:115](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/providers.ts#L115)
+Defined in: [src/types/providers.ts:115](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/providers.ts#L115)
 
 Gets a managed adapter instance based on the runtime config.
 
@@ -43,7 +43,7 @@ May queue requests or throw errors based on concurrency limits.
 
 > **getAvailableProviders**(): `string`[]
 
-Defined in: [src/types/providers.ts:103](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/providers.ts#L103)
+Defined in: [src/types/providers.ts:103](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/providers.ts#L103)
 
 Returns identifiers for all registered potential providers.
 

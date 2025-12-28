@@ -6,7 +6,7 @@
 
 # Interface: ArtInstanceConfig
 
-Defined in: [src/types/index.ts:1251](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1251)
+Defined in: [src/types/index.ts:1324](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1324)
 
 Configuration for creating an ART instance.
 
@@ -18,7 +18,7 @@ Configuration for creating an ART instance.
 
 > `optional` **a2aConfig**: `object`
 
-Defined in: [src/types/index.ts:1340](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1340)
+Defined in: [src/types/index.ts:1413](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1413)
 
 Optional: Configuration for A2A services.
 
@@ -40,7 +40,7 @@ The endpoint for discovering A2A agents.
 
 > `optional` **agentCore**: (`dependencies`) => [`IAgentCore`](IAgentCore.md)
 
-Defined in: [src/types/index.ts:1275](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1275)
+Defined in: [src/types/index.ts:1348](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1348)
 
 The agent core implementation class to use.
 Defaults to `PESAgent` if not provided.
@@ -67,7 +67,7 @@ MyCustomAgentClass
 
 > `optional` **authConfig**: `object`
 
-Defined in: [src/types/index.ts:1324](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1324)
+Defined in: [src/types/index.ts:1397](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1397)
 
 Optional configuration for authentication strategies.
 Used for secure connections to external services and MCP servers.
@@ -90,7 +90,7 @@ Pre-configured authentication strategies to register at startup.
 
 > `optional` **execution**: [`ExecutionConfig`](ExecutionConfig.md)
 
-Defined in: [src/types/index.ts:1312](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1312)
+Defined in: [src/types/index.ts:1385](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1385)
 
 Optional: Configuration for execution phase behavior (TAEF parameters).
 
@@ -100,7 +100,7 @@ Optional: Configuration for execution phase behavior (TAEF parameters).
 
 > `optional` **logger**: `object`
 
-Defined in: [src/types/index.ts:1298](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1298)
+Defined in: [src/types/index.ts:1371](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1371)
 
 Optional configuration for the framework's logger.
 
@@ -116,7 +116,7 @@ Minimum log level to output. Defaults to 'info'.
 
 > `optional` **mcpConfig**: [`McpManagerConfig`](McpManagerConfig.md)
 
-Defined in: [src/types/index.ts:1318](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1318)
+Defined in: [src/types/index.ts:1391](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1391)
 
 Optional configuration for MCP (Model Context Protocol) manager.
 Enables connection to external MCP servers for dynamic tool loading.
@@ -127,7 +127,7 @@ Enables connection to external MCP servers for dynamic tool loading.
 
 > `optional` **persona**: [`AgentPersona`](AgentPersona.md)
 
-Defined in: [src/types/index.ts:1307](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1307)
+Defined in: [src/types/index.ts:1380](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1380)
 
 Optional: Defines the default identity and high-level guidance for the agent.
 This can be overridden at the thread or call level.
@@ -138,7 +138,7 @@ This can be overridden at the thread or call level.
 
 > **providers**: [`ProviderManagerConfig`](ProviderManagerConfig.md)
 
-Defined in: [src/types/index.ts:1266](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1266)
+Defined in: [src/types/index.ts:1339](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1339)
 
 Configuration for the ProviderManager, defining available LLM provider adapters.
 
@@ -148,7 +148,7 @@ Configuration for the ProviderManager, defining available LLM provider adapters.
 
 > `optional` **stateSavingStrategy**: [`StateSavingStrategy`](../type-aliases/StateSavingStrategy.md)
 
-Defined in: [src/types/index.ts:1293](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1293)
+Defined in: [src/types/index.ts:1366](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1366)
 
 Defines the strategy for saving `AgentState`. Defaults to 'explicit'.
 
@@ -166,7 +166,7 @@ Defines the strategy for saving `AgentState`. Defaults to 'explicit'.
 
 > **storage**: [`StorageAdapter`](StorageAdapter.md) \| \{ `dbName?`: `string`; `objectStores?`: `any`[]; `type`: `"memory"` \| `"indexedDB"`; `version?`: `number`; \}
 
-Defined in: [src/types/index.ts:1261](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1261)
+Defined in: [src/types/index.ts:1334](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1334)
 
 Configuration for the storage adapter.
 Can be a pre-configured `StorageAdapter` instance,
@@ -184,6 +184,6 @@ or an object specifying the type and options for a built-in adapter.
 
 > `optional` **tools**: [`IToolExecutor`](IToolExecutor.md)[]
 
-Defined in: [src/types/index.ts:1280](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/types/index.ts#L1280)
+Defined in: [src/types/index.ts:1353](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1353)
 
 An optional array of tool executor instances to register at initialization.

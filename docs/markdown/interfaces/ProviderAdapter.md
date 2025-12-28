@@ -6,7 +6,7 @@
 
 # Interface: ProviderAdapter
 
-Defined in: [src/core/interfaces.ts:162](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/interfaces.ts#L162)
+Defined in: [src/core/interfaces.ts:161](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L161)
 
 Base interface for LLM Provider Adapters, extending the core ReasoningEngine.
 Implementations will handle provider-specific API calls, authentication, etc.
@@ -21,7 +21,7 @@ Implementations will handle provider-specific API calls, authentication, etc.
 
 > `readonly` **providerName**: `string`
 
-Defined in: [src/core/interfaces.ts:166](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/interfaces.ts#L166)
+Defined in: [src/core/interfaces.ts:165](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L165)
 
 The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
@@ -31,7 +31,7 @@ The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
 > **call**(`prompt`, `options`): `Promise`\<`AsyncIterable`\<[`StreamEvent`](StreamEvent.md), `any`, `any`\>\>
 
-Defined in: [src/core/interfaces.ts:86](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/interfaces.ts#L86)
+Defined in: [src/core/interfaces.ts:85](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L85)
 
 Executes a call to the configured Large Language Model (LLM).
 This method is typically implemented by a specific `ProviderAdapter`.
@@ -75,7 +75,7 @@ If a critical error occurs during the initial call setup or if the stream itself
 
 > `optional` **shutdown**(): `Promise`\<`void`\>
 
-Defined in: [src/core/interfaces.ts:169](https://github.com/hashangit/ART/blob/4b6e07b019bda196c951a1bba064e95e97bd080e/src/core/interfaces.ts#L169)
+Defined in: [src/core/interfaces.ts:168](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L168)
 
 Optional: Method for graceful shutdown
 
