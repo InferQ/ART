@@ -35,9 +35,9 @@ The key is the `ExecutionOutput` interface which supports plan updates:
 ```typescript
 // File: src/types/pes-types.ts
 export interface ExecutionOutput {
-  thoughts?: string;
-  content?: string;
-  toolCalls?: ParsedToolCall[];
+  thoughts?: string;       // Agent's thoughts or reasoning for this execution step
+  content?: string;        // Main response content from the LLM
+  toolCalls?: ParsedToolCall[]; // Tool calls the LLM decided to make
   nextStepDecision?: 'continue' | 'wait' | 'complete_item' | 'update_plan';
   updatedPlan?: {
     intent?: string;      // Optional: Update the overall intent
@@ -82,14 +82,14 @@ When the agent discovers new requirements during execution, it can add items to 
 // Original todolist
 const originalTodoList = [
   { id: '1', description: 'Fetch user data', status: 'PENDING' },
-  { id: '2', description: 'Process data', status: 'PENDING' }
+  { id: '2', description: 'Process data', status: 'PENDING', dependencies: ['1'] }
 ];
 
 // During execution of item 1, agent discovers authentication is needed
 const updatedTodoList = [
   { id: '1', description: 'Fetch user data', status: 'COMPLETED' },
-  { id: '2', description: 'Authenticate user', status: 'PENDING' },  // NEW
-  { id: '3', description: 'Process data', status: 'PENDING' }
+  { id: 'auth-1', description: 'Authenticate user', status: 'PENDING', dependencies: ['1'] }, // NEW
+  { id: '2', description: 'Process data', status: 'PENDING', dependencies: ['auth-1'] } // Original item's dependencies updated
 ];
 ```
 
@@ -99,7 +99,7 @@ const updatedTodoList = [
   "thoughts": "Discovered that the API requires authentication before fetching data.",
   "nextStepDecision": "update_plan",
   "updatedPlan": {
-    "plan": "Added authentication step before data processing",
+    "plan": "Added authentication step before data processing.",
     "todoList": [
       {
         "id": "1",
@@ -114,13 +114,15 @@ const updatedTodoList = [
         "status": "PENDING",
         "stepType": "tool",
         "requiredTools": ["http_request"],
+        "dependencies": ["1"],
         "createdTimestamp": 1704067260000,
         "updatedTimestamp": 1704067260000
       },
       {
-        "id": "3",
+        "id": "2",
         "description": "Process data",
         "status": "PENDING",
+        "dependencies": ["auth-1"],
         "createdTimestamp": 1704067200000,
         "updatedTimestamp": 1704067200000
       }
@@ -158,7 +160,9 @@ const modifiedItem = {
         "id": "1",
         "description": "Fetch user data",
         "status": "COMPLETED",
-        "result": { "raw": "..." }
+        "result": { "raw": "..." },
+        "createdTimestamp": 1704067200000,
+        "updatedTimestamp": 1704067200000
       },
       {
         "id": "2",
