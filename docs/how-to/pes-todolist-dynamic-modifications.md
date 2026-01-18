@@ -52,13 +52,16 @@ Each item in the todolist has the following structure:
 export interface TodoItem {
   id: string;                              // Unique identifier
   description: string;                     // Human-readable task description
-  status: TodoItemStatus;                  // PENDING, IN_PROGRESS, COMPLETED, FAILED, SKIPPED
+  status: TodoItemStatus;                  // PENDING, IN_PROGRESS, COMPLETED, FAILED, SKIPPED, CANCELLED, WAITING
   dependencies?: string[];                // IDs of items that must complete first
   stepType?: 'tool' | 'reasoning';         // Type of execution step
   requiredTools?: string[];                // Tools required for tool-type steps
   expectedOutcome?: string;               // Expected result description
   toolValidationMode?: 'strict' | 'advisory'; // Validation enforcement level
   result?: any;                           // Execution result
+  thoughts?: string[];                    // Agent's thoughts for this item
+  toolCalls?: ParsedToolCall[];           // Planned tool calls
+  actualToolCalls?: ParsedToolCall[];     // Executed tool calls
   toolResults?: ToolResult[];             // Results from tool executions
   validationStatus?: 'passed' | 'failed' | 'skipped';
   createdTimestamp: number;
