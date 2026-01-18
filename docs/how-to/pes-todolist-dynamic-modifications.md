@@ -174,7 +174,9 @@ const modifiedItem = {
       {
         "id": "3",
         "description": "Generate report",
-        "status": "PENDING"
+        "status": "PENDING",
+        "createdTimestamp": 1704067200000,
+        "updatedTimestamp": 1704067350000
       }
     ]
   }
