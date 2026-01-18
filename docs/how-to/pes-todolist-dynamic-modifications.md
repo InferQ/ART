@@ -218,12 +218,16 @@ const updated = [
       {
         "id": "1",
         "description": "Load configuration",
-        "status": "COMPLETED"
+        "status": "COMPLETED",
+        "createdTimestamp": 1704067200000,
+        "updatedTimestamp": 1704067200000
       },
       {
         "id": "2",
         "description": "Process data",
-        "status": "IN_PROGRESS"
+        "status": "IN_PROGRESS",
+        "createdTimestamp": 1704067200000,
+        "updatedTimestamp": 1704067260000
       }
       // Export step omitted - removed from plan
     ]
