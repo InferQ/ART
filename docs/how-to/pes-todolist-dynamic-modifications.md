@@ -35,6 +35,9 @@ The key is the `ExecutionOutput` interface which supports plan updates:
 ```typescript
 // File: src/types/pes-types.ts
 export interface ExecutionOutput {
+  thoughts?: string;
+  content?: string;
+  toolCalls?: ParsedToolCall[];
   nextStepDecision?: 'continue' | 'wait' | 'complete_item' | 'update_plan';
   updatedPlan?: {
     intent?: string;      // Optional: Update the overall intent
