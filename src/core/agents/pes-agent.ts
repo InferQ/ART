@@ -42,6 +42,7 @@ import { generateUUID } from '@/utils/uuid';
 import { ARTError, ErrorCode } from '@/errors';
 import { Logger } from '@/utils/logger';
 import { safeStringify } from '@/utils/string-helpers';
+import { computeTodoListDiff, createInitialChanges } from '@/utils/todo-diff';
 
 import { AgentDiscoveryService } from '@/systems/a2a/AgentDiscoveryService';
 import { TaskDelegationService } from '@/systems/a2a/TaskDelegationService';
@@ -385,10 +386,13 @@ export class PESAgent implements IAgentCore {
             },
             metadata: { timestamp: Date.now() }
         });
-        // Also emit initial plan update
+        // Also emit initial plan update with changes (all items marked as added)
         await this.deps.observationManager.record({
             threadId, traceId, type: ObservationType.PLAN_UPDATE,
-            content: { todoList: planningOutput.todoList },
+            content: {
+                todoList: planningOutput.todoList,
+                changes: createInitialChanges(planningOutput.todoList || [])
+            },
             metadata: { timestamp: Date.now() }
         });
     }
@@ -1191,6 +1195,9 @@ Respond with a JSON object containing "content" explaining the situation and "ne
             if (parsed.updatedPlan && parsed.updatedPlan.todoList) {
                 Logger.info(`[${traceId}] Plan update received from execution step.`);
 
+                // IMPORTANT: Capture previous state BEFORE any mutations for accurate diff computation
+                const previousTodoList = [...state.todoList];
+
                 // Sanitize: Ensure agent doesn't mark current/future items as COMPLETED prematurely
                 const sanitizedList = parsed.updatedPlan.todoList.map(newItem => {
                     // Find if this item was already COMPLETED in our previous state
@@ -1210,10 +1217,18 @@ Respond with a JSON object containing "content" explaining the situation and "ne
                 if (parsed.updatedPlan.intent) state.intent = parsed.updatedPlan.intent;
                 if (parsed.updatedPlan.plan) state.plan = parsed.updatedPlan.plan;
 
+                // IMPORTANT: Save state BEFORE emitting observation to ensure consistency
                 await this._saveState(props.threadId, state);
+
+                // Compute diff on sanitized result to match the persisted state
+                const todoListChanges = computeTodoListDiff(previousTodoList, state.todoList);
+
                 await this.deps.observationManager.record({
                     threadId: props.threadId, traceId, type: ObservationType.PLAN_UPDATE,
-                    content: { todoList: state.todoList },
+                    content: {
+                        todoList: state.todoList,
+                        changes: todoListChanges
+                    },
                     metadata: { timestamp: Date.now() }
                 });
             }

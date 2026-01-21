@@ -465,3 +465,103 @@ export interface ExecutionOutput {
     todoList?: TodoItem[];
   };
 }
+
+/**
+ * Represents the type of change that occurred to a TodoItem during
+ * dynamic plan updates.
+ *
+ * @enum {string}
+ */
+export enum TodoItemChangeType {
+  /** A new item was added to the plan during execution. */
+  ADDED = 'added',
+  /** An existing item was modified. */
+  MODIFIED = 'modified',
+  /** An item was removed from the plan. */
+  REMOVED = 'removed',
+}
+
+/**
+ * Describes a single change to a TodoItem during dynamic plan updates.
+ *
+ * The presence of optional fields depends on the change type:
+ * - ADDED: `item` is present
+ * - MODIFIED: both `item` and `previousItem` are present
+ * - REMOVED: only `previousItem` is present
+ *
+ * @interface TodoItemChange
+ */
+export interface TodoItemChange {
+  /**
+   * The type of change that occurred.
+   * @property {TodoItemChangeType} type
+   */
+  type: TodoItemChangeType;
+
+  /**
+   * The ID of the TodoItem that changed.
+   * @property {string} itemId
+   */
+  itemId: string;
+
+  /**
+   * When this change was detected (Unix timestamp in milliseconds).
+   * @property {number} timestamp
+   */
+  timestamp: number;
+
+  /**
+   * For ADDED and MODIFIED changes: the new state of the item.
+   * @property {TodoItem} [item]
+   */
+  item?: TodoItem;
+
+  /**
+   * For MODIFIED changes: the state before modification.
+   * For REMOVED changes: the state before removal.
+   * @property {TodoItem} [previousItem]
+   */
+  previousItem?: TodoItem;
+}
+
+/**
+ * Describes the changes made to a todo list during dynamic plan updates.
+ * Provides both a flat array of all changes and convenience accessors
+ * for common filtering patterns.
+ *
+ * @interface TodoListChanges
+ */
+export interface TodoListChanges {
+  /**
+   * When these changes were detected (Unix timestamp in milliseconds).
+   * @property {number} timestamp
+   */
+  timestamp: number;
+
+  /**
+   * All changes as a flat array - the single source of truth.
+   * @property {TodoItemChange[]} changes
+   */
+  changes: TodoItemChange[];
+
+  /**
+   * Convenience accessor for items that were added.
+   * Filters the changes array to include only ADDED type changes.
+   * @property {TodoItemChange[]} added
+   */
+  added: TodoItemChange[];
+
+  /**
+   * Convenience accessor for items that were modified.
+   * Filters the changes array to include only MODIFIED type changes.
+   * @property {TodoItemChange[]} modified
+   */
+  modified: TodoItemChange[];
+
+  /**
+   * Convenience accessor for items that were removed.
+   * Filters the changes array to include only REMOVED type changes.
+   * @property {TodoItemChange[]} removed
+   */
+  removed: TodoItemChange[];
+}

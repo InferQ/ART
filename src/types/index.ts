@@ -37,7 +37,19 @@ export { A2ATaskSocket } from '@/systems/ui/a2a-task-socket';
 export type { UnsubscribeFunction } from '@/systems/ui/typed-socket';
 
 // --- PES Types ---
-export { TodoItemStatus, TodoItem, PESAgentStateData, ExecutionOutput, StepOutputEntry } from './pes-types';
+export {
+  TodoItemStatus,
+  TodoItem,
+  PESAgentStateData,
+  ExecutionOutput,
+  StepOutputEntry,
+  TodoItemChangeType,
+  TodoItemChange,
+  TodoListChanges
+} from './pes-types';
+
+// --- Todo Diff Utility ---
+export { computeTodoListDiff, createInitialChanges } from '@/utils/todo-diff';
 
 // --- Zod Schemas for Validation ---
 export { ArtStandardPromptSchema, ArtStandardMessageSchema } from './schemas';
