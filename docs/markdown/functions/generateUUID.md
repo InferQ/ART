@@ -8,7 +8,7 @@
 
 > **generateUUID**(): `string`
 
-Defined in: [src/utils/uuid.ts:17](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/utils/uuid.ts#L17)
+Defined in: [src/utils/uuid.ts:17](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/utils/uuid.ts#L17)
 
 Generates a unique Version 4 UUID (Universally Unique Identifier) string.
 

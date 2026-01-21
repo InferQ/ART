@@ -6,7 +6,7 @@
 
 # Interface: HITLFeedbackSchema
 
-Defined in: src/types/hitl-types.ts:106
+Defined in: [src/types/hitl-types.ts:106](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L106)
 
 Schema for what kind of feedback a blocking tool expects.
 
@@ -60,7 +60,7 @@ The framework uses this to validate feedback and construct the tool result.
 
 > `optional` **allowModifyArgs**: `boolean`
 
-Defined in: src/types/hitl-types.ts:160
+Defined in: [src/types/hitl-types.ts:160](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L160)
 
 If true, user can modify the original tool arguments before submitting.
 The modified args are returned in the feedback.
@@ -77,7 +77,7 @@ false
 
 > `optional` **cancelLabel**: `string`
 
-Defined in: src/types/hitl-types.ts:153
+Defined in: [src/types/hitl-types.ts:153](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L153)
 
 For confirm type: custom label for the reject button.
 
@@ -93,7 +93,7 @@ For confirm type: custom label for the reject button.
 
 > `optional` **confirmLabel**: `string`
 
-Defined in: src/types/hitl-types.ts:147
+Defined in: [src/types/hitl-types.ts:147](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L147)
 
 For confirm type: custom label for the approve button.
 
@@ -109,7 +109,7 @@ For confirm type: custom label for the approve button.
 
 > `optional` **customSchema**: `Record`\<`string`, `unknown`\>
 
-Defined in: src/types/hitl-types.ts:165
+Defined in: [src/types/hitl-types.ts:165](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L165)
 
 For custom inputType: application-defined JSON schema for the input.
 
@@ -119,7 +119,7 @@ For custom inputType: application-defined JSON schema for the input.
 
 > `optional` **defaultValue**: `unknown`
 
-Defined in: src/types/hitl-types.ts:136
+Defined in: [src/types/hitl-types.ts:136](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L136)
 
 Optional default value to pre-fill.
 
@@ -129,7 +129,7 @@ Optional default value to pre-fill.
 
 > `optional` **hint**: `string`
 
-Defined in: src/types/hitl-types.ts:170
+Defined in: [src/types/hitl-types.ts:170](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L170)
 
 Optional hint text shown below the input.
 
@@ -139,7 +139,7 @@ Optional hint text shown below the input.
 
 > **inputType**: [`HITLInputType`](../type-aliases/HITLInputType.md)
 
-Defined in: src/types/hitl-types.ts:110
+Defined in: [src/types/hitl-types.ts:110](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L110)
 
 The type of input expected from the user.
 
@@ -149,7 +149,7 @@ The type of input expected from the user.
 
 > `optional` **options**: [`HITLSelectOption`](HITLSelectOption.md)[]
 
-Defined in: src/types/hitl-types.ts:126
+Defined in: [src/types/hitl-types.ts:126](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L126)
 
 For select/multiselect: available options to choose from.
 
@@ -159,7 +159,7 @@ For select/multiselect: available options to choose from.
 
 > `optional` **placeholder**: `string`
 
-Defined in: src/types/hitl-types.ts:141
+Defined in: [src/types/hitl-types.ts:141](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L141)
 
 Placeholder text for text/number inputs.
 
@@ -169,7 +169,7 @@ Placeholder text for text/number inputs.
 
 > **prompt**: `string`
 
-Defined in: src/types/hitl-types.ts:116
+Defined in: [src/types/hitl-types.ts:116](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L116)
 
 Human-readable prompt shown to the user.
 This should clearly explain what input is needed and why.
@@ -180,7 +180,7 @@ This should clearly explain what input is needed and why.
 
 > `optional` **sensitive**: `boolean`
 
-Defined in: src/types/hitl-types.ts:177
+Defined in: [src/types/hitl-types.ts:177](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L177)
 
 Whether this is a sensitive input (e.g., password, API key).
 UI should mask the input if true.
@@ -197,7 +197,7 @@ false
 
 > `optional` **title**: `string`
 
-Defined in: src/types/hitl-types.ts:121
+Defined in: [src/types/hitl-types.ts:121](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L121)
 
 Optional title for the feedback dialog/section.
 
@@ -207,6 +207,6 @@ Optional title for the feedback dialog/section.
 
 > `optional` **validation**: [`HITLInputValidation`](HITLInputValidation.md)
 
-Defined in: src/types/hitl-types.ts:131
+Defined in: [src/types/hitl-types.ts:131](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L131)
 
 Validation constraints for the input.

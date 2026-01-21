@@ -6,7 +6,7 @@
 
 # Interface: ExecutionContext
 
-Defined in: [src/types/index.ts:941](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L941)
+Defined in: [src/types/index.ts:953](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L953)
 
 Context provided to a tool during its execution.
 
@@ -18,7 +18,7 @@ Context provided to a tool during its execution.
 
 > `optional` **hitlContext**: [`HITLContext`](HITLContext.md)
 
-Defined in: [src/types/index.ts:973](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L973)
+Defined in: [src/types/index.ts:985](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L985)
 
 HITL context for blocking tools.
 
@@ -39,7 +39,7 @@ to perform actual work after user approval.
 
 > **threadId**: `string`
 
-Defined in: [src/types/index.ts:946](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L946)
+Defined in: [src/types/index.ts:958](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L958)
 
 The ID of the thread in which the tool is being executed.
 
@@ -49,7 +49,7 @@ The ID of the thread in which the tool is being executed.
 
 > `optional` **traceId**: `string`
 
-Defined in: [src/types/index.ts:951](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L951)
+Defined in: [src/types/index.ts:963](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L963)
 
 The trace ID for this execution cycle, if available.
 
@@ -59,6 +59,6 @@ The trace ID for this execution cycle, if available.
 
 > `optional` **userId**: `string`
 
-Defined in: [src/types/index.ts:956](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L956)
+Defined in: [src/types/index.ts:968](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L968)
 
 The user ID associated with the execution, if available.

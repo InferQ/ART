@@ -6,7 +6,7 @@
 
 # Interface: CreateA2ATaskRequest
 
-Defined in: [src/types/index.ts:1738](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1738)
+Defined in: [src/types/index.ts:1750](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1750)
 
 Represents a request to create a new A2A task.
 
@@ -18,7 +18,7 @@ Represents a request to create a new A2A task.
 
 > `optional` **callbackUrl**: `string`
 
-Defined in: [src/types/index.ts:1783](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1783)
+Defined in: [src/types/index.ts:1795](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1795)
 
 Callback URL for notifications.
 
@@ -28,7 +28,7 @@ Callback URL for notifications.
 
 > `optional` **dependencies**: `string`[]
 
-Defined in: [src/types/index.ts:1778](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1778)
+Defined in: [src/types/index.ts:1790](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1790)
 
 Task dependencies.
 
@@ -38,7 +38,7 @@ Task dependencies.
 
 > **input**: `any`
 
-Defined in: [src/types/index.ts:1748](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1748)
+Defined in: [src/types/index.ts:1760](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1760)
 
 Input data for the task.
 
@@ -48,7 +48,7 @@ Input data for the task.
 
 > `optional` **instructions**: `string`
 
-Defined in: [src/types/index.ts:1753](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1753)
+Defined in: [src/types/index.ts:1765](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1765)
 
 Instructions for task execution.
 
@@ -58,7 +58,7 @@ Instructions for task execution.
 
 > `optional` **maxRetries**: `number`
 
-Defined in: [src/types/index.ts:1793](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1793)
+Defined in: [src/types/index.ts:1805](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1805)
 
 Maximum retry attempts.
 
@@ -68,7 +68,7 @@ Maximum retry attempts.
 
 > `optional` **parameters**: `Record`\<`string`, `any`\>
 
-Defined in: [src/types/index.ts:1758](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1758)
+Defined in: [src/types/index.ts:1770](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1770)
 
 Task parameters.
 
@@ -78,7 +78,7 @@ Task parameters.
 
 > `optional` **preferredTargetAgent**: [`A2AAgentInfo`](A2AAgentInfo.md)
 
-Defined in: [src/types/index.ts:1773](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1773)
+Defined in: [src/types/index.ts:1785](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1785)
 
 Preferred target agent (if any).
 
@@ -88,7 +88,7 @@ Preferred target agent (if any).
 
 > `optional` **priority**: [`A2ATaskPriority`](../enumerations/A2ATaskPriority.md)
 
-Defined in: [src/types/index.ts:1763](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1763)
+Defined in: [src/types/index.ts:1775](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1775)
 
 Task priority.
 
@@ -98,7 +98,7 @@ Task priority.
 
 > **sourceAgent**: [`A2AAgentInfo`](A2AAgentInfo.md)
 
-Defined in: [src/types/index.ts:1768](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1768)
+Defined in: [src/types/index.ts:1780](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1780)
 
 Source agent information.
 
@@ -108,7 +108,7 @@ Source agent information.
 
 > `optional` **tags**: `string`[]
 
-Defined in: [src/types/index.ts:1798](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1798)
+Defined in: [src/types/index.ts:1810](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1810)
 
 Task tags.
 
@@ -118,7 +118,7 @@ Task tags.
 
 > **taskType**: `string`
 
-Defined in: [src/types/index.ts:1743](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1743)
+Defined in: [src/types/index.ts:1755](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1755)
 
 The type of task to be executed.
 
@@ -128,6 +128,6 @@ The type of task to be executed.
 
 > `optional` **timeoutMs**: `number`
 
-Defined in: [src/types/index.ts:1788](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1788)
+Defined in: [src/types/index.ts:1800](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1800)
 
 Task timeout in milliseconds.

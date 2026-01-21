@@ -6,7 +6,7 @@
 
 # Class: OutputParser
 
-Defined in: [src/systems/reasoning/OutputParser.ts:122](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/OutputParser.ts#L122)
+Defined in: [src/systems/reasoning/OutputParser.ts:122](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/reasoning/OutputParser.ts#L122)
 
 Default implementation of the IOutputParser interface.
 
@@ -65,7 +65,7 @@ IOutputParser
 
 > **parseExecutionOutput**(`output`): `Promise`\<[`ExecutionOutput`](../interfaces/ExecutionOutput.md)\>
 
-Defined in: [src/systems/reasoning/OutputParser.ts:377](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/OutputParser.ts#L377)
+Defined in: [src/systems/reasoning/OutputParser.ts:377](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/reasoning/OutputParser.ts#L377)
 
 Parses the raw string output from an execution LLM call (per todo item).
 
@@ -124,7 +124,7 @@ Never throws; errors are handled gracefully with empty results.
 
 > **parsePlanningOutput**(`output`): `Promise`\<\{ `intent?`: `string`; `plan?`: `string`; `thoughts?`: `string`; `title?`: `string`; `todoList?`: [`TodoItem`](../interfaces/TodoItem.md)[]; `toolCalls?`: [`ParsedToolCall`](../interfaces/ParsedToolCall.md)[]; \}\>
 
-Defined in: [src/systems/reasoning/OutputParser.ts:232](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/OutputParser.ts#L232)
+Defined in: [src/systems/reasoning/OutputParser.ts:232](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/reasoning/OutputParser.ts#L232)
 
 Parses the raw string output from the planning LLM call.
 
@@ -182,7 +182,7 @@ Never throws; errors are handled gracefully with empty results.
 
 > **parseSynthesisOutput**(`output`): `Promise`\<`string`\>
 
-Defined in: [src/systems/reasoning/OutputParser.ts:479](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/reasoning/OutputParser.ts#L479)
+Defined in: [src/systems/reasoning/OutputParser.ts:479](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/reasoning/OutputParser.ts#L479)
 
 Parses the raw string output from the synthesis LLM call.
 

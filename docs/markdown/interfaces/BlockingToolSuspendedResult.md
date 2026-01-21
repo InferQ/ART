@@ -6,7 +6,7 @@
 
 # Interface: BlockingToolSuspendedResult
 
-Defined in: src/types/hitl-types.ts:475
+Defined in: [src/types/hitl-types.ts:475](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L475)
 
 Extended ToolResult for blocking tools that return 'suspended' status.
 
@@ -21,7 +21,7 @@ feedbackSchema so the UI knows what to render.
 
 > **callId**: `string`
 
-Defined in: src/types/hitl-types.ts:477
+Defined in: [src/types/hitl-types.ts:477](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L477)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: src/types/hitl-types.ts:477
 
 > `optional` **feedbackSchema**: [`HITLFeedbackSchema`](HITLFeedbackSchema.md)
 
-Defined in: src/types/hitl-types.ts:484
+Defined in: [src/types/hitl-types.ts:484](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L484)
 
 The feedback schema for the UI to render.
 If not provided, the framework uses the tool's schema config.
@@ -40,7 +40,7 @@ If not provided, the framework uses the tool's schema config.
 
 > `optional` **metadata**: `object`
 
-Defined in: src/types/hitl-types.ts:498
+Defined in: [src/types/hitl-types.ts:498](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L498)
 
 Metadata including the suspensionId.
 
@@ -58,7 +58,7 @@ Metadata including the suspensionId.
 
 > `optional` **output**: `object`
 
-Defined in: src/types/hitl-types.ts:489
+Defined in: [src/types/hitl-types.ts:489](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L489)
 
 Display content to show in the suspension UI.
 
@@ -80,7 +80,7 @@ Display content to show in the suspension UI.
 
 > **status**: `"suspended"`
 
-Defined in: src/types/hitl-types.ts:476
+Defined in: [src/types/hitl-types.ts:476](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L476)
 
 ***
 
@@ -88,4 +88,4 @@ Defined in: src/types/hitl-types.ts:476
 
 > **toolName**: `string`
 
-Defined in: src/types/hitl-types.ts:478
+Defined in: [src/types/hitl-types.ts:478](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L478)

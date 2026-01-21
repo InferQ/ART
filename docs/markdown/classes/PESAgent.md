@@ -6,7 +6,7 @@
 
 # Class: PESAgent
 
-Defined in: [src/core/agents/pes-agent.ts:90](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agents/pes-agent.ts#L90)
+Defined in: [src/core/agents/pes-agent.ts:91](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/agents/pes-agent.ts#L91)
 
 Implements the Plan-Execute-Synthesize (PES) agent orchestration logic.
 Refactored to support persistent TodoList execution and iterative refinement.
@@ -21,7 +21,7 @@ Refactored to support persistent TodoList execution and iterative refinement.
 
 > **new PESAgent**(`dependencies`): `PESAgent`
 
-Defined in: [src/core/agents/pes-agent.ts:94](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agents/pes-agent.ts#L94)
+Defined in: [src/core/agents/pes-agent.ts:95](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/agents/pes-agent.ts#L95)
 
 #### Parameters
 
@@ -39,7 +39,7 @@ Defined in: [src/core/agents/pes-agent.ts:94](https://github.com/hashangit/ART/b
 
 > **process**(`props`): `Promise`\<[`AgentFinalResponse`](../interfaces/AgentFinalResponse.md)\>
 
-Defined in: [src/core/agents/pes-agent.ts:106](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/agents/pes-agent.ts#L106)
+Defined in: [src/core/agents/pes-agent.ts:107](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/agents/pes-agent.ts#L107)
 
 Processes a user query through the configured agent reasoning pattern (e.g., PES).
 Orchestrates interactions between various ART subsystems.

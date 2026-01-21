@@ -6,7 +6,7 @@
 
 # Interface: A2ATaskMetadata
 
-Defined in: [src/types/index.ts:1531](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1531)
+Defined in: [src/types/index.ts:1543](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1543)
 
 Represents metadata about A2A task execution.
 
@@ -18,7 +18,7 @@ Represents metadata about A2A task execution.
 
 > `optional` **completedAt**: `number`
 
-Defined in: [src/types/index.ts:1551](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1551)
+Defined in: [src/types/index.ts:1563](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1563)
 
 Timestamp when the task was completed/failed (if applicable).
 
@@ -28,7 +28,7 @@ Timestamp when the task was completed/failed (if applicable).
 
 > `optional` **correlationId**: `string`
 
-Defined in: [src/types/index.ts:1571](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1571)
+Defined in: [src/types/index.ts:1583](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1583)
 
 Correlation ID for tracking related tasks across the system.
 
@@ -38,7 +38,7 @@ Correlation ID for tracking related tasks across the system.
 
 > **createdAt**: `number`
 
-Defined in: [src/types/index.ts:1536](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1536)
+Defined in: [src/types/index.ts:1548](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1548)
 
 Timestamp when the task was created (Unix timestamp in milliseconds).
 
@@ -48,7 +48,7 @@ Timestamp when the task was created (Unix timestamp in milliseconds).
 
 > `optional` **delegatedAt**: `number`
 
-Defined in: [src/types/index.ts:1556](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1556)
+Defined in: [src/types/index.ts:1568](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1568)
 
 Timestamp when the task was delegated to a remote agent (if applicable).
 
@@ -58,7 +58,7 @@ Timestamp when the task was delegated to a remote agent (if applicable).
 
 > `optional` **estimatedCompletionMs**: `number`
 
-Defined in: [src/types/index.ts:1591](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1591)
+Defined in: [src/types/index.ts:1603](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1603)
 
 Estimated completion time in milliseconds (if provided by remote agent).
 
@@ -68,7 +68,7 @@ Estimated completion time in milliseconds (if provided by remote agent).
 
 > `optional` **initiatedBy**: `string`
 
-Defined in: [src/types/index.ts:1566](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1566)
+Defined in: [src/types/index.ts:1578](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1578)
 
 The user or system that initiated this task.
 
@@ -78,7 +78,7 @@ The user or system that initiated this task.
 
 > `optional` **lastUpdated**: `number`
 
-Defined in: [src/types/index.ts:1561](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1561)
+Defined in: [src/types/index.ts:1573](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1573)
 
 Timestamp when the task was last updated (for compatibility).
 
@@ -88,7 +88,7 @@ Timestamp when the task was last updated (for compatibility).
 
 > `optional` **maxRetries**: `number`
 
-Defined in: [src/types/index.ts:1581](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1581)
+Defined in: [src/types/index.ts:1593](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1593)
 
 Maximum number of retry attempts allowed.
 
@@ -98,7 +98,7 @@ Maximum number of retry attempts allowed.
 
 > `optional` **retryCount**: `number`
 
-Defined in: [src/types/index.ts:1576](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1576)
+Defined in: [src/types/index.ts:1588](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1588)
 
 Number of retry attempts made for this task.
 
@@ -108,7 +108,7 @@ Number of retry attempts made for this task.
 
 > `optional` **startedAt**: `number`
 
-Defined in: [src/types/index.ts:1546](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1546)
+Defined in: [src/types/index.ts:1558](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1558)
 
 Timestamp when the task was started (if applicable).
 
@@ -118,7 +118,7 @@ Timestamp when the task was started (if applicable).
 
 > `optional` **tags**: `string`[]
 
-Defined in: [src/types/index.ts:1596](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1596)
+Defined in: [src/types/index.ts:1608](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1608)
 
 Tags or labels for categorizing tasks.
 
@@ -128,7 +128,7 @@ Tags or labels for categorizing tasks.
 
 > `optional` **timeoutMs**: `number`
 
-Defined in: [src/types/index.ts:1586](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1586)
+Defined in: [src/types/index.ts:1598](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1598)
 
 Timeout duration in milliseconds.
 
@@ -138,6 +138,6 @@ Timeout duration in milliseconds.
 
 > **updatedAt**: `number`
 
-Defined in: [src/types/index.ts:1541](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1541)
+Defined in: [src/types/index.ts:1553](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1553)
 
 Timestamp when the task was last updated (Unix timestamp in milliseconds).

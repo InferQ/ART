@@ -6,7 +6,7 @@
 
 # Interface: BlockingToolConfig
 
-Defined in: src/types/hitl-types.ts:341
+Defined in: [src/types/hitl-types.ts:341](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L341)
 
 Configuration for blocking tools in the ToolSchema.
 
@@ -21,7 +21,7 @@ It defines how the tool interacts with the HITL system.
 
 > `optional` **allowRetryOnReject**: `boolean`
 
-Defined in: src/types/hitl-types.ts:368
+Defined in: [src/types/hitl-types.ts:368](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L368)
 
 Whether rejection allows retry with modified arguments.
 If true, rejection doesn't fail the step but allows re-planning.
@@ -38,7 +38,7 @@ true
 
 > `optional` **approvalPrompt**: `string`
 
-Defined in: src/types/hitl-types.ts:353
+Defined in: [src/types/hitl-types.ts:353](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L353)
 
 Message to show in the approval dialog.
 Can include {{variable}} placeholders that will be replaced
@@ -50,7 +50,7 @@ with values from the tool's input arguments.
 
 > `optional` **category**: `string`
 
-Defined in: src/types/hitl-types.ts:381
+Defined in: [src/types/hitl-types.ts:381](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L381)
 
 Category of the blocking action for UI grouping.
 Examples: 'destructive', 'financial', 'external', 'sensitive'
@@ -61,7 +61,7 @@ Examples: 'destructive', 'financial', 'external', 'sensitive'
 
 > `optional` **completesOnApproval**: `boolean`
 
-Defined in: src/types/hitl-types.ts:361
+Defined in: [src/types/hitl-types.ts:361](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L361)
 
 Whether the tool auto-completes successfully when approved.
 If true (default), approval = success with feedback as output.
@@ -79,7 +79,7 @@ true
 
 > `optional` **feedbackSchema**: [`HITLFeedbackSchema`](HITLFeedbackSchema.md)
 
-Defined in: src/types/hitl-types.ts:346
+Defined in: [src/types/hitl-types.ts:346](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L346)
 
 The schema for feedback this tool expects.
 If not provided, defaults to a simple confirm schema.
@@ -90,7 +90,7 @@ If not provided, defaults to a simple confirm schema.
 
 > `optional` **riskLevel**: `"low"` \| `"medium"` \| `"high"` \| `"critical"`
 
-Defined in: src/types/hitl-types.ts:386
+Defined in: [src/types/hitl-types.ts:386](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L386)
 
 Risk level for UI styling/warnings.
 
@@ -100,7 +100,7 @@ Risk level for UI styling/warnings.
 
 > `optional` **timeoutMs**: `number`
 
-Defined in: src/types/hitl-types.ts:375
+Defined in: [src/types/hitl-types.ts:375](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L375)
 
 Timeout in milliseconds for user response.
 If exceeded, the tool fails with a timeout error.

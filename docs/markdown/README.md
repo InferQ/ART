@@ -4,7 +4,7 @@
 
 # ART Framework Component Reference
 
-ART (Agentic Runtime) Framework - Main Entry Point
+ART (Agentic Reasoning & Tool-use) Framework - Main Entry Point
 -----------------------------------------------------------------
 
 Welcome to the ART framework! This file is the primary public API surface for the library.
@@ -53,6 +53,7 @@ const response = await art.process({ query: "Hello, world!" });
 - [MessageRole](enumerations/MessageRole.md)
 - [ModelCapability](enumerations/ModelCapability.md)
 - [ObservationType](enumerations/ObservationType.md)
+- [TodoItemChangeType](enumerations/TodoItemChangeType.md)
 - [TodoItemStatus](enumerations/TodoItemStatus.md)
 
 ## Classes
@@ -186,6 +187,8 @@ const response = await art.process({ query: "Hello, world!" });
 - [ThreadConfig](interfaces/ThreadConfig.md)
 - [ThreadContext](interfaces/ThreadContext.md)
 - [TodoItem](interfaces/TodoItem.md)
+- [TodoItemChange](interfaces/TodoItemChange.md)
+- [TodoListChanges](interfaces/TodoListChanges.md)
 - [ToolResult](interfaces/ToolResult.md)
 - [ToolSchema](interfaces/ToolSchema.md)
 - [ToolSystem](interfaces/ToolSystem.md)
@@ -214,8 +217,10 @@ const response = await art.process({ query: "Hello, world!" });
 
 ## Functions
 
+- [computeTodoListDiff](functions/computeTodoListDiff.md)
 - [createArtInstance](functions/createArtInstance.md)
 - [createHITLSuccessResult](functions/createHITLSuccessResult.md)
+- [createInitialChanges](functions/createInitialChanges.md)
 - [generateUUID](functions/generateUUID.md)
 - [isBlockingSuspendedResult](functions/isBlockingSuspendedResult.md)
 - [isFeedbackApproved](functions/isFeedbackApproved.md)

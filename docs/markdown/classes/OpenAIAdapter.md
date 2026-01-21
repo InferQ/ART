@@ -6,7 +6,7 @@
 
 # Class: OpenAIAdapter
 
-Defined in: [src/integrations/reasoning/openai.ts:141](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L141)
+Defined in: [src/integrations/reasoning/openai.ts:141](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L141)
 
 Implements the `ProviderAdapter` interface for interacting with OpenAI's
 Responses API (supports reasoning models like GPT-5 family and other models).
@@ -29,7 +29,7 @@ Uses the official OpenAI SDK with the new Responses API for full reasoning model
 
 > **new OpenAIAdapter**(`options`): `OpenAIAdapter`
 
-Defined in: [src/integrations/reasoning/openai.ts:153](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L153)
+Defined in: [src/integrations/reasoning/openai.ts:153](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L153)
 
 Creates an instance of the OpenAIAdapter.
 
@@ -55,7 +55,7 @@ If the API key is missing.
 
 > `readonly` **providerName**: `"openai"` = `'openai'`
 
-Defined in: [src/integrations/reasoning/openai.ts:142](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L142)
+Defined in: [src/integrations/reasoning/openai.ts:142](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L142)
 
 The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
@@ -69,7 +69,7 @@ The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
 > **call**(`prompt`, `options`): `Promise`\<`AsyncIterable`\<[`StreamEvent`](../interfaces/StreamEvent.md), `any`, `any`\>\>
 
-Defined in: [src/integrations/reasoning/openai.ts:178](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L178)
+Defined in: [src/integrations/reasoning/openai.ts:178](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L178)
 
 Sends a request to the OpenAI Responses API.
 Translates `ArtStandardPrompt` to the Responses API format and handles streaming/reasoning.
@@ -104,7 +104,7 @@ A promise resolving to an AsyncIterable of StreamEvent objects.
 
 > **shutdown**(): `Promise`\<`void`\>
 
-Defined in: [src/integrations/reasoning/openai.ts:438](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L438)
+Defined in: [src/integrations/reasoning/openai.ts:438](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L438)
 
 Optional: Method for graceful shutdown
 

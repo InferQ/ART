@@ -6,7 +6,7 @@
 
 # Interface: AgentOptions
 
-Defined in: [src/types/index.ts:809](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L809)
+Defined in: [src/types/index.ts:821](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L821)
 
 Options to override agent behavior at runtime.
 
@@ -18,7 +18,7 @@ Options to override agent behavior at runtime.
 
 > `optional` **executionConfig**: [`ExecutionConfig`](ExecutionConfig.md)
 
-Defined in: [src/types/index.ts:856](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L856)
+Defined in: [src/types/index.ts:868](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L868)
 
 Optional: Configuration for execution phase behavior (TAEF parameters) for this specific call.
 Overrides thread and instance-level execution config.
@@ -29,7 +29,7 @@ Overrides thread and instance-level execution config.
 
 > `optional` **forceTools**: `string`[]
 
-Defined in: [src/types/index.ts:824](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L824)
+Defined in: [src/types/index.ts:836](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L836)
 
 Force the use of specific tools, potentially overriding the thread's `enabledTools` for this call (use with caution).
 
@@ -39,7 +39,7 @@ Force the use of specific tools, potentially overriding the thread's `enabledToo
 
 > `optional` **llmParams**: `Record`\<`string`, `any`\>
 
-Defined in: [src/types/index.ts:814](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L814)
+Defined in: [src/types/index.ts:826](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L826)
 
 Override specific LLM parameters (e.g., temperature, max_tokens) for this call only.
 
@@ -49,7 +49,7 @@ Override specific LLM parameters (e.g., temperature, max_tokens) for this call o
 
 > `optional` **overrideModel**: `object`
 
-Defined in: [src/types/index.ts:829](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L829)
+Defined in: [src/types/index.ts:841](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L841)
 
 Specify a particular reasoning model to use for this call, overriding the thread's default.
 
@@ -67,7 +67,7 @@ Specify a particular reasoning model to use for this call, overriding the thread
 
 > `optional` **persona**: `Partial`\<[`AgentPersona`](AgentPersona.md)\>
 
-Defined in: [src/types/index.ts:850](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L850)
+Defined in: [src/types/index.ts:862](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L862)
 
 Optional: Defines the identity and high-level guidance for the agent for this specific call.
 This overrides both the instance-level and thread-level persona.
@@ -78,7 +78,7 @@ This overrides both the instance-level and thread-level persona.
 
 > `optional` **promptTemplateId**: `string`
 
-Defined in: [src/types/index.ts:839](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L839)
+Defined in: [src/types/index.ts:851](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L851)
 
 Override the prompt template used for this specific call.
 
@@ -88,7 +88,7 @@ Override the prompt template used for this specific call.
 
 > `optional` **providerConfig**: [`RuntimeProviderConfig`](RuntimeProviderConfig.md)
 
-Defined in: [src/types/index.ts:819](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L819)
+Defined in: [src/types/index.ts:831](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L831)
 
 Override provider configuration for this specific call.
 
@@ -98,7 +98,7 @@ Override provider configuration for this specific call.
 
 > `optional` **stream**: `boolean`
 
-Defined in: [src/types/index.ts:834](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L834)
+Defined in: [src/types/index.ts:846](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L846)
 
 Request a streaming response for this specific agent process call.
 
@@ -108,6 +108,6 @@ Request a streaming response for this specific agent process call.
 
 > `optional` **systemPrompt**: `string` \| [`SystemPromptOverride`](SystemPromptOverride.md)
 
-Defined in: [src/types/index.ts:844](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L844)
+Defined in: [src/types/index.ts:856](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L856)
 
 Optional system prompt override/tag to override thread, instance, or agent defaults for this specific call.

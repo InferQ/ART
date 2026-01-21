@@ -8,6 +8,6 @@
 
 > **SystemPromptMergeStrategy** = `"append"` \| `"prepend"`
 
-Defined in: [src/types/index.ts:570](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L570)
+Defined in: [src/types/index.ts:582](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L582)
 
 Strategy for combining custom system prompt content across precedence levels.

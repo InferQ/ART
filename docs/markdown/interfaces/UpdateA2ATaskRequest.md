@@ -6,7 +6,7 @@
 
 # Interface: UpdateA2ATaskRequest
 
-Defined in: [src/types/index.ts:1806](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1806)
+Defined in: [src/types/index.ts:1818](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1818)
 
 Represents an update to an existing A2A task.
 
@@ -18,7 +18,7 @@ Represents an update to an existing A2A task.
 
 > `optional` **metadata**: `Partial`\<[`A2ATaskMetadata`](A2ATaskMetadata.md)\>
 
-Defined in: [src/types/index.ts:1831](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1831)
+Defined in: [src/types/index.ts:1843](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1843)
 
 Additional metadata updates.
 
@@ -28,7 +28,7 @@ Additional metadata updates.
 
 > `optional` **result**: [`A2ATaskResult`](A2ATaskResult.md)
 
-Defined in: [src/types/index.ts:1826](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1826)
+Defined in: [src/types/index.ts:1838](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1838)
 
 Task result (if completing).
 
@@ -38,7 +38,7 @@ Task result (if completing).
 
 > `optional` **status**: [`A2ATaskStatus`](../enumerations/A2ATaskStatus.md)
 
-Defined in: [src/types/index.ts:1816](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1816)
+Defined in: [src/types/index.ts:1828](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1828)
 
 New task status (if changing).
 
@@ -48,7 +48,7 @@ New task status (if changing).
 
 > `optional` **targetAgent**: [`A2AAgentInfo`](A2AAgentInfo.md)
 
-Defined in: [src/types/index.ts:1821](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1821)
+Defined in: [src/types/index.ts:1833](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1833)
 
 Target agent assignment (if assigning/reassigning).
 
@@ -58,6 +58,6 @@ Target agent assignment (if assigning/reassigning).
 
 > **taskId**: `string`
 
-Defined in: [src/types/index.ts:1811](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1811)
+Defined in: [src/types/index.ts:1823](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1823)
 
 Task ID to update.

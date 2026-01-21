@@ -6,7 +6,7 @@
 
 # Interface: HITLContext
 
-Defined in: src/types/hitl-types.ts:436
+Defined in: [src/types/hitl-types.ts:436](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L436)
 
 HITL-specific context passed to tools via ExecutionContext.
 
@@ -21,7 +21,7 @@ for initial suspension vs. post-approval execution.
 
 > `optional` **feedback**: [`HITLFeedback`](HITLFeedback.md)
 
-Defined in: src/types/hitl-types.ts:451
+Defined in: [src/types/hitl-types.ts:451](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L451)
 
 The user's feedback if resuming from approval.
 
@@ -31,7 +31,7 @@ The user's feedback if resuming from approval.
 
 > **isResuming**: `boolean`
 
-Defined in: src/types/hitl-types.ts:440
+Defined in: [src/types/hitl-types.ts:440](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L440)
 
 True if this execution is resuming from a previous suspension.
 
@@ -41,7 +41,7 @@ True if this execution is resuming from a previous suspension.
 
 > `optional` **originalArgs**: `Record`\<`string`, `unknown`\>
 
-Defined in: src/types/hitl-types.ts:461
+Defined in: [src/types/hitl-types.ts:461](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L461)
 
 The original tool arguments that were suspended.
 
@@ -51,7 +51,7 @@ The original tool arguments that were suspended.
 
 > `optional` **suspensionId**: `string`
 
-Defined in: src/types/hitl-types.ts:456
+Defined in: [src/types/hitl-types.ts:456](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L456)
 
 The original suspension ID being resumed.
 
@@ -61,7 +61,7 @@ The original suspension ID being resumed.
 
 > `optional` **wasApproved**: `boolean`
 
-Defined in: src/types/hitl-types.ts:446
+Defined in: [src/types/hitl-types.ts:446](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L446)
 
 True if the user approved the action.
 Only meaningful when isResuming is true.

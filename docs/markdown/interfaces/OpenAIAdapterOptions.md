@@ -6,7 +6,7 @@
 
 # Interface: OpenAIAdapterOptions
 
-Defined in: [src/integrations/reasoning/openai.ts:54](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L54)
+Defined in: [src/integrations/reasoning/openai.ts:54](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L54)
 
 Configuration options required for the `OpenAIAdapter`.
 
@@ -16,7 +16,7 @@ Configuration options required for the `OpenAIAdapter`.
 
 > `optional` **apiBaseUrl**: `string`
 
-Defined in: [src/integrations/reasoning/openai.ts:60](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L60)
+Defined in: [src/integrations/reasoning/openai.ts:60](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L60)
 
 Optional: Override the base URL for the OpenAI API (e.g., for Azure OpenAI or custom proxies).
 
@@ -26,7 +26,7 @@ Optional: Override the base URL for the OpenAI API (e.g., for Azure OpenAI or cu
 
 > **apiKey**: `string`
 
-Defined in: [src/integrations/reasoning/openai.ts:56](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L56)
+Defined in: [src/integrations/reasoning/openai.ts:56](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L56)
 
 Your OpenAI API key. Handle securely.
 
@@ -36,7 +36,7 @@ Your OpenAI API key. Handle securely.
 
 > `optional` **defaultMaxTokens**: `number`
 
-Defined in: [src/integrations/reasoning/openai.ts:62](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L62)
+Defined in: [src/integrations/reasoning/openai.ts:62](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L62)
 
 Optional: Default maximum tokens for responses.
 
@@ -46,7 +46,7 @@ Optional: Default maximum tokens for responses.
 
 > `optional` **defaultTemperature**: `number`
 
-Defined in: [src/integrations/reasoning/openai.ts:64](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L64)
+Defined in: [src/integrations/reasoning/openai.ts:64](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L64)
 
 Optional: Default temperature for responses.
 
@@ -56,6 +56,6 @@ Optional: Default temperature for responses.
 
 > `optional` **model**: `string`
 
-Defined in: [src/integrations/reasoning/openai.ts:58](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/openai.ts#L58)
+Defined in: [src/integrations/reasoning/openai.ts:58](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/openai.ts#L58)
 
 The default OpenAI model ID to use (e.g., 'gpt-4o', 'gpt-5', 'gpt-5-mini').

@@ -6,7 +6,7 @@
 
 # Interface: ThreadContext
 
-Defined in: [src/types/index.ts:734](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L734)
+Defined in: [src/types/index.ts:746](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L746)
 
 Encapsulates the configuration and state for a specific thread.
 
@@ -18,7 +18,7 @@ Encapsulates the configuration and state for a specific thread.
 
 > **config**: [`ThreadConfig`](ThreadConfig.md)
 
-Defined in: [src/types/index.ts:739](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L739)
+Defined in: [src/types/index.ts:751](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L751)
 
 The configuration settings (`ThreadConfig`) currently active for the thread.
 
@@ -26,8 +26,8 @@ The configuration settings (`ThreadConfig`) currently active for the thread.
 
 ### state
 
-> **state**: `null` \| [`AgentState`](AgentState.md)
+> **state**: [`AgentState`](AgentState.md) \| `null`
 
-Defined in: [src/types/index.ts:744](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L744)
+Defined in: [src/types/index.ts:756](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L756)
 
 The persistent state (`AgentState`) associated with the thread, or `null` if no state exists.

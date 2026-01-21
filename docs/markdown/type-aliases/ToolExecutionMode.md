@@ -8,7 +8,7 @@
 
 > **ToolExecutionMode** = `"functional"` \| `"blocking"` \| `"display"`
 
-Defined in: src/types/hitl-types.ts:36
+Defined in: [src/types/hitl-types.ts:36](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L36)
 
 Defines the three categories of tools in the ART framework.
 

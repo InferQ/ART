@@ -6,7 +6,7 @@
 
 # Interface: A2ATaskResult
 
-Defined in: [src/types/index.ts:1604](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1604)
+Defined in: [src/types/index.ts:1616](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1616)
 
 Represents the result of an A2A task execution.
 
@@ -18,7 +18,7 @@ Represents the result of an A2A task execution.
 
 > `optional` **data**: `any`
 
-Defined in: [src/types/index.ts:1614](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1614)
+Defined in: [src/types/index.ts:1626](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1626)
 
 The data returned by the task execution.
 
@@ -28,7 +28,7 @@ The data returned by the task execution.
 
 > `optional` **durationMs**: `number`
 
-Defined in: [src/types/index.ts:1636](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1636)
+Defined in: [src/types/index.ts:1648](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1648)
 
 Execution duration in milliseconds.
 
@@ -38,7 +38,7 @@ Execution duration in milliseconds.
 
 > `optional` **error**: `string`
 
-Defined in: [src/types/index.ts:1619](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1619)
+Defined in: [src/types/index.ts:1631](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1631)
 
 Error message if the task failed.
 
@@ -48,7 +48,7 @@ Error message if the task failed.
 
 > `optional` **metadata**: `object`
 
-Defined in: [src/types/index.ts:1624](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1624)
+Defined in: [src/types/index.ts:1636](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1636)
 
 Additional metadata about the execution.
 
@@ -70,6 +70,6 @@ Additional metadata about the execution.
 
 > **success**: `boolean`
 
-Defined in: [src/types/index.ts:1609](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1609)
+Defined in: [src/types/index.ts:1621](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1621)
 
 Whether the task execution was successful.

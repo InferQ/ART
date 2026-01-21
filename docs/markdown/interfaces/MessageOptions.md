@@ -6,7 +6,7 @@
 
 # Interface: MessageOptions
 
-Defined in: [src/types/index.ts:1249](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1249)
+Defined in: [src/types/index.ts:1261](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1261)
 
 Options for retrieving conversation messages.
 
@@ -18,7 +18,7 @@ Options for retrieving conversation messages.
 
 > `optional` **afterTimestamp**: `number`
 
-Defined in: [src/types/index.ts:1264](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1264)
+Defined in: [src/types/index.ts:1276](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1276)
 
 Retrieve messages created after this Unix timestamp (milliseconds).
 
@@ -28,7 +28,7 @@ Retrieve messages created after this Unix timestamp (milliseconds).
 
 > `optional` **beforeTimestamp**: `number`
 
-Defined in: [src/types/index.ts:1259](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1259)
+Defined in: [src/types/index.ts:1271](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1271)
 
 Retrieve messages created before this Unix timestamp (milliseconds).
 
@@ -38,7 +38,7 @@ Retrieve messages created before this Unix timestamp (milliseconds).
 
 > `optional` **limit**: `number`
 
-Defined in: [src/types/index.ts:1254](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1254)
+Defined in: [src/types/index.ts:1266](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1266)
 
 The maximum number of messages to retrieve.
 
@@ -48,6 +48,6 @@ The maximum number of messages to retrieve.
 
 > `optional` **roles**: [`MessageRole`](../enumerations/MessageRole.md)[]
 
-Defined in: [src/types/index.ts:1269](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1269)
+Defined in: [src/types/index.ts:1281](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1281)
 
 Optionally filter messages by role (e.g., retrieve only 'AI' messages).

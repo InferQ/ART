@@ -6,7 +6,7 @@
 
 # Interface: LLMMetadata
 
-Defined in: [src/types/index.ts:388](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L388)
+Defined in: [src/types/index.ts:400](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L400)
 
 Structure for holding metadata about an LLM call, typically received via a `METADATA` `StreamEvent`
 or parsed from a non-streaming response. Fields are optional as availability varies by provider and stream state.
@@ -19,7 +19,7 @@ or parsed from a non-streaming response. Fields are optional as availability var
 
 > `optional` **inputTokens**: `number`
 
-Defined in: [src/types/index.ts:393](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L393)
+Defined in: [src/types/index.ts:405](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L405)
 
 The number of tokens in the input prompt, if available.
 
@@ -29,7 +29,7 @@ The number of tokens in the input prompt, if available.
 
 > `optional` **outputTokens**: `number`
 
-Defined in: [src/types/index.ts:398](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L398)
+Defined in: [src/types/index.ts:410](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L410)
 
 The number of tokens generated in the output response, if available.
 
@@ -39,7 +39,7 @@ The number of tokens generated in the output response, if available.
 
 > `optional` **providerRawUsage**: `any`
 
-Defined in: [src/types/index.ts:423](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L423)
+Defined in: [src/types/index.ts:435](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L435)
 
 Optional raw usage data provided directly by the LLM provider for extensibility (structure depends on provider).
 
@@ -49,7 +49,7 @@ Optional raw usage data provided directly by the LLM provider for extensibility 
 
 > `optional` **stopReason**: `string`
 
-Defined in: [src/types/index.ts:418](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L418)
+Defined in: [src/types/index.ts:430](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L430)
 
 The reason the LLM stopped generating tokens (e.g., 'stop_sequence', 'max_tokens', 'tool_calls'), if available.
 
@@ -59,7 +59,7 @@ The reason the LLM stopped generating tokens (e.g., 'stop_sequence', 'max_tokens
 
 > `optional` **thinkingTokens**: `number`
 
-Defined in: [src/types/index.ts:403](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L403)
+Defined in: [src/types/index.ts:415](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L415)
 
 The number of tokens identified as part of the LLM's internal thinking process (if available from provider).
 
@@ -69,7 +69,7 @@ The number of tokens identified as part of the LLM's internal thinking process (
 
 > `optional` **timeToFirstTokenMs**: `number`
 
-Defined in: [src/types/index.ts:408](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L408)
+Defined in: [src/types/index.ts:420](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L420)
 
 The time elapsed (in milliseconds) until the first token was generated in a streaming response, if applicable and available.
 
@@ -79,7 +79,7 @@ The time elapsed (in milliseconds) until the first token was generated in a stre
 
 > `optional` **totalGenerationTimeMs**: `number`
 
-Defined in: [src/types/index.ts:413](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L413)
+Defined in: [src/types/index.ts:425](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L425)
 
 The total time elapsed (in milliseconds) for the entire generation process, if available.
 
@@ -89,6 +89,6 @@ The total time elapsed (in milliseconds) for the entire generation process, if a
 
 > `optional` **traceId**: `string`
 
-Defined in: [src/types/index.ts:428](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L428)
+Defined in: [src/types/index.ts:440](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L440)
 
 The trace ID associated with the LLM call, useful for correlating metadata with the specific request.

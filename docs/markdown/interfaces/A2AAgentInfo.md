@@ -6,7 +6,7 @@
 
 # Interface: A2AAgentInfo
 
-Defined in: [src/types/index.ts:1472](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1472)
+Defined in: [src/types/index.ts:1484](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1484)
 
 Represents agent information for A2A task assignment.
 
@@ -18,7 +18,7 @@ Represents agent information for A2A task assignment.
 
 > **agentId**: `string`
 
-Defined in: [src/types/index.ts:1477](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1477)
+Defined in: [src/types/index.ts:1489](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1489)
 
 Unique identifier for the agent.
 
@@ -28,7 +28,7 @@ Unique identifier for the agent.
 
 > **agentName**: `string`
 
-Defined in: [src/types/index.ts:1482](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1482)
+Defined in: [src/types/index.ts:1494](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1494)
 
 Human-readable name for the agent.
 
@@ -38,7 +38,7 @@ Human-readable name for the agent.
 
 > **agentType**: `string`
 
-Defined in: [src/types/index.ts:1487](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1487)
+Defined in: [src/types/index.ts:1499](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1499)
 
 The type or role of the agent (e.g., 'reasoning', 'data-processing', 'synthesis').
 
@@ -48,7 +48,7 @@ The type or role of the agent (e.g., 'reasoning', 'data-processing', 'synthesis'
 
 > `optional` **authentication**: `object`
 
-Defined in: [src/types/index.ts:1507](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1507)
+Defined in: [src/types/index.ts:1519](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1519)
 
 Authentication configuration for communicating with the agent.
 
@@ -76,7 +76,7 @@ Type of authentication required.
 
 > `optional` **capabilities**: `string`[]
 
-Defined in: [src/types/index.ts:1497](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1497)
+Defined in: [src/types/index.ts:1509](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1509)
 
 Agent capabilities or specializations.
 
@@ -86,7 +86,7 @@ Agent capabilities or specializations.
 
 > `optional` **endpoint**: `string`
 
-Defined in: [src/types/index.ts:1492](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1492)
+Defined in: [src/types/index.ts:1504](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1504)
 
 Base URL or endpoint for communicating with the agent.
 
@@ -96,6 +96,6 @@ Base URL or endpoint for communicating with the agent.
 
 > `optional` **status**: `"available"` \| `"busy"` \| `"offline"`
 
-Defined in: [src/types/index.ts:1502](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1502)
+Defined in: [src/types/index.ts:1514](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1514)
 
 Current load or availability status of the agent.

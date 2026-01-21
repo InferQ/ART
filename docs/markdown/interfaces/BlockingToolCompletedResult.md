@@ -6,7 +6,7 @@
 
 # Interface: BlockingToolCompletedResult
 
-Defined in: src/types/hitl-types.ts:511
+Defined in: [src/types/hitl-types.ts:511](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L511)
 
 The successful result created by the framework when user provides feedback.
 
@@ -21,7 +21,7 @@ The content field contains a description, and output contains the feedback.
 
 > **callId**: `string`
 
-Defined in: src/types/hitl-types.ts:513
+Defined in: [src/types/hitl-types.ts:513](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L513)
 
 ***
 
@@ -29,7 +29,7 @@ Defined in: src/types/hitl-types.ts:513
 
 > `optional` **metadata**: `object`
 
-Defined in: src/types/hitl-types.ts:544
+Defined in: [src/types/hitl-types.ts:544](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L544)
 
 Metadata about the completion.
 
@@ -61,7 +61,7 @@ Duration from suspension to completion in ms.
 
 > **output**: `object`
 
-Defined in: src/types/hitl-types.ts:519
+Defined in: [src/types/hitl-types.ts:519](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L519)
 
 The user's feedback structured as the tool output.
 
@@ -95,7 +95,7 @@ The actual value provided (varies by input type).
 
 > **status**: `"success"`
 
-Defined in: src/types/hitl-types.ts:512
+Defined in: [src/types/hitl-types.ts:512](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L512)
 
 ***
 
@@ -103,4 +103,4 @@ Defined in: src/types/hitl-types.ts:512
 
 > **toolName**: `string`
 
-Defined in: src/types/hitl-types.ts:514
+Defined in: [src/types/hitl-types.ts:514](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L514)

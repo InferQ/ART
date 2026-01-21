@@ -89,6 +89,18 @@ For _each_ Todo item, the agent enters a mini-ReAct loop (max 5 iterations):
 2. **Thought/Tool:** It can think, call local tools, or delegate to other agents.
 3. **Dynamic Updates:** The execution step can return an `updatedPlan`, allowing the agent to modify _future_ steps based on _current_ findings (e.g., "I found a file I didn't expect, I need to add a step to read it").
 
+#### Change Tracking (v0.4.15)
+
+> **New in v0.4.15**: When the agent dynamically modifies its todo list, the `PLAN_UPDATE` observation includes detailed change tracking.
+
+The framework automatically tracks changes to the todo list during execution:
+
+- **What changed**: `added`, `modified`, `removed` arrays in the `changes` field
+- **Before/after states**: For modifications and removals, both old and new states are available
+- **Timestamps**: When each change was detected
+
+This enables UI implementations to provide real-time visual feedback about plan evolution without manual comparison logic. For examples, see [How-To: Dynamic Todolist Modifications](../how-to/pes-todolist-dynamic-modifications.md#tracking-plan-changes).
+
 ### Stage 5: Synthesis
 
 - Activated when all tasks are done.
