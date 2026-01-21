@@ -222,7 +222,7 @@ describe('computeTodoListDiff', () => {
       expect(result.removed).toHaveLength(0);
     });
 
-    it('should handle ID reuse (same ID, different content) as REMOVED + ADDED', () => {
+    it('should detect same ID with different content as MODIFIED', () => {
       const previous: TodoItem[] = [
         createTodoItem('1', 'Task 1'),
       ];

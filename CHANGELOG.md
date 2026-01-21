@@ -2,6 +2,53 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.15] - 2026-01-21
+
+### ✨ Dynamic Todo List Change Tracking
+
+This release exposes the internal dynamic todo list feature as a public API, allowing developers to track plan changes during agent execution without needing to dissect the framework internals.
+
+### 🔌 Public API Enhancements
+
+**New Types** (`src/types/pes-types.ts`):
+- `TodoItemChangeType`: Enum for change types (ADDED, MODIFIED, REMOVED)
+- `TodoItemChange`: Describes a single change to a todo item
+- `TodoListChanges`: Aggregate of all changes with convenience accessors
+
+**New Utilities** (`src/utils/todo-diff.ts`):
+- `computeTodoListDiff()`: O(n+m) diff algorithm for detecting changes
+- `createInitialChanges()`: Creates initial changes for new todo lists
+
+**Enhanced Observations**:
+- `PLAN_UPDATE` observations now include a `changes` field containing:
+  - `changes`: Flat array of all changes
+  - `added`: Convenience accessor for added items
+  - `modified`: Convenience accessor for modified items
+  - `removed`: Convenience accessor for removed items
+
+### 🎯 Example Usage
+
+```typescript
+import { ObservationType, TodoItemChangeType } from 'art-framework';
+
+art.uiSystem.getObservationSocket().subscribe(
+  (observation) => {
+    if (observation.type === ObservationType.PLAN_UPDATE) {
+      const { todoList, changes } = observation.content;
+
+      changes.added.forEach(c => console.log('Added:', c.item?.description));
+      changes.modified.forEach(c => console.log('Modified:', c.item?.description));
+      changes.removed.forEach(c => console.log('Removed:', c.previousItem?.description));
+    }
+  },
+  ObservationType.PLAN_UPDATE,
+  { threadId }
+);
+```
+
+### 🐛 Bug Fixes
+- Fixed misleading test description in todo-diff tests (ID reuse case)
+
 ## [0.4.14] - 2025-12-28
 
 ### 🚀 HITL Contract Redesign
