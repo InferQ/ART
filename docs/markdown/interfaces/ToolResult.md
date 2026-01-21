@@ -6,7 +6,7 @@
 
 # Interface: ToolResult
 
-Defined in: [src/types/index.ts:523](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L523)
+Defined in: [src/types/index.ts:535](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L535)
 
 Represents the structured result of a tool execution.
 
@@ -18,7 +18,7 @@ Represents the structured result of a tool execution.
 
 > **callId**: `string`
 
-Defined in: [src/types/index.ts:528](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L528)
+Defined in: [src/types/index.ts:540](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L540)
 
 The unique identifier of the corresponding `ParsedToolCall` that initiated this execution attempt.
 
@@ -28,7 +28,7 @@ The unique identifier of the corresponding `ParsedToolCall` that initiated this 
 
 > `optional` **error**: `string`
 
-Defined in: [src/types/index.ts:548](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L548)
+Defined in: [src/types/index.ts:560](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L560)
 
 A descriptive error message if the execution failed (`status` is 'error').
 
@@ -38,7 +38,7 @@ A descriptive error message if the execution failed (`status` is 'error').
 
 > `optional` **metadata**: `object`
 
-Defined in: [src/types/index.ts:553](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L553)
+Defined in: [src/types/index.ts:565](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L565)
 
 Optional metadata about the execution (e.g., duration, cost, logs).
 
@@ -64,7 +64,7 @@ Optional metadata about the execution (e.g., duration, cost, logs).
 
 > `optional` **output**: `any`
 
-Defined in: [src/types/index.ts:543](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L543)
+Defined in: [src/types/index.ts:555](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L555)
 
 The data returned by the tool upon successful execution. Structure may be validated against `outputSchema`.
 
@@ -74,7 +74,7 @@ The data returned by the tool upon successful execution. Structure may be valida
 
 > **status**: `"suspended"` \| `"success"` \| `"error"`
 
-Defined in: [src/types/index.ts:538](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L538)
+Defined in: [src/types/index.ts:550](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L550)
 
 Indicates whether the tool execution succeeded, failed, or was suspended.
 
@@ -84,6 +84,6 @@ Indicates whether the tool execution succeeded, failed, or was suspended.
 
 > **toolName**: `string`
 
-Defined in: [src/types/index.ts:533](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L533)
+Defined in: [src/types/index.ts:545](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L545)
 
 The name of the tool that was executed.

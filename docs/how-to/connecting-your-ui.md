@@ -298,3 +298,147 @@ async function loadInProgressTasks(threadId) {
   }
 }
 ```
+
+---
+
+## 7. Visualizing Plan Changes
+
+> **New in v0.4.15**: You can now visualize exactly how the agent's plan evolves during execution.
+
+When the PES agent dynamically modifies its todo list (adding, modifying, or removing tasks), `PLAN_UPDATE` observations now include a `changes` field with detailed change tracking.
+
+### Step 1: Subscribe to PLAN_UPDATE Observations
+
+```javascript
+import { ObservationType } from 'art-framework';
+
+const observationSocket = art.uiSystem.getObservationSocket();
+
+const unsubscribe = observationSocket.subscribe(
+  (observation) => {
+    if (observation.type === ObservationType.PLAN_UPDATE) {
+      handlePlanUpdate(observation.content);
+    }
+  },
+  ObservationType.PLAN_UPDATE,
+  { threadId: 'user-123-session-1' }
+);
+```
+
+### Step 2: Display Change Indicators
+
+The `changes` field provides three convenience arrays for different change types:
+
+```javascript
+function handlePlanUpdate({ todoList, changes }) {
+  // Show summary of changes
+  console.log(
+    `${changes.added.length} added, ` +
+    `${changes.modified.length} modified, ` +
+    `${changes.removed.length} removed`
+  );
+
+  // Update your UI with change animations
+  changes.added.forEach(change => {
+    showItemWithAnimation(change.item, 'slide-in');
+  });
+
+  changes.modified.forEach(change => {
+    updateItemWithHighlight(
+      change.itemId,
+      change.item,           // New state
+      change.previousItem    // Old state
+    );
+  });
+
+  changes.removed.forEach(change => {
+    removeItemWithAnimation(change.itemId, 'fade-out');
+  });
+}
+```
+
+### Step 3: Build a Change History Component
+
+Here's a React example that accumulates and displays plan changes over time:
+
+```javascript
+import { useState, useEffect } from 'react';
+import { ObservationType } from 'art-framework';
+
+function PlanChangeHistory({ threadId }) {
+  const [history, setHistory] = useState([]);
+
+  useEffect(() => {
+    const socket = art.uiSystem.getObservationSocket();
+
+    const unsubscribe = socket.subscribe(
+      (observation) => {
+        if (observation.type === ObservationType.PLAN_UPDATE) {
+          const { changes } = observation.content;
+
+          // Add this batch of changes to history
+          setHistory(prev => [...prev, {
+            timestamp: changes.timestamp,
+            added: changes.added.map(c => c.item?.description),
+            modified: changes.modified.map(c => ({
+              from: c.previousItem?.description,
+              to: c.item?.description
+            })),
+            removed: changes.removed.map(c => c.previousItem?.description)
+          }]);
+        }
+      },
+      ObservationType.PLAN_UPDATE,
+      { threadId }
+    );
+
+    return unsubscribe;
+  }, [threadId]);
+
+  if (history.length === 0) {
+    return <div>No plan changes yet</div>;
+  }
+
+  return (
+    <div className="change-history">
+      <h3>Plan Evolution ({history.length} updates)</h3>
+      {history.map((entry, i) => (
+        <div key={i} className="change-entry">
+          <span className="timestamp">
+            {new Date(entry.timestamp).toLocaleTimeString()}
+          </span>
+
+          {entry.added.length > 0 && (
+            <div className="added">
+              + {entry.added.join(', ')}
+            </div>
+          )}
+
+          {entry.modified.length > 0 && (
+            <div className="modified">
+              ~ {entry.modified.map(m => `${m.from} → ${m.to}`).join(', ')}
+            </div>
+          )}
+
+          {entry.removed.length > 0 && (
+            <div className="removed">
+              - {entry.removed.join(', ')}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+### Change Types Reference
+
+| Type | Property Access | What to Display |
+|------|----------------|-----------------|
+| Added | `changes.added` | `item.description` |
+| Modified | `changes.modified` | `previousItem.description` → `item.description` |
+| Removed | `changes.removed` | `previousItem.description` |
+
+For more details, see [How-To: Dynamic Todolist Modifications](./pes-todolist-dynamic-modifications.md#tracking-plan-changes).
+

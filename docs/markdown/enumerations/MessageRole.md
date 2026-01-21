@@ -6,7 +6,7 @@
 
 # Enumeration: MessageRole
 
-Defined in: [src/types/index.ts:60](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L60)
+Defined in: [src/types/index.ts:72](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L72)
 
 Represents the role of a message sender in a conversation.
 
@@ -16,7 +16,7 @@ Represents the role of a message sender in a conversation.
 
 > **AI**: `"AI"`
 
-Defined in: [src/types/index.ts:64](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L64)
+Defined in: [src/types/index.ts:76](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L76)
 
 The AI agent.
 
@@ -26,7 +26,7 @@ The AI agent.
 
 > **SYSTEM**: `"SYSTEM"`
 
-Defined in: [src/types/index.ts:66](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L66)
+Defined in: [src/types/index.ts:78](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L78)
 
 A system-level message providing context or instructions.
 
@@ -36,7 +36,7 @@ A system-level message providing context or instructions.
 
 > **TOOL**: `"TOOL"`
 
-Defined in: [src/types/index.ts:68](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L68)
+Defined in: [src/types/index.ts:80](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L80)
 
 A message containing the result of a tool execution.
 
@@ -46,6 +46,6 @@ A message containing the result of a tool execution.
 
 > **USER**: `"USER"`
 
-Defined in: [src/types/index.ts:62](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L62)
+Defined in: [src/types/index.ts:74](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L74)
 
 The end-user interacting with the agent.

@@ -6,7 +6,7 @@
 
 # Interface: SystemPromptsRegistry
 
-Defined in: [src/types/index.ts:605](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L605)
+Defined in: [src/types/index.ts:617](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L617)
 
 Registry of available system prompt presets (tags) at the instance level.
 
@@ -18,7 +18,7 @@ Registry of available system prompt presets (tags) at the instance level.
 
 > `optional` **defaultTag**: `string`
 
-Defined in: [src/types/index.ts:610](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L610)
+Defined in: [src/types/index.ts:622](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L622)
 
 Tag to use when no other tag is specified.
 
@@ -28,6 +28,6 @@ Tag to use when no other tag is specified.
 
 > **specs**: `Record`\<`string`, [`SystemPromptSpec`](SystemPromptSpec.md)\>
 
-Defined in: [src/types/index.ts:615](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L615)
+Defined in: [src/types/index.ts:627](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L627)
 
 Mapping of tag -> spec.

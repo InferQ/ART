@@ -6,7 +6,7 @@
 
 # Interface: StreamEvent
 
-Defined in: [src/types/index.ts:257](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L257)
+Defined in: [src/types/index.ts:269](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L269)
 
 Represents a single event emitted from an asynchronous LLM stream (`ReasoningEngine.call`).
 
@@ -23,7 +23,7 @@ Adapters are responsible for translating provider-specific stream chunks into th
 
 > **data**: `any`
 
-Defined in: [src/types/index.ts:275](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L275)
+Defined in: [src/types/index.ts:287](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L287)
 
 The actual content of the event.
 - For `TOKEN`: string (the text chunk).
@@ -37,7 +37,7 @@ The actual content of the event.
 
 > `optional` **phase**: `"planning"` \| `"execution"` \| `"synthesis"`
 
-Defined in: [src/types/index.ts:313](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L313)
+Defined in: [src/types/index.ts:325](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L325)
 
 Phase identification for the agent execution lifecycle.
 
@@ -51,7 +51,7 @@ Phase identification for the agent execution lifecycle.
 
 > `optional` **sessionId**: `string`
 
-Defined in: [src/types/index.ts:346](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L346)
+Defined in: [src/types/index.ts:358](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L358)
 
 Optional identifier linking the event to a specific UI tab/window.
 
@@ -61,7 +61,7 @@ Optional identifier linking the event to a specific UI tab/window.
 
 > `optional` **stepDescription**: `string`
 
-Defined in: [src/types/index.ts:325](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L325)
+Defined in: [src/types/index.ts:337](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L337)
 
 Step description during execution phase.
 
@@ -75,7 +75,7 @@ Step description during execution phase.
 
 > `optional` **stepId**: `string`
 
-Defined in: [src/types/index.ts:319](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L319)
+Defined in: [src/types/index.ts:331](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L331)
 
 Step ID during execution phase. Links tokens to specific TodoItem being executed.
 
@@ -89,7 +89,7 @@ Step ID during execution phase. Links tokens to specific TodoItem being executed
 
 > **threadId**: `string`
 
-Defined in: [src/types/index.ts:336](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L336)
+Defined in: [src/types/index.ts:348](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L348)
 
 The identifier of the conversation thread this event belongs to.
 
@@ -99,7 +99,7 @@ The identifier of the conversation thread this event belongs to.
 
 > `optional` **timestamp**: `number`
 
-Defined in: [src/types/index.ts:331](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L331)
+Defined in: [src/types/index.ts:343](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L343)
 
 Token emission timestamp (Unix ms).
 
@@ -113,7 +113,7 @@ Token emission timestamp (Unix ms).
 
 > `optional` **tokenType**: `"PLANNING_LLM_THINKING"` \| `"PLANNING_LLM_RESPONSE"` \| `"EXECUTION_LLM_THINKING"` \| `"EXECUTION_LLM_RESPONSE"` \| `"SYNTHESIS_LLM_THINKING"` \| `"SYNTHESIS_LLM_RESPONSE"` \| `"LLM_THINKING"` \| `"LLM_RESPONSE"`
 
-Defined in: [src/types/index.ts:295](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L295)
+Defined in: [src/types/index.ts:307](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L307)
 
 Classification for TOKEN events, combining phase context and thinking detection.
 
@@ -142,7 +142,7 @@ Adapters should prioritize setting the phase-based token type based on `CallOpti
 
 > **traceId**: `string`
 
-Defined in: [src/types/index.ts:341](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L341)
+Defined in: [src/types/index.ts:353](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L353)
 
 The identifier tracing the specific agent execution cycle this event is part of.
 
@@ -152,7 +152,7 @@ The identifier tracing the specific agent execution cycle this event is part of.
 
 > **type**: `"TOKEN"` \| `"METADATA"` \| `"ERROR"` \| `"END"`
 
-Defined in: [src/types/index.ts:266](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L266)
+Defined in: [src/types/index.ts:278](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L278)
 
 The type of the stream event.
 - `TOKEN`: A chunk of text generated by the LLM.

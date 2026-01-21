@@ -6,7 +6,7 @@
 
 # Interface: IA2ATaskRepository
 
-Defined in: [src/core/interfaces.ts:533](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L533)
+Defined in: [src/core/interfaces.ts:533](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L533)
 
 Interface for managing A2A (Agent-to-Agent) task persistence and retrieval.
 
@@ -16,7 +16,7 @@ Interface for managing A2A (Agent-to-Agent) task persistence and retrieval.
 
 > **createTask**(`task`): `Promise`\<`void`\>
 
-Defined in: [src/core/interfaces.ts:540](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L540)
+Defined in: [src/core/interfaces.ts:540](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L540)
 
 Creates a new A2A task in the repository.
 
@@ -44,7 +44,7 @@ If the task cannot be created (e.g., duplicate taskId, validation errors).
 
 > **deleteTask**(`taskId`): `Promise`\<`void`\>
 
-Defined in: [src/core/interfaces.ts:565](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L565)
+Defined in: [src/core/interfaces.ts:565](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L565)
 
 Removes an A2A task from the repository.
 
@@ -70,9 +70,9 @@ If the task is not found or cannot be deleted.
 
 ### getTask()
 
-> **getTask**(`taskId`): `Promise`\<`null` \| [`A2ATask`](A2ATask.md)\>
+> **getTask**(`taskId`): `Promise`\<[`A2ATask`](A2ATask.md) \| `null`\>
 
-Defined in: [src/core/interfaces.ts:548](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L548)
+Defined in: [src/core/interfaces.ts:548](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L548)
 
 Retrieves an A2A task by its unique identifier.
 
@@ -86,7 +86,7 @@ The unique identifier of the task.
 
 #### Returns
 
-`Promise`\<`null` \| [`A2ATask`](A2ATask.md)\>
+`Promise`\<[`A2ATask`](A2ATask.md) \| `null`\>
 
 A promise resolving to the A2ATask object if found, or null if not found.
 
@@ -100,7 +100,7 @@ If an error occurs during retrieval.
 
 > **getTasksByAgent**(`agentId`, `filter?`): `Promise`\<[`A2ATask`](A2ATask.md)[]\>
 
-Defined in: [src/core/interfaces.ts:585](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L585)
+Defined in: [src/core/interfaces.ts:585](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L585)
 
 Retrieves tasks assigned to a specific agent.
 
@@ -136,7 +136,7 @@ A promise resolving to an array of A2ATask objects assigned to the agent.
 
 > **getTasksByStatus**(`status`, `options?`): `Promise`\<[`A2ATask`](A2ATask.md)[]\>
 
-Defined in: [src/core/interfaces.ts:596](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L596)
+Defined in: [src/core/interfaces.ts:596](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L596)
 
 Retrieves tasks based on their current status.
 
@@ -172,7 +172,7 @@ A promise resolving to an array of A2ATask objects with the specified status.
 
 > **getTasksByThread**(`threadId`, `filter?`): `Promise`\<[`A2ATask`](A2ATask.md)[]\>
 
-Defined in: [src/core/interfaces.ts:573](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L573)
+Defined in: [src/core/interfaces.ts:573](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L573)
 
 Retrieves tasks associated with a specific thread.
 
@@ -212,7 +212,7 @@ A promise resolving to an array of A2ATask objects matching the criteria.
 
 > **updateTask**(`taskId`, `updates`): `Promise`\<`void`\>
 
-Defined in: [src/core/interfaces.ts:557](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L557)
+Defined in: [src/core/interfaces.ts:557](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L557)
 
 Updates an existing A2A task with new information.
 

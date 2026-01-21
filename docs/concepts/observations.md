@@ -43,7 +43,7 @@ The `ObservationType` enum defines the vocabulary of events the system can expre
 | **`INTENT`** | The agent's understanding of what the user wants to achieve. | `{ intent: string }` |
 | **`TITLE`** | A generated concise title for the conversation thread. | `{ title: string }` |
 | **`PLAN`** | The logical steps the agent intends to take. | `{ plan: string; rawOutput?: string }` |
-| **`PLAN_UPDATE`** | Updates to the existing plan structure. | _Varies based on update_ |
+| **`PLAN_UPDATE`** | Updates to the existing plan structure. | `{ todoList: TodoItem[]; changes: TodoListChanges }` |
 | **`THOUGHTS`** | The agent's internal reasoning process. Recorded across all phases. See [Standardized THOUGHTS](#standardized-thoughts-v0411) below. | `{ text: string }` |
 | **`SYNTHESIS`** | Events related to the synthesis phase, often where the final response is constructed. | _Varies_ |
 | **`FINAL_RESPONSE`** | The final message delivered to the user. | `{ message: ConversationMessage; uiMetadata?: object }` |
@@ -106,6 +106,75 @@ These types capture the granular progress of an LLM generation stream.
 | **`LLM_STREAM_METADATA`** | Metadata about the generation (token counts, latency). Content: `LLMMetadata`. |
 | **`LLM_STREAM_END`** | Stream finished successfully. |
 | **`LLM_STREAM_ERROR`** | Stream interrupted or failed. |
+
+## PLAN_UPDATE Content Structure
+
+> **New in v0.4.15**: `PLAN_UPDATE` observations now include detailed change tracking.
+
+The `content` field of `PLAN_UPDATE` observations contains:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `todoList` | `TodoItem[]` | The complete, updated todo list |
+| `changes` | `TodoListChanges` | Detailed change deltas (added, modified, removed) |
+
+### Change Tracking Structure
+
+```typescript
+interface TodoListChanges {
+  timestamp: number;           // When changes were detected
+  changes: TodoItemChange[];   // All changes as a flat array
+  added: TodoItemChange[];     // Convenience: only additions
+  modified: TodoItemChange[];  // Convenience: only modifications
+  removed: TodoItemChange[];   // Convenience: only removals
+}
+
+interface TodoItemChange {
+  type: TodoItemChangeType;    // ADDED, MODIFIED, or REMOVED
+  itemId: string;
+  timestamp: number;
+  item?: TodoItem;             // Present for ADDED and MODIFIED
+  previousItem?: TodoItem;     // Present for MODIFIED (before) and REMOVED
+}
+```
+
+### UI Integration Benefits
+
+This change tracking enables UI implementations to:
+- Show visual indicators when items are added/modified/removed
+- Animate transitions between plan states
+- Highlight specific changes for user attention
+- Build change history timelines
+- Provide real-time feedback without manual comparison logic
+
+### Example Usage
+
+```typescript
+import { ObservationType, TodoItemChangeType } from 'art-framework';
+
+socket.subscribe(
+  (observation) => {
+    if (observation.type === ObservationType.PLAN_UPDATE) {
+      const { todoList, changes } = observation.content;
+
+      // Display summary
+      console.log(
+        `${changes.added.length} added, ` +
+        `${changes.modified.length} modified, ` +
+        `${changes.removed.length} removed`
+      );
+
+      // Handle specific changes
+      changes.added.forEach(c => showBadge(c.itemId, 'added'));
+      changes.modified.forEach(c => highlightChange(c.itemId));
+      changes.removed.forEach(c => fadeOut(c.itemId));
+    }
+  },
+  ObservationType.PLAN_UPDATE
+);
+```
+
+For comprehensive examples, see [How-To: Dynamic Todolist Modifications](../how-to/pes-todolist-dynamic-modifications.md#tracking-plan-changes).
 
 ## Usage Example
 

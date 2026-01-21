@@ -6,7 +6,7 @@
 
 # Interface: IStateRepository
 
-Defined in: [src/core/interfaces.ts:520](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L520)
+Defined in: [src/core/interfaces.ts:520](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L520)
 
 Repository for managing ThreadConfig and AgentState.
 
@@ -14,9 +14,9 @@ Repository for managing ThreadConfig and AgentState.
 
 ### getAgentState()
 
-> **getAgentState**(`threadId`): `Promise`\<`null` \| [`AgentState`](AgentState.md)\>
+> **getAgentState**(`threadId`): `Promise`\<[`AgentState`](AgentState.md) \| `null`\>
 
-Defined in: [src/core/interfaces.ts:523](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L523)
+Defined in: [src/core/interfaces.ts:523](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L523)
 
 #### Parameters
 
@@ -26,15 +26,15 @@ Defined in: [src/core/interfaces.ts:523](https://github.com/hashangit/ART/blob/0
 
 #### Returns
 
-`Promise`\<`null` \| [`AgentState`](AgentState.md)\>
+`Promise`\<[`AgentState`](AgentState.md) \| `null`\>
 
 ***
 
 ### getThreadConfig()
 
-> **getThreadConfig**(`threadId`): `Promise`\<`null` \| [`ThreadConfig`](ThreadConfig.md)\>
+> **getThreadConfig**(`threadId`): `Promise`\<[`ThreadConfig`](ThreadConfig.md) \| `null`\>
 
-Defined in: [src/core/interfaces.ts:521](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L521)
+Defined in: [src/core/interfaces.ts:521](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L521)
 
 #### Parameters
 
@@ -44,15 +44,15 @@ Defined in: [src/core/interfaces.ts:521](https://github.com/hashangit/ART/blob/0
 
 #### Returns
 
-`Promise`\<`null` \| [`ThreadConfig`](ThreadConfig.md)\>
+`Promise`\<[`ThreadConfig`](ThreadConfig.md) \| `null`\>
 
 ***
 
 ### getThreadContext()
 
-> **getThreadContext**(`threadId`): `Promise`\<`null` \| [`ThreadContext`](ThreadContext.md)\>
+> **getThreadContext**(`threadId`): `Promise`\<[`ThreadContext`](ThreadContext.md) \| `null`\>
 
-Defined in: [src/core/interfaces.ts:526](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L526)
+Defined in: [src/core/interfaces.ts:526](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L526)
 
 #### Parameters
 
@@ -62,7 +62,7 @@ Defined in: [src/core/interfaces.ts:526](https://github.com/hashangit/ART/blob/0
 
 #### Returns
 
-`Promise`\<`null` \| [`ThreadContext`](ThreadContext.md)\>
+`Promise`\<[`ThreadContext`](ThreadContext.md) \| `null`\>
 
 ***
 
@@ -70,7 +70,7 @@ Defined in: [src/core/interfaces.ts:526](https://github.com/hashangit/ART/blob/0
 
 > **setAgentState**(`threadId`, `state`): `Promise`\<`void`\>
 
-Defined in: [src/core/interfaces.ts:524](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L524)
+Defined in: [src/core/interfaces.ts:524](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L524)
 
 #### Parameters
 
@@ -92,7 +92,7 @@ Defined in: [src/core/interfaces.ts:524](https://github.com/hashangit/ART/blob/0
 
 > **setThreadConfig**(`threadId`, `config`): `Promise`\<`void`\>
 
-Defined in: [src/core/interfaces.ts:522](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L522)
+Defined in: [src/core/interfaces.ts:522](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L522)
 
 #### Parameters
 
@@ -114,7 +114,7 @@ Defined in: [src/core/interfaces.ts:522](https://github.com/hashangit/ART/blob/0
 
 > **setThreadContext**(`threadId`, `context`): `Promise`\<`void`\>
 
-Defined in: [src/core/interfaces.ts:527](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L527)
+Defined in: [src/core/interfaces.ts:527](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L527)
 
 #### Parameters
 

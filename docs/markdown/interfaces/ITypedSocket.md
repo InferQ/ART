@@ -6,7 +6,7 @@
 
 # Interface: ITypedSocket\<DataType, FilterType\>
 
-Defined in: [src/core/interfaces.ts:392](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L392)
+Defined in: [src/core/interfaces.ts:392](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L392)
 
 Generic interface for a typed publish/subscribe socket.
 
@@ -26,7 +26,7 @@ Generic interface for a typed publish/subscribe socket.
 
 > `optional` **getHistory**(`filter?`, `options?`): `Promise`\<`DataType`[]\>
 
-Defined in: [src/core/interfaces.ts:421](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L421)
+Defined in: [src/core/interfaces.ts:421](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L421)
 
 Optional method to retrieve historical data from the socket's source.
 
@@ -60,7 +60,7 @@ Optional configuration like threadId and limit.
 
 > **notify**(`data`, `options?`): `void`
 
-Defined in: [src/core/interfaces.ts:411](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L411)
+Defined in: [src/core/interfaces.ts:411](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L411)
 
 Notifies subscribers of new data.
 
@@ -94,7 +94,7 @@ Optional targeting information (e.g., specific thread).
 
 > **subscribe**(`callback`, `filter?`, `options?`): () => `void`
 
-Defined in: [src/core/interfaces.ts:400](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L400)
+Defined in: [src/core/interfaces.ts:400](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L400)
 
 Subscribes a callback function to receive data updates.
 

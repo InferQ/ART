@@ -6,7 +6,7 @@
 
 # Interface: ObservationFilter
 
-Defined in: [src/types/index.ts:1277](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1277)
+Defined in: [src/types/index.ts:1289](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1289)
 
 Options for filtering observations.
 
@@ -18,7 +18,7 @@ Options for filtering observations.
 
 > `optional` **afterTimestamp**: `number`
 
-Defined in: [src/types/index.ts:1292](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1292)
+Defined in: [src/types/index.ts:1304](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1304)
 
 Retrieve observations recorded after this Unix timestamp (milliseconds).
 
@@ -28,7 +28,7 @@ Retrieve observations recorded after this Unix timestamp (milliseconds).
 
 > `optional` **beforeTimestamp**: `number`
 
-Defined in: [src/types/index.ts:1287](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1287)
+Defined in: [src/types/index.ts:1299](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1299)
 
 Retrieve observations recorded before this Unix timestamp (milliseconds).
 
@@ -38,6 +38,6 @@ Retrieve observations recorded before this Unix timestamp (milliseconds).
 
 > `optional` **types**: [`ObservationType`](../enumerations/ObservationType.md)[]
 
-Defined in: [src/types/index.ts:1282](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1282)
+Defined in: [src/types/index.ts:1294](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1294)
 
 An array of `ObservationType` enums to filter by. If provided, only observations matching these types are returned.

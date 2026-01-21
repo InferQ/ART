@@ -6,7 +6,7 @@
 
 # Class: DeepSeekAdapter
 
-Defined in: [src/integrations/reasoning/deepseek.ts:113](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/deepseek.ts#L113)
+Defined in: [src/integrations/reasoning/deepseek.ts:113](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/deepseek.ts#L113)
 
 This adapter provides a consistent interface for ART agents to use DeepSeek models,
 handling the conversion of standard ART prompts to the DeepSeek API format and
@@ -26,7 +26,7 @@ parsing the responses into the ART `StreamEvent` format.
 
 > **new DeepSeekAdapter**(`options`): `DeepSeekAdapter`
 
-Defined in: [src/integrations/reasoning/deepseek.ts:125](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/deepseek.ts#L125)
+Defined in: [src/integrations/reasoning/deepseek.ts:125](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/deepseek.ts#L125)
 
 Creates an instance of the DeepSeekAdapter.
 
@@ -56,7 +56,7 @@ https://platform.deepseek.com/api-docs
 
 > `readonly` **providerName**: `"deepseek"` = `'deepseek'`
 
-Defined in: [src/integrations/reasoning/deepseek.ts:114](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/deepseek.ts#L114)
+Defined in: [src/integrations/reasoning/deepseek.ts:114](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/deepseek.ts#L114)
 
 The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
@@ -70,7 +70,7 @@ The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
 > **call**(`prompt`, `options`): `Promise`\<`AsyncIterable`\<[`StreamEvent`](../interfaces/StreamEvent.md), `any`, `any`\>\>
 
-Defined in: [src/integrations/reasoning/deepseek.ts:146](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/deepseek.ts#L146)
+Defined in: [src/integrations/reasoning/deepseek.ts:146](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/deepseek.ts#L146)
 
 Sends a request to the DeepSeek Chat Completions API endpoint.
 Translates `ArtStandardPrompt` to the OpenAI-compatible format.

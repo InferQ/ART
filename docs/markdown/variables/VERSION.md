@@ -6,8 +6,8 @@
 
 # Variable: VERSION
 
-> `const` **VERSION**: `"0.4.13"` = `'0.4.13'`
+> `const` **VERSION**: `"0.4.15"` = `'0.4.15'`
 
-Defined in: [src/index.ts:324](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/index.ts#L324)
+Defined in: [src/index.ts:324](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/index.ts#L324)
 
 The current version of the ART Framework package.

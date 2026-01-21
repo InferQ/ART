@@ -6,7 +6,7 @@
 
 # Interface: StepOutputEntry
 
-Defined in: [src/types/pes-types.ts:349](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L349)
+Defined in: [src/types/pes-types.ts:349](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/pes-types.ts#L349)
 
 Represents a cached output entry from a completed execution step.
 These entries are persisted in the PESAgentStateData to enable resume
@@ -20,7 +20,7 @@ capability and cross-step data access.
 
 > `optional` **completedAt**: `number`
 
-Defined in: [src/types/pes-types.ts:382](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L382)
+Defined in: [src/types/pes-types.ts:382](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/pes-types.ts#L382)
 
 The Unix timestamp (in milliseconds) when the step was completed.
 
@@ -30,7 +30,7 @@ The Unix timestamp (in milliseconds) when the step was completed.
 
 > **description**: `string`
 
-Defined in: [src/types/pes-types.ts:362](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L362)
+Defined in: [src/types/pes-types.ts:362](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/pes-types.ts#L362)
 
 A description of the step.
 Matches the TodoItem.description.
@@ -41,7 +41,7 @@ Matches the TodoItem.description.
 
 > `optional` **rawResult**: `any`
 
-Defined in: [src/types/pes-types.ts:396](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L396)
+Defined in: [src/types/pes-types.ts:396](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/pes-types.ts#L396)
 
 The raw result from the step execution.
 This contains full, untruncated data for use by downstream steps.
@@ -59,7 +59,7 @@ this rawResult preserves the complete data.
 
 > **status**: [`TodoItemStatus`](../enumerations/TodoItemStatus.md)
 
-Defined in: [src/types/pes-types.ts:376](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L376)
+Defined in: [src/types/pes-types.ts:376](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/pes-types.ts#L376)
 
 The final status of the step.
 Matches the TodoItem.status at completion time.
@@ -70,7 +70,7 @@ Matches the TodoItem.status at completion time.
 
 > **stepId**: `string`
 
-Defined in: [src/types/pes-types.ts:355](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L355)
+Defined in: [src/types/pes-types.ts:355](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/pes-types.ts#L355)
 
 The ID of the step this output belongs to.
 Matches the TodoItem.id.
@@ -81,7 +81,7 @@ Matches the TodoItem.id.
 
 > **stepType**: `"tool"` \| `"reasoning"`
 
-Defined in: [src/types/pes-types.ts:369](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L369)
+Defined in: [src/types/pes-types.ts:369](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/pes-types.ts#L369)
 
 The type of step that produced this output.
 Matches the TodoItem.stepType.
@@ -92,7 +92,7 @@ Matches the TodoItem.stepType.
 
 > `optional` **summary**: `string`
 
-Defined in: [src/types/pes-types.ts:411](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L411)
+Defined in: [src/types/pes-types.ts:411](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/pes-types.ts#L411)
 
 An optional summary of the step output.
 This provides a quick reference without loading the full rawResult.
@@ -104,7 +104,7 @@ Useful for synthesis and debugging.
 
 > `optional` **toolResults**: [`ToolResult`](ToolResult.md)[]
 
-Defined in: [src/types/pes-types.ts:403](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/pes-types.ts#L403)
+Defined in: [src/types/pes-types.ts:403](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/pes-types.ts#L403)
 
 Array of tool results if this was a tool-type step.
 Contains all tool execution attempts including errors.

@@ -6,7 +6,7 @@
 
 # Interface: StageSpecificPrompts
 
-Defined in: [src/types/index.ts:1899](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1899)
+Defined in: [src/types/index.ts:1911](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1911)
 
 Defines stage-specific system prompts for planning and synthesis.
 
@@ -18,7 +18,7 @@ Defines stage-specific system prompts for planning and synthesis.
 
 > `optional` **execution**: `string`
 
-Defined in: [src/types/index.ts:1920](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1920)
+Defined in: [src/types/index.ts:1932](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1932)
 
 Custom system prompt template for tool execution steps.
 If provided, overrides the default execution prompt.
@@ -30,7 +30,7 @@ Supports variable interpolation: ${item.description}, ${completedItemsContext}, 
 
 > `optional` **planning**: `string`
 
-Defined in: [src/types/index.ts:1905](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1905)
+Defined in: [src/types/index.ts:1917](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1917)
 
 System prompt to guide the planning phase.
 Focuses on reasoning, expertise, and tool selection.
@@ -41,7 +41,7 @@ Focuses on reasoning, expertise, and tool selection.
 
 > `optional` **synthesis**: `string`
 
-Defined in: [src/types/index.ts:1912](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1912)
+Defined in: [src/types/index.ts:1924](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1924)
 
 System prompt to guide the synthesis phase.
 Focuses on tone, formatting, and final response structure.

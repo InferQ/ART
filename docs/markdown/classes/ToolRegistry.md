@@ -6,7 +6,7 @@
 
 # Class: ToolRegistry
 
-Defined in: [src/systems/tool/ToolRegistry.ts:10](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/tool/ToolRegistry.ts#L10)
+Defined in: [src/systems/tool/ToolRegistry.ts:10](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/tool/ToolRegistry.ts#L10)
 
 A simple in-memory implementation of the `ToolRegistry` interface.
 Stores tool executors in a Map, keyed by the tool's unique name.
@@ -21,7 +21,7 @@ Stores tool executors in a Map, keyed by the tool's unique name.
 
 > **new ToolRegistry**(`stateManager?`): `ToolRegistry`
 
-Defined in: [src/systems/tool/ToolRegistry.ts:18](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/tool/ToolRegistry.ts#L18)
+Defined in: [src/systems/tool/ToolRegistry.ts:18](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/tool/ToolRegistry.ts#L18)
 
 Creates an instance of ToolRegistry.
 
@@ -43,7 +43,7 @@ Optional StateManager instance for advanced filtering.
 
 > **clearAllTools**(): `Promise`\<`void`\>
 
-Defined in: [src/systems/tool/ToolRegistry.ts:105](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/tool/ToolRegistry.ts#L105)
+Defined in: [src/systems/tool/ToolRegistry.ts:105](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/tool/ToolRegistry.ts#L105)
 
 Removes all registered tool executors from the registry.
 Primarily useful for resetting state during testing or specific application scenarios.
@@ -60,7 +60,7 @@ A promise that resolves when all tools have been cleared.
 
 > **getAvailableTools**(`filter?`): `Promise`\<[`ToolSchema`](../interfaces/ToolSchema.md)[]\>
 
-Defined in: [src/systems/tool/ToolRegistry.ts:64](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/tool/ToolRegistry.ts#L64)
+Defined in: [src/systems/tool/ToolRegistry.ts:64](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/tool/ToolRegistry.ts#L64)
 
 Retrieves the schemas of all currently registered tools.
 Retrieves the schemas of available tools, optionally filtering by those enabled for a specific thread.
@@ -91,9 +91,9 @@ A promise resolving to an array containing the `ToolSchema` of the available too
 
 ### getToolExecutor()
 
-> **getToolExecutor**(`toolName`): `Promise`\<`undefined` \| [`IToolExecutor`](../interfaces/IToolExecutor.md)\>
+> **getToolExecutor**(`toolName`): `Promise`\<[`IToolExecutor`](../interfaces/IToolExecutor.md) \| `undefined`\>
 
-Defined in: [src/systems/tool/ToolRegistry.ts:48](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/tool/ToolRegistry.ts#L48)
+Defined in: [src/systems/tool/ToolRegistry.ts:48](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/tool/ToolRegistry.ts#L48)
 
 Retrieves a registered tool executor instance by its unique name.
 
@@ -107,7 +107,7 @@ The `name` property defined in the tool's schema.
 
 #### Returns
 
-`Promise`\<`undefined` \| [`IToolExecutor`](../interfaces/IToolExecutor.md)\>
+`Promise`\<[`IToolExecutor`](../interfaces/IToolExecutor.md) \| `undefined`\>
 
 A promise resolving to the `IToolExecutor` instance, or `undefined` if no tool with that name is registered.
 
@@ -121,7 +121,7 @@ A promise resolving to the `IToolExecutor` instance, or `undefined` if no tool w
 
 > **registerTool**(`executor`): `Promise`\<`void`\>
 
-Defined in: [src/systems/tool/ToolRegistry.ts:30](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/tool/ToolRegistry.ts#L30)
+Defined in: [src/systems/tool/ToolRegistry.ts:30](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/tool/ToolRegistry.ts#L30)
 
 Registers a tool executor instance, making it available for lookup via `getToolExecutor`.
 If a tool with the same name (from `executor.schema.name`) already exists, it will be overwritten, and a warning will be logged.
@@ -154,7 +154,7 @@ If the provided executor or its schema is invalid.
 
 > **unregisterTool**(`toolName`): `Promise`\<`void`\>
 
-Defined in: [src/systems/tool/ToolRegistry.ts:113](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/tool/ToolRegistry.ts#L113)
+Defined in: [src/systems/tool/ToolRegistry.ts:113](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/tool/ToolRegistry.ts#L113)
 
 Unregister a single tool by name.
 
@@ -178,7 +178,7 @@ Unregister a single tool by name.
 
 > **unregisterTools**(`predicate`): `Promise`\<`number`\>
 
-Defined in: [src/systems/tool/ToolRegistry.ts:122](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/systems/tool/ToolRegistry.ts#L122)
+Defined in: [src/systems/tool/ToolRegistry.ts:122](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/systems/tool/ToolRegistry.ts#L122)
 
 Unregister tools matching a predicate; returns count removed.
 

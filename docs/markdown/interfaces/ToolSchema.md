@@ -6,7 +6,7 @@
 
 # Interface: ToolSchema
 
-Defined in: [src/types/index.ts:458](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L458)
+Defined in: [src/types/index.ts:470](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L470)
 
 Defines the schema for a tool, including its input parameters.
 Uses JSON Schema format for inputSchema.
@@ -19,7 +19,7 @@ Uses JSON Schema format for inputSchema.
 
 > `optional` **blockingConfig**: [`BlockingToolConfig`](BlockingToolConfig.md)
 
-Defined in: [src/types/index.ts:509](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L509)
+Defined in: [src/types/index.ts:521](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L521)
 
 Configuration for blocking tools (HITL).
 Only applicable when executionMode is 'blocking'.
@@ -30,7 +30,7 @@ Only applicable when executionMode is 'blocking'.
 
 > **description**: `string`
 
-Defined in: [src/types/index.ts:468](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L468)
+Defined in: [src/types/index.ts:480](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L480)
 
 A clear description of what the tool does, intended for the LLM to understand its purpose and usage.
 
@@ -40,7 +40,7 @@ A clear description of what the tool does, intended for the LLM to understand it
 
 > `optional` **displayConfig**: [`DisplayToolConfig`](DisplayToolConfig.md)
 
-Defined in: [src/types/index.ts:516](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L516)
+Defined in: [src/types/index.ts:528](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L528)
 
 Configuration for display tools (Generative UI).
 Only applicable when executionMode is 'display'.
@@ -51,7 +51,7 @@ Only applicable when executionMode is 'display'.
 
 > `optional` **examples**: `object`[]
 
-Defined in: [src/types/index.ts:483](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L483)
+Defined in: [src/types/index.ts:495](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L495)
 
 Optional array of examples demonstrating how to use the tool, useful for few-shot prompting of the LLM.
 
@@ -73,7 +73,7 @@ Optional array of examples demonstrating how to use the tool, useful for few-sho
 
 > `optional` **executionMode**: `"functional"` \| `"blocking"` \| `"display"` \| `"immediate"`
 
-Defined in: [src/types/index.ts:502](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L502)
+Defined in: [src/types/index.ts:514](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L514)
 
 Defines the execution mode (category) of the tool.
 
@@ -97,7 +97,7 @@ Tools are categorized into three modes with different framework handling:
 
 > **inputSchema**: [`JsonSchema`](../type-aliases/JsonSchema.md)
 
-Defined in: [src/types/index.ts:473](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L473)
+Defined in: [src/types/index.ts:485](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L485)
 
 A JSON Schema object defining the structure, types, and requirements of the input arguments the tool expects.
 
@@ -107,7 +107,7 @@ A JSON Schema object defining the structure, types, and requirements of the inpu
 
 > **name**: `string`
 
-Defined in: [src/types/index.ts:463](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L463)
+Defined in: [src/types/index.ts:475](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L475)
 
 A unique name identifying the tool (used in LLM prompts and registry lookups). Must be unique.
 
@@ -117,6 +117,6 @@ A unique name identifying the tool (used in LLM prompts and registry lookups). M
 
 > `optional` **outputSchema**: [`JsonSchema`](../type-aliases/JsonSchema.md)
 
-Defined in: [src/types/index.ts:478](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L478)
+Defined in: [src/types/index.ts:490](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L490)
 
 An optional JSON Schema object defining the expected structure of the data returned in the `output` field of a successful `ToolResult`.

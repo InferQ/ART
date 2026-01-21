@@ -6,7 +6,7 @@
 
 # Interface: CallOptions
 
-Defined in: [src/types/index.ts:983](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L983)
+Defined in: [src/types/index.ts:995](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L995)
 
 Options for configuring an LLM call, including streaming and context information.
 
@@ -24,7 +24,7 @@ Additional key-value pairs representing provider-specific parameters (e.g., `tem
 
 > `optional` **callContext**: `string`
 
-Defined in: [src/types/index.ts:1018](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1018)
+Defined in: [src/types/index.ts:1030](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1030)
 
 Provides context for the LLM call, identifying which phase of agent execution
 is making the request. This determines the tokenType prefix in StreamEvents.
@@ -40,7 +40,7 @@ is making the request. This determines the tokenType prefix in StreamEvents.
 
 > **providerConfig**: [`RuntimeProviderConfig`](RuntimeProviderConfig.md)
 
-Defined in: [src/types/index.ts:1037](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1037)
+Defined in: [src/types/index.ts:1049](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1049)
 
 Carries the specific target provider and configuration for this call.
 
@@ -50,7 +50,7 @@ Carries the specific target provider and configuration for this call.
 
 > `optional` **sessionId**: `string`
 
-Defined in: [src/types/index.ts:1003](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1003)
+Defined in: [src/types/index.ts:1015](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1015)
 
 Optional session ID.
 
@@ -60,7 +60,7 @@ Optional session ID.
 
 > `optional` **stepContext**: `object`
 
-Defined in: [src/types/index.ts:1024](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1024)
+Defined in: [src/types/index.ts:1036](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1036)
 
 Step context for execution phase, passed to StreamEvent for step identification.
 
@@ -82,7 +82,7 @@ Step context for execution phase, passed to StreamEvent for step identification.
 
 > `optional` **stream**: `boolean`
 
-Defined in: [src/types/index.ts:1009](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1009)
+Defined in: [src/types/index.ts:1021](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1021)
 
 Request a streaming response from the LLM provider.
 Adapters MUST check this flag.
@@ -93,7 +93,7 @@ Adapters MUST check this flag.
 
 > **threadId**: `string`
 
-Defined in: [src/types/index.ts:988](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L988)
+Defined in: [src/types/index.ts:1000](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1000)
 
 The mandatory thread ID, used by the ReasoningEngine to fetch thread-specific configuration (e.g., model, params) via StateManager.
 
@@ -103,7 +103,7 @@ The mandatory thread ID, used by the ReasoningEngine to fetch thread-specific co
 
 > `optional` **traceId**: `string`
 
-Defined in: [src/types/index.ts:993](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L993)
+Defined in: [src/types/index.ts:1005](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1005)
 
 Optional trace ID for correlation.
 
@@ -113,6 +113,6 @@ Optional trace ID for correlation.
 
 > `optional` **userId**: `string`
 
-Defined in: [src/types/index.ts:998](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L998)
+Defined in: [src/types/index.ts:1010](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1010)
 
 Optional user ID.

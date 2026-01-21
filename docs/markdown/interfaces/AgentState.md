@@ -6,7 +6,7 @@
 
 # Interface: AgentState
 
-Defined in: [src/types/index.ts:711](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L711)
+Defined in: [src/types/index.ts:723](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L723)
 
 Represents non-configuration state associated with an agent or thread.
 Could include user preferences, accumulated knowledge, etc. (Less defined for v1.0)
@@ -25,7 +25,7 @@ Allows for other arbitrary properties to be stored in the agent's state.
 
 > **data**: `any`
 
-Defined in: [src/types/index.ts:716](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L716)
+Defined in: [src/types/index.ts:728](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L728)
 
 The primary data payload of the agent's state. Structure is application-defined.
 
@@ -35,6 +35,6 @@ The primary data payload of the agent's state. Structure is application-defined.
 
 > `optional` **version**: `number`
 
-Defined in: [src/types/index.ts:721](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L721)
+Defined in: [src/types/index.ts:733](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L733)
 
 An optional version number for the agent's state, useful for migrations or tracking changes.

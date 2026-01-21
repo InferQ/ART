@@ -6,7 +6,7 @@
 
 # Interface: DisplayToolConfig
 
-Defined in: src/types/hitl-types.ts:400
+Defined in: [src/types/hitl-types.ts:400](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L400)
 
 Configuration for display tools in the ToolSchema.
 
@@ -21,7 +21,7 @@ Display tools render UI without producing traditional results.
 
 > `optional` **componentType**: `string`
 
-Defined in: src/types/hitl-types.ts:404
+Defined in: [src/types/hitl-types.ts:404](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L404)
 
 The type of UI component this tool renders.
 
@@ -31,7 +31,7 @@ The type of UI component this tool renders.
 
 > `optional` **dataSchema**: `Record`\<`string`, `unknown`\>
 
-Defined in: src/types/hitl-types.ts:422
+Defined in: [src/types/hitl-types.ts:422](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L422)
 
 Schema for the data this display component expects.
 
@@ -41,7 +41,7 @@ Schema for the data this display component expects.
 
 > `optional` **displayMode**: `"persistent"` \| `"ephemeral"` \| `"modal"`
 
-Defined in: src/types/hitl-types.ts:410
+Defined in: [src/types/hitl-types.ts:410](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L410)
 
 Whether the display persists or is ephemeral.
 
@@ -57,7 +57,7 @@ Whether the display persists or is ephemeral.
 
 > `optional` **interactive**: `boolean`
 
-Defined in: src/types/hitl-types.ts:417
+Defined in: [src/types/hitl-types.ts:417](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/hitl-types.ts#L417)
 
 Whether this display supports user interaction.
 If true, interactions may generate new messages.

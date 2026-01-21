@@ -6,7 +6,7 @@
 
 # Interface: IToolExecutor
 
-Defined in: [src/core/interfaces.ts:174](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L174)
+Defined in: [src/core/interfaces.ts:174](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L174)
 
 Interface for the executable logic of a tool.
 
@@ -16,7 +16,7 @@ Interface for the executable logic of a tool.
 
 > `readonly` **schema**: [`ToolSchema`](ToolSchema.md)
 
-Defined in: [src/core/interfaces.ts:176](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L176)
+Defined in: [src/core/interfaces.ts:176](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L176)
 
 The schema definition for this tool.
 
@@ -26,7 +26,7 @@ The schema definition for this tool.
 
 > **execute**(`input`, `context`): `Promise`\<[`ToolResult`](ToolResult.md)\>
 
-Defined in: [src/core/interfaces.ts:184](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/core/interfaces.ts#L184)
+Defined in: [src/core/interfaces.ts:184](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/core/interfaces.ts#L184)
 
 Executes the tool's logic.
 

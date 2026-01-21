@@ -6,7 +6,7 @@
 
 # Interface: ExecutionMetadata
 
-Defined in: [src/types/index.ts:883](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L883)
+Defined in: [src/types/index.ts:895](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L895)
 
 Metadata summarizing an agent execution cycle, including performance metrics and outcomes.
 
@@ -18,7 +18,7 @@ Metadata summarizing an agent execution cycle, including performance metrics and
 
 > `optional` **error**: `string`
 
-Defined in: [src/types/index.ts:928](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L928)
+Defined in: [src/types/index.ts:940](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L940)
 
 A top-level error message if the overall status is 'error' or 'partial'.
 
@@ -28,7 +28,7 @@ A top-level error message if the overall status is 'error' or 'partial'.
 
 > **llmCalls**: `number`
 
-Defined in: [src/types/index.ts:913](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L913)
+Defined in: [src/types/index.ts:925](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L925)
 
 The number of calls made to the `ReasoningEngine`.
 
@@ -38,7 +38,7 @@ The number of calls made to the `ReasoningEngine`.
 
 > `optional` **llmCost**: `number`
 
-Defined in: [src/types/index.ts:923](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L923)
+Defined in: [src/types/index.ts:935](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L935)
 
 An optional estimated cost for the LLM calls made during this execution.
 
@@ -48,7 +48,7 @@ An optional estimated cost for the LLM calls made during this execution.
 
 > `optional` **llmMetadata**: [`LLMMetadata`](LLMMetadata.md)
 
-Defined in: [src/types/index.ts:933](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L933)
+Defined in: [src/types/index.ts:945](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L945)
 
 Aggregated metadata from LLM calls made during the execution.
 
@@ -58,7 +58,7 @@ Aggregated metadata from LLM calls made during the execution.
 
 > **status**: `"success"` \| `"error"` \| `"partial"`
 
-Defined in: [src/types/index.ts:903](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L903)
+Defined in: [src/types/index.ts:915](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L915)
 
 The overall status of the execution ('success', 'error', or 'partial' if some steps failed but a response was generated).
 
@@ -68,7 +68,7 @@ The overall status of the execution ('success', 'error', or 'partial' if some st
 
 > **threadId**: `string`
 
-Defined in: [src/types/index.ts:888](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L888)
+Defined in: [src/types/index.ts:900](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L900)
 
 The thread ID associated with this execution cycle.
 
@@ -78,7 +78,7 @@ The thread ID associated with this execution cycle.
 
 > **toolCalls**: `number`
 
-Defined in: [src/types/index.ts:918](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L918)
+Defined in: [src/types/index.ts:930](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L930)
 
 The number of tool execution attempts made by the `ToolSystem`.
 
@@ -88,7 +88,7 @@ The number of tool execution attempts made by the `ToolSystem`.
 
 > **totalDurationMs**: `number`
 
-Defined in: [src/types/index.ts:908](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L908)
+Defined in: [src/types/index.ts:920](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L920)
 
 The total duration of the `agent.process()` call in milliseconds.
 
@@ -98,7 +98,7 @@ The total duration of the `agent.process()` call in milliseconds.
 
 > `optional` **traceId**: `string`
 
-Defined in: [src/types/index.ts:893](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L893)
+Defined in: [src/types/index.ts:905](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L905)
 
 The trace ID used during this execution, if provided.
 
@@ -108,6 +108,6 @@ The trace ID used during this execution, if provided.
 
 > `optional` **userId**: `string`
 
-Defined in: [src/types/index.ts:898](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L898)
+Defined in: [src/types/index.ts:910](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L910)
 
 The user ID associated with the execution, if provided.

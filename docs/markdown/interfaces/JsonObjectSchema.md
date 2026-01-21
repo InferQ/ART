@@ -6,7 +6,7 @@
 
 # Interface: JsonObjectSchema
 
-Defined in: [src/types/index.ts:355](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L355)
+Defined in: [src/types/index.ts:367](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L367)
 
 Represents a basic JSON Schema definition, focusing on object types commonly used for tool inputs/outputs.
 This is a simplified representation and doesn't cover all JSON Schema features.
@@ -19,7 +19,7 @@ This is a simplified representation and doesn't cover all JSON Schema features.
 
 > `optional` **additionalProperties**: `boolean`
 
-Defined in: [src/types/index.ts:376](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L376)
+Defined in: [src/types/index.ts:388](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L388)
 
 ***
 
@@ -27,7 +27,7 @@ Defined in: [src/types/index.ts:376](https://github.com/hashangit/ART/blob/0a239
 
 > **properties**: `object`
 
-Defined in: [src/types/index.ts:363](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L363)
+Defined in: [src/types/index.ts:375](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L375)
 
 #### Index Signature
 
@@ -39,7 +39,7 @@ Defined in: [src/types/index.ts:363](https://github.com/hashangit/ART/blob/0a239
 
 > `optional` **required**: `string`[]
 
-Defined in: [src/types/index.ts:375](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L375)
+Defined in: [src/types/index.ts:387](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L387)
 
 ***
 
@@ -47,4 +47,4 @@ Defined in: [src/types/index.ts:375](https://github.com/hashangit/ART/blob/0a239
 
 > **type**: `"object"`
 
-Defined in: [src/types/index.ts:359](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L359)
+Defined in: [src/types/index.ts:371](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L371)

@@ -265,6 +265,201 @@ const reorderedTodoList = [
 ];
 ```
 
+## Tracking Plan Changes
+
+> **New in v0.4.15**: The ART Framework now provides detailed change tracking for dynamic todo list modifications.
+
+When the agent modifies its todo list during execution, `PLAN_UPDATE` observations now include a `changes` field that tells you exactly what changed—without needing to manually compare todo lists.
+
+### The TodoListChanges Interface
+
+```typescript
+import { TodoListChanges, TodoItemChange, TodoItemChangeType } from 'art-framework';
+
+interface TodoListChanges {
+  timestamp: number;           // When changes were detected
+  changes: TodoItemChange[];   // All changes as a flat array
+  added: TodoItemChange[];     // Convenience: only additions
+  modified: TodoItemChange[];  // Convenience: only modifications
+  removed: TodoItemChange[];   // Convenience: only removals
+}
+
+interface TodoItemChange {
+  type: TodoItemChangeType;    // ADDED, MODIFIED, or REMOVED
+  itemId: string;
+  timestamp: number;
+  item?: TodoItem;             // Present for ADDED and MODIFIED
+  previousItem?: TodoItem;     // Present for MODIFIED (before) and REMOVED
+}
+```
+
+### Change Types
+
+Each `TodoItemChange` has a `type` field from the `TodoItemChangeType` enum:
+
+| Type | When it Occurs | Available Properties |
+|------|----------------|---------------------|
+| `ADDED` | New item added to plan | `item` (new state) |
+| `MODIFIED` | Existing item changed | `item` (new state), `previousItem` (old state) |
+| `REMOVED` | Item removed from plan | `previousItem` (removed item) |
+
+### React UI Example
+
+Here's a complete React component that displays change badges when the agent modifies its plan:
+
+```typescript
+import { useEffect, useState } from 'react';
+import { ObservationType, TodoItemChangeType } from 'art-framework';
+
+interface TodoListChangesProps {
+  threadId: string;
+}
+
+function TodoListChanges({ threadId }: TodoListChangesProps) {
+  const [changes, setChanges] = useState<TodoListChanges | null>(null);
+
+  useEffect(() => {
+    const socket = art.uiSystem.getObservationSocket();
+
+    const unsubscribe = socket.subscribe(
+      (observation) => {
+        if (observation.type === ObservationType.PLAN_UPDATE) {
+          setChanges(observation.content.changes);
+        }
+      },
+      ObservationType.PLAN_UPDATE,
+      { threadId }
+    );
+
+    return unsubscribe;
+  }, [threadId]);
+
+  if (!changes || changes.changes.length === 0) return null;
+
+  return (
+    <div className="changes-panel">
+      <h3>Plan Updated ({changes.changes.length} changes)</h3>
+
+      {changes.added.length > 0 && (
+        <div className="changes-added">
+          {changes.added.map(c => (
+            <ChangeBadge
+              key={c.itemId}
+              type="added"
+              item={c.item}
+              message={`Added: ${c.item?.description}`}
+            />
+          ))}
+        </div>
+      )}
+
+      {changes.modified.length > 0 && (
+        <div className="changes-modified">
+          {changes.modified.map(c => (
+            <ChangeBadge
+              key={c.itemId}
+              type="modified"
+              item={c.item}
+              previousItem={c.previousItem}
+              message={`Modified: ${c.item?.description}`}
+            />
+          ))}
+        </div>
+      )}
+
+      {changes.removed.length > 0 && (
+        <div className="changes-removed">
+          {changes.removed.map(c => (
+            <ChangeBadge
+              key={c.itemId}
+              type="removed"
+              item={c.previousItem}
+              message={`Removed: ${c.previousItem?.description}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Helper component for displaying individual changes
+function ChangeBadge({ type, item, message }: {
+  type: 'added' | 'modified' | 'removed';
+  item?: TodoItem;
+  message: string;
+}) {
+  const colors = {
+    added: 'bg-green-100 text-green-800',
+    modified: 'bg-blue-100 text-blue-800',
+    removed: 'bg-red-100 text-red-800',
+  };
+
+  return (
+    <div className={`change-badge px-3 py-2 rounded ${colors[type]}`}>
+      <span className="font-medium">{type.toUpperCase()}</span>: {message}
+    </div>
+  );
+}
+```
+
+### Minimal TypeScript Example
+
+For a simpler integration without React:
+
+```typescript
+import { ObservationType, TodoItemChangeType } from 'art-framework';
+
+// Subscribe to plan updates
+art.uiSystem.getObservationSocket().subscribe(
+  (observation) => {
+    if (observation.type === ObservationType.PLAN_UPDATE) {
+      const { todoList, changes } = observation.content;
+
+      // Log summary of changes
+      console.log(
+        `Plan updated: ${changes.added.length} added, ` +
+        `${changes.modified.length} modified, ` +
+        `${changes.removed.length} removed`
+      );
+
+      // Handle each type of change
+      changes.added.forEach(c => {
+        console.log(`  [ADD] ${c.item?.description}`);
+      });
+
+      changes.modified.forEach(c => {
+        console.log(`  [MODIFY] ${c.previousItem?.description} → ${c.item?.description}`);
+      });
+
+      changes.removed.forEach(c => {
+        console.log(`  [REMOVE] ${c.previousItem?.description}`);
+      });
+    }
+  },
+  ObservationType.PLAN_UPDATE,
+  { threadId }
+);
+```
+
+### Using the Diff Utility
+
+The framework also provides a utility function for computing diffs between todo lists:
+
+```typescript
+import { computeTodoListDiff, createInitialChanges } from 'art-framework';
+
+// Compute differences between two todo lists
+const changes = computeTodoListDiff(previousTodoList, currentTodoList);
+
+console.log(changes.added);    // Array of added items
+console.log(changes.modified); // Array of modified items
+console.log(changes.removed);  // Array of removed items
+
+// For initial plans, mark all items as added
+const initialChanges = createInitialChanges(todoList);
+```
+
 ## Important Constraints
 
 ### Protection of Completed Items
@@ -424,9 +619,11 @@ See the integration tests for examples:
 
 | File | Purpose |
 |------|---------|
-| `src/types/pes-types.ts` | TodoItem and ExecutionOutput definitions |
+| `src/types/pes-types.ts` | TodoItem, ExecutionOutput, TodoItemChange, TodoListChanges definitions |
+| `src/utils/todo-diff.ts` | `computeTodoListDiff` and `createInitialChanges` utilities |
 | `src/core/agents/pes-agent.ts:1191-1219` | Plan update handler |
 | `src/systems/reasoning/OutputParser.ts:442-443` | Output parser |
+| `test/todo-diff.test.ts` | Change tracking unit tests |
 | `test/pes-agent-followup.integration.test.ts` | Integration tests |
 
 ## Summary
@@ -436,5 +633,6 @@ See the integration tests for examples:
 - **Remove items**: Omit items from `updatedPlan.todoList`
 - **Protection**: COMPLETED items retain their status
 - **Persistence**: Changes are automatically saved and recorded
+- **Change Tracking** (v0.4.15): `PLAN_UPDATE` observations include detailed `changes` field with `added`, `modified`, and `removed` arrays
 
 This dynamic capability enables adaptive agent behavior where the plan evolves based on real-time discoveries during execution.

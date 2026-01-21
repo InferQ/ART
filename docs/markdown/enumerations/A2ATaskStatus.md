@@ -6,7 +6,7 @@
 
 # Enumeration: A2ATaskStatus
 
-Defined in: [src/types/index.ts:1434](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1434)
+Defined in: [src/types/index.ts:1446](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1446)
 
 Represents the possible states of an A2A (Agent-to-Agent) task.
 
@@ -16,7 +16,7 @@ Represents the possible states of an A2A (Agent-to-Agent) task.
 
 > **CANCELLED**: `"CANCELLED"`
 
-Defined in: [src/types/index.ts:1444](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1444)
+Defined in: [src/types/index.ts:1456](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1456)
 
 Task has been cancelled before completion.
 
@@ -26,7 +26,7 @@ Task has been cancelled before completion.
 
 > **COMPLETED**: `"COMPLETED"`
 
-Defined in: [src/types/index.ts:1440](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1440)
+Defined in: [src/types/index.ts:1452](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1452)
 
 Task has been completed successfully.
 
@@ -36,7 +36,7 @@ Task has been completed successfully.
 
 > **FAILED**: `"FAILED"`
 
-Defined in: [src/types/index.ts:1442](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1442)
+Defined in: [src/types/index.ts:1454](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1454)
 
 Task has failed during execution.
 
@@ -46,7 +46,7 @@ Task has failed during execution.
 
 > **IN\_PROGRESS**: `"IN_PROGRESS"`
 
-Defined in: [src/types/index.ts:1438](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1438)
+Defined in: [src/types/index.ts:1450](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1450)
 
 Task has been assigned to an agent and is being processed.
 
@@ -56,7 +56,7 @@ Task has been assigned to an agent and is being processed.
 
 > **PENDING**: `"PENDING"`
 
-Defined in: [src/types/index.ts:1436](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1436)
+Defined in: [src/types/index.ts:1448](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1448)
 
 Task has been created but not yet assigned to an agent.
 
@@ -66,7 +66,7 @@ Task has been created but not yet assigned to an agent.
 
 > **REVIEW**: `"REVIEW"`
 
-Defined in: [src/types/index.ts:1448](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1448)
+Defined in: [src/types/index.ts:1460](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1460)
 
 Task is being reviewed for quality assurance.
 
@@ -76,6 +76,6 @@ Task is being reviewed for quality assurance.
 
 > **WAITING**: `"WAITING"`
 
-Defined in: [src/types/index.ts:1446](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/types/index.ts#L1446)
+Defined in: [src/types/index.ts:1458](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/types/index.ts#L1458)
 
 Task is waiting for external dependencies or manual intervention.

@@ -6,7 +6,7 @@
 
 # Class: GroqAdapter
 
-Defined in: [src/integrations/reasoning/groq.ts:87](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/groq.ts#L87)
+Defined in: [src/integrations/reasoning/groq.ts:87](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/groq.ts#L87)
 
 Implements the `ProviderAdapter` interface for interacting with Groq's
 ultra-fast inference API using the official Groq SDK.
@@ -31,7 +31,7 @@ Handles formatting requests, parsing responses, streaming, and tool use.
 
 > **new GroqAdapter**(`options`): `GroqAdapter`
 
-Defined in: [src/integrations/reasoning/groq.ts:99](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/groq.ts#L99)
+Defined in: [src/integrations/reasoning/groq.ts:99](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/groq.ts#L99)
 
 Creates an instance of the GroqAdapter.
 
@@ -57,7 +57,7 @@ If the API key is missing.
 
 > `readonly` **providerName**: `"groq"` = `'groq'`
 
-Defined in: [src/integrations/reasoning/groq.ts:88](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/groq.ts#L88)
+Defined in: [src/integrations/reasoning/groq.ts:88](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/groq.ts#L88)
 
 The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
@@ -71,7 +71,7 @@ The unique identifier name for this provider (e.g., 'openai', 'anthropic').
 
 > **call**(`prompt`, `options`): `Promise`\<`AsyncIterable`\<[`StreamEvent`](../interfaces/StreamEvent.md), `any`, `any`\>\>
 
-Defined in: [src/integrations/reasoning/groq.ts:124](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/groq.ts#L124)
+Defined in: [src/integrations/reasoning/groq.ts:124](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/groq.ts#L124)
 
 Sends a request to the Groq Chat Completions API.
 Translates `ArtStandardPrompt` to the Groq/OpenAI format and handles streaming and tool use.
@@ -106,7 +106,7 @@ A promise resolving to an AsyncIterable of StreamEvent objects.
 
 > **shutdown**(): `Promise`\<`void`\>
 
-Defined in: [src/integrations/reasoning/groq.ts:354](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/reasoning/groq.ts#L354)
+Defined in: [src/integrations/reasoning/groq.ts:354](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/reasoning/groq.ts#L354)
 
 Optional: Method for graceful shutdown
 

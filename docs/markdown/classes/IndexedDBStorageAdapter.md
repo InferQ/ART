@@ -6,7 +6,7 @@
 
 # Class: IndexedDBStorageAdapter
 
-Defined in: [src/integrations/storage/indexedDB.ts:34](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/storage/indexedDB.ts#L34)
+Defined in: [src/integrations/storage/indexedDB.ts:34](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/storage/indexedDB.ts#L34)
 
 An implementation of the `StorageAdapter` interface that uses the browser's
 IndexedDB API for persistent, client-side storage.
@@ -32,7 +32,7 @@ any other database operations (get, set, delete, query).
 
 > **new IndexedDBStorageAdapter**(`config`): `IndexedDBStorageAdapter`
 
-Defined in: [src/integrations/storage/indexedDB.ts:47](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/storage/indexedDB.ts#L47)
+Defined in: [src/integrations/storage/indexedDB.ts:47](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/storage/indexedDB.ts#L47)
 
 Creates an instance of IndexedDBStorageAdapter.
 Note: The database connection is not opened until `init()` is called.
@@ -59,7 +59,7 @@ https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API
 
 > **clearAll**(): `Promise`\<`void`\>
 
-Defined in: [src/integrations/storage/indexedDB.ts:424](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/storage/indexedDB.ts#L424)
+Defined in: [src/integrations/storage/indexedDB.ts:424](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/storage/indexedDB.ts#L424)
 
 Removes all data from all object stores managed by this adapter instance within the database.
 Use with caution as this is destructive.
@@ -84,7 +84,7 @@ If the database is not initialized or a transaction error occurs.
 
 > **clearCollection**(`collection`): `Promise`\<`void`\>
 
-Defined in: [src/integrations/storage/indexedDB.ts:391](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/storage/indexedDB.ts#L391)
+Defined in: [src/integrations/storage/indexedDB.ts:391](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/storage/indexedDB.ts#L391)
 
 Removes all items from a specific object store (collection).
 
@@ -116,7 +116,7 @@ If the database is not initialized, the store doesn't exist, or a database error
 
 > **delete**(`collection`, `id`): `Promise`\<`void`\>
 
-Defined in: [src/integrations/storage/indexedDB.ts:282](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/storage/indexedDB.ts#L282)
+Defined in: [src/integrations/storage/indexedDB.ts:282](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/storage/indexedDB.ts#L282)
 
 Deletes an item from the specified object store (collection) by its ID.
 
@@ -152,9 +152,9 @@ If the database is not initialized, the store doesn't exist, or a database error
 
 ### get()
 
-> **get**\<`T`\>(`collection`, `id`): `Promise`\<`null` \| `T`\>
+> **get**\<`T`\>(`collection`, `id`): `Promise`\<`T` \| `null`\>
 
-Defined in: [src/integrations/storage/indexedDB.ts:189](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/storage/indexedDB.ts#L189)
+Defined in: [src/integrations/storage/indexedDB.ts:189](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/storage/indexedDB.ts#L189)
 
 Retrieves a single item by its ID from the specified object store (collection).
 
@@ -182,7 +182,7 @@ The ID (key) of the item to retrieve.
 
 #### Returns
 
-`Promise`\<`null` \| `T`\>
+`Promise`\<`T` \| `null`\>
 
 A promise resolving to a copy of the item if found, or `null` otherwise.
 
@@ -200,7 +200,7 @@ If the database is not initialized, the store doesn't exist, or a database error
 
 > **init**(): `Promise`\<`void`\>
 
-Defined in: [src/integrations/storage/indexedDB.ts:67](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/storage/indexedDB.ts#L67)
+Defined in: [src/integrations/storage/indexedDB.ts:67](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/storage/indexedDB.ts#L67)
 
 Opens the IndexedDB database connection and ensures the required object stores
 are created or updated based on the configured `dbVersion`.
@@ -223,7 +223,7 @@ A promise that resolves when the database is successfully opened and ready, or r
 
 > **query**\<`T`\>(`collection`, `filterOptions`): `Promise`\<`T`[]\>
 
-Defined in: [src/integrations/storage/indexedDB.ts:324](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/storage/indexedDB.ts#L324)
+Defined in: [src/integrations/storage/indexedDB.ts:324](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/storage/indexedDB.ts#L324)
 
 Queries items within a collection based on provided filter options.
 **Note:** This implementation uses `getAll()` and performs filtering, sorting,
@@ -279,7 +279,7 @@ This will improve performance for large datasets.
 
 > **set**\<`T`\>(`collection`, `id`, `data`): `Promise`\<`void`\>
 
-Defined in: [src/integrations/storage/indexedDB.ts:226](https://github.com/hashangit/ART/blob/0a239b629fdf1f154ebbcba36600c92f3b8d9c05/src/integrations/storage/indexedDB.ts#L226)
+Defined in: [src/integrations/storage/indexedDB.ts:226](https://github.com/InferQ/ART/blob/1b9328719efc8f19d3a8a92e9b589737d6fa0375/src/integrations/storage/indexedDB.ts#L226)
 
 Saves (creates or updates) an item in the specified object store (collection).
 Assumes the object store uses 'id' as its keyPath. The `id` parameter provided
