@@ -12,39 +12,9 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
+import { getStreamTokenContext } from '@/utils/stream-event-helpers';
 // XmlMatcher removed, parsing of embedded XML is responsibility of OutputParser
 
-/**
- * Helper to determine tokenType and phase based on callContext.
- * @since 0.4.11
- */
-function getTokenContext(callContext: string | undefined, isThinking: boolean): {
-  tokenType: string;
-  phase: 'planning' | 'execution' | 'synthesis' | undefined;
-} {
-  switch (callContext) {
-    case 'PLANNING_THOUGHTS':
-      return {
-        phase: 'planning',
-        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
-      };
-    case 'EXECUTION_THOUGHTS':
-      return {
-        phase: 'execution',
-        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
-      };
-    case 'SYNTHESIS_THOUGHTS':
-      return {
-        phase: 'synthesis',
-        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
-      };
-    default:
-      return {
-        phase: undefined,
-        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
-      };
-  }
-}
 
 // Define expected options for the Ollama adapter constructor
 /**
@@ -152,7 +122,9 @@ export class OllamaAdapter implements ProviderAdapter {
         ErrorCode.INVALID_CONFIG
       );
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-        yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
+        const { phase } = getStreamTokenContext(callContext, false);
+        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+        yield { type: 'ERROR', data: err, phase, threadId, traceId, sessionId };
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return errorGenerator();
@@ -165,7 +137,9 @@ export class OllamaAdapter implements ProviderAdapter {
       Logger.error(`Error translating ArtStandardPrompt to OpenAI format for Ollama: ${error.message}`, { error, threadId, traceId });
       const artError = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-        yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+        const { phase } = getStreamTokenContext(callContext, false);
+        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return errorGenerator();
@@ -225,7 +199,7 @@ export class OllamaAdapter implements ProviderAdapter {
               accumulatedOutputTokens++; // Approximation: count each content chunk as one token
               // If XML parsing is needed for <think> tags, it should be done by OutputParser
               // Adapter streams raw content.
-              const { tokenType, phase } = getTokenContext(callContext, false);
+              const { tokenType, phase } = getStreamTokenContext(callContext, false);
               yield { type: 'TOKEN', data: delta.content, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
             }
 
@@ -266,7 +240,7 @@ export class OllamaAdapter implements ProviderAdapter {
           // If streaming and stop reason is tool_calls, yield the accumulated tool calls.
           // Text content would have been yielded incrementally.
           if (finalStopReason === 'tool_calls' && accumulatedToolCalls.length > 0) {
-            const { tokenType, phase } = getTokenContext(callContext, false);
+            const { tokenType, phase } = getStreamTokenContext(callContext, false);
             const toolData = accumulatedToolCalls.map(tc => ({
               type: 'tool_use', // ART specific marker
               id: tc.id,
@@ -294,7 +268,7 @@ export class OllamaAdapter implements ProviderAdapter {
           finalApiResponseUsage = response.usage;
           const responseMessage = firstChoice.message;
 
-          const { tokenType, phase } = getTokenContext(callContext, false);
+          const { tokenType, phase } = getStreamTokenContext(callContext, false);
 
           if (responseMessage.tool_calls && responseMessage.tool_calls.length > 0) {
             const toolData = responseMessage.tool_calls.map((tc: OpenAI.Chat.Completions.ChatCompletionMessageToolCall) => ({
@@ -330,7 +304,9 @@ export class OllamaAdapter implements ProviderAdapter {
         const artError = error instanceof ARTError ? error :
           (error.constructor.name === 'APIError' ? new ARTError(`Ollama API Error (${(error as any).status}): ${(error as any).message}`, ErrorCode.LLM_PROVIDER_ERROR, error) :
             new ARTError(error.message || 'Unknown Ollama adapter error', ErrorCode.LLM_PROVIDER_ERROR, error));
-        yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+        const { phase } = getStreamTokenContext(callContext, false);
+        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
       } finally {
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }

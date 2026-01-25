@@ -9,6 +9,7 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors'; // Import ARTError and ErrorCode
+import { getStreamTokenContext } from '@/utils/stream-event-helpers';
 
 // TODO: Implement streaming support for DeepSeek.
 // TODO: Implement support for 'tools' and 'tool_choice'.
@@ -22,37 +23,6 @@ export interface DeepSeekAdapterOptions {
   apiBaseUrl?: string;
 }
 
-/**
- * Helper to determine tokenType and phase based on callContext.
- * @since 0.4.11
- */
-function getTokenContext(callContext: string | undefined, isThinking: boolean): {
-  tokenType: string;
-  phase: 'planning' | 'execution' | 'synthesis' | undefined;
-} {
-  switch (callContext) {
-    case 'PLANNING_THOUGHTS':
-      return {
-        phase: 'planning',
-        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
-      };
-    case 'EXECUTION_THOUGHTS':
-      return {
-        phase: 'execution',
-        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
-      };
-    case 'SYNTHESIS_THOUGHTS':
-      return {
-        phase: 'synthesis',
-        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
-      };
-    default:
-      return {
-        phase: undefined,
-        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
-      };
-  }
-}
 
 // Use OpenAI-compatible structures
 // Based on https://platform.deepseek.com/api-docs/api/create-chat-completion/index.html
@@ -154,7 +124,9 @@ export class DeepSeekAdapter implements ProviderAdapter {
       Logger.warn(`DeepSeekAdapter: Streaming requested but not implemented. Returning error stream.`, { threadId, traceId });
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
         const err = new ARTError("Streaming is not yet implemented for the DeepSeekAdapter.", ErrorCode.LLM_PROVIDER_ERROR);
-        yield { type: 'ERROR', data: err, threadId: threadId ?? '', traceId: traceId ?? '', sessionId };
+        const { phase } = getStreamTokenContext(callContext, false);
+        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+        yield { type: 'ERROR', data: err, phase, threadId: threadId ?? '', traceId: traceId ?? '', sessionId };
         yield { type: 'END', data: null, threadId: threadId ?? '', traceId: traceId ?? '', sessionId };
       };
       return errorGenerator();
@@ -171,7 +143,9 @@ export class DeepSeekAdapter implements ProviderAdapter {
       Logger.error(`Error translating ArtStandardPrompt to DeepSeek/OpenAI format: ${error.message}`, { error, threadId, traceId });
       const generator = async function* (): AsyncIterable<StreamEvent> {
         const err = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
-        yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
+        const { phase } = getStreamTokenContext(callContext, false);
+        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+        yield { type: 'ERROR', data: err, phase, threadId, traceId, sessionId };
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
       return generator();
@@ -222,7 +196,9 @@ export class DeepSeekAdapter implements ProviderAdapter {
             ErrorCode.LLM_PROVIDER_ERROR,
             new Error(errorBody) // Pass underlying error context
           );
-          yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
+          const { phase } = getStreamTokenContext(callContext, false);
+          Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+          yield { type: 'ERROR', data: err, phase, threadId, traceId, sessionId };
           yield { type: 'END', data: null, threadId, traceId, sessionId };
           return; // Stop the generator on error
         }
@@ -232,7 +208,9 @@ export class DeepSeekAdapter implements ProviderAdapter {
 
         if (!firstChoice?.message) {
           const err = new ARTError('Invalid response structure from DeepSeek API: No message found.', ErrorCode.LLM_PROVIDER_ERROR, new Error(JSON.stringify(data)));
-          yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
+          const { phase } = getStreamTokenContext(callContext, false);
+          Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+          yield { type: 'ERROR', data: err, phase, threadId, traceId, sessionId };
           yield { type: 'END', data: null, threadId, traceId, sessionId };
           return; // Stop the generator
         }
@@ -245,7 +223,7 @@ export class DeepSeekAdapter implements ProviderAdapter {
         Logger.debug(`DeepSeek API call successful. Finish reason: ${firstChoice.finish_reason}`, { threadId, traceId });
 
         // Yield TOKEN
-        const { tokenType, phase } = getTokenContext(callContext, false);
+        const { tokenType, phase } = getStreamTokenContext(callContext, false);
         const responseContent = responseMessage.content ?? '';
         yield { type: 'TOKEN', data: responseContent.trim(), tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
 
@@ -265,7 +243,9 @@ export class DeepSeekAdapter implements ProviderAdapter {
       } catch (error: any) {
         Logger.error(`Error during DeepSeek API call: ${error.message}`, { error, threadId, traceId });
         const artError = error instanceof ARTError ? error : new ARTError(error.message, ErrorCode.LLM_PROVIDER_ERROR, error);
-        yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+        const { phase } = getStreamTokenContext(callContext, false);
+        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
     }; // No need for .bind(this)

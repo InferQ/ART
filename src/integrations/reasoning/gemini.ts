@@ -13,6 +13,7 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors'; // Import ARTError and ErrorCode
+import { getStreamTokenContext } from '@/utils/stream-event-helpers';
 
 // Define expected options for the Gemini adapter constructor
 /**
@@ -36,37 +37,6 @@ const DEFAULT_INITIAL_DELAY_MS = 1000;
 const DEFAULT_MAX_DELAY_MS = 30000;
 const RETRYABLE_STATUS_CODES = [503, 429, 500, 502, 504];
 
-/**
- * Helper to determine tokenType and phase based on callContext.
- * @since 0.4.11
- */
-function getTokenContext(callContext: string | undefined, isThinking: boolean): {
-  tokenType: string;
-  phase: 'planning' | 'execution' | 'synthesis' | undefined;
-} {
-  switch (callContext) {
-    case 'PLANNING_THOUGHTS':
-      return {
-        phase: 'planning',
-        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
-      };
-    case 'EXECUTION_THOUGHTS':
-      return {
-        phase: 'execution',
-        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
-      };
-    case 'SYNTHESIS_THOUGHTS':
-      return {
-        phase: 'synthesis',
-        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
-      };
-    default:
-      return {
-        phase: undefined,
-        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
-      };
-  }
-}
 
 /**
  * Helper function to check if an error is retryable
@@ -225,7 +195,9 @@ export class GeminiAdapter implements ProviderAdapter {
       Logger.error(`Error translating ArtStandardPrompt to Gemini format: ${error.message}`, { error, threadId, traceId });
       // Immediately yield error and end if translation fails
       const generator = async function* (): AsyncIterable<StreamEvent> {
-        yield { type: 'ERROR', data: error instanceof Error ? error : new Error(String(error)), threadId, traceId, sessionId };
+        const { phase } = getStreamTokenContext(callContext, false);
+        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+        yield { type: 'ERROR', data: error instanceof Error ? error : new Error(String(error)), phase, threadId, traceId, sessionId };
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
       return generator();
@@ -309,7 +281,7 @@ export class GeminiAdapter implements ProviderAdapter {
                   (part as any)?.metadata?.thought ||
                   (part as any)?.inlineMetadata?.thought
                 );
-                const { tokenType, phase } = getTokenContext(callContext, isThought);
+                const { tokenType, phase } = getStreamTokenContext(callContext, isThought);
                 yield {
                   type: 'TOKEN',
                   data: partText,
@@ -325,7 +297,7 @@ export class GeminiAdapter implements ProviderAdapter {
             } else {
               const textPart = (chunk as any).text; // Access as property (fallback)
               if (textPart) {
-                const { tokenType, phase } = getTokenContext(callContext, false);
+                const { tokenType, phase } = getStreamTokenContext(callContext, false);
                 yield {
                   type: 'TOKEN',
                   data: textPart,
@@ -416,7 +388,7 @@ export class GeminiAdapter implements ProviderAdapter {
                 (part as any)?.metadata?.thought ||
                 (part as any)?.inlineMetadata?.thought
               );
-              const { tokenType, phase } = getTokenContext(callContext, isThought);
+              const { tokenType, phase } = getStreamTokenContext(callContext, isThought);
               yield {
                 type: 'TOKEN',
                 data: partText.trim(),
@@ -432,15 +404,19 @@ export class GeminiAdapter implements ProviderAdapter {
           } else if (!firstCandidate || !responseText) {
             if (result.promptFeedback?.blockReason) { // Access directly from result
               Logger.error('Gemini SDK call blocked.', { feedback: result.promptFeedback, threadId, traceId });
-              yield { type: 'ERROR', data: new Error(`Gemini API call blocked: ${result.promptFeedback.blockReason}`), threadId, traceId, sessionId };
+              const { phase } = getStreamTokenContext(callContext, false);
+              Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+              yield { type: 'ERROR', data: new Error(`Gemini API call blocked: ${result.promptFeedback.blockReason}`), phase, threadId, traceId, sessionId };
               return;
             }
             Logger.error('Invalid response structure from Gemini SDK: No text content found', { responseData: result, threadId, traceId }); // Log the whole result
-            yield { type: 'ERROR', data: new Error('Invalid response structure from Gemini SDK: No text content found.'), threadId, traceId, sessionId };
+            const { phase } = getStreamTokenContext(callContext, false);
+            Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+            yield { type: 'ERROR', data: new Error('Invalid response structure from Gemini SDK: No text content found.'), phase, threadId, traceId, sessionId };
             return;
           } else {
             // Yield TOKEN (fallback single text)
-            const { tokenType, phase } = getTokenContext(callContext, false);
+            const { tokenType, phase } = getStreamTokenContext(callContext, false);
             yield {
               type: 'TOKEN',
               data: responseText.trim(),
@@ -472,7 +448,9 @@ export class GeminiAdapter implements ProviderAdapter {
 
       } catch (error: any) {
         Logger.error(`Error during Gemini SDK call: ${error.message}`, { error, threadId, traceId });
-        yield { type: 'ERROR', data: error instanceof Error ? error : new Error(String(error)), threadId, traceId, sessionId };
+        const { phase } = getStreamTokenContext(callContext, false);
+        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+        yield { type: 'ERROR', data: error instanceof Error ? error : new Error(String(error)), phase, threadId, traceId, sessionId };
         // Ensure END is yielded even after an error
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }

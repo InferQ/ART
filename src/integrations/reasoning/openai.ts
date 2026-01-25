@@ -10,43 +10,13 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
+import { getStreamTokenContext } from '@/utils/stream-event-helpers';
 
 // Default model configuration
 const OPENAI_DEFAULT_MODEL_ID = 'gpt-4o';
 const OPENAI_DEFAULT_MAX_TOKENS = 4096;
 const OPENAI_DEFAULT_TEMPERATURE = 0.7;
 
-/**
- * Helper to determine tokenType and phase based on callContext.
- * @since 0.4.11
- */
-function getTokenContext(callContext: string | undefined, isThinking: boolean): {
-  tokenType: string;
-  phase: 'planning' | 'execution' | 'synthesis' | undefined;
-} {
-  switch (callContext) {
-    case 'PLANNING_THOUGHTS':
-      return {
-        phase: 'planning',
-        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
-      };
-    case 'EXECUTION_THOUGHTS':
-      return {
-        phase: 'execution',
-        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
-      };
-    case 'SYNTHESIS_THOUGHTS':
-      return {
-        phase: 'synthesis',
-        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
-      };
-    default:
-      return {
-        phase: undefined,
-        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
-      };
-  }
-}
 
 /**
  * Configuration options required for the `OpenAIAdapter`.
@@ -210,7 +180,9 @@ export class OpenAIAdapter implements ProviderAdapter {
       Logger.error(`Error translating ArtStandardPrompt to OpenAI Responses format: ${error.message}`, { error, threadId, traceId });
       const artError = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-        yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+        const { phase } = getStreamTokenContext(callContext, false);
+        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return errorGenerator();
@@ -274,14 +246,14 @@ export class OpenAIAdapter implements ProviderAdapter {
             if (event.type === 'response.reasoning.delta' || event.type === 'response.reasoning_text.delta') {
               if (event.delta) {
                 accumulatedReasoning += event.delta;
-                const { tokenType, phase } = getTokenContext(callContext, true);
+                const { tokenType, phase } = getStreamTokenContext(callContext, true);
                 yield { type: 'TOKEN', data: event.delta, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
               }
             }
             // Handle reasoning summary deltas
             else if (event.type === 'response.reasoning_summary.delta' || event.type === 'response.reasoning_summary_text.delta') {
               if (event.delta) {
-                const { tokenType, phase } = getTokenContext(callContext, true);
+                const { tokenType, phase } = getStreamTokenContext(callContext, true);
                 yield { type: 'TOKEN', data: event.delta, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
               }
             }
@@ -289,7 +261,7 @@ export class OpenAIAdapter implements ProviderAdapter {
             else if (event.type === 'response.text.delta' || event.type === 'response.output_text.delta') {
               if (event.delta) {
                 accumulatedText += event.delta;
-                const { tokenType, phase } = getTokenContext(callContext, false);
+                const { tokenType, phase } = getStreamTokenContext(callContext, false);
                 yield { type: 'TOKEN', data: event.delta, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
               }
             }
@@ -297,15 +269,15 @@ export class OpenAIAdapter implements ProviderAdapter {
             else if (event.type === 'response.output_item.added') {
               if (event.item) {
                 if (event.item.type === 'text' && event.item.text) {
-                  const { tokenType, phase } = getTokenContext(callContext, false);
+                  const { tokenType, phase } = getStreamTokenContext(callContext, false);
                   yield { type: 'TOKEN', data: event.item.text, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                 } else if (event.item.type === 'reasoning' && event.item.text) {
-                  const { tokenType, phase } = getTokenContext(callContext, true);
+                  const { tokenType, phase } = getStreamTokenContext(callContext, true);
                   yield { type: 'TOKEN', data: event.item.text, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                 } else if (event.item.type === 'message' && event.item.content) {
                   for (const content of event.item.content) {
                     if (content.type === 'output_text' && content.text) {
-                      const { tokenType, phase } = getTokenContext(callContext, false);
+                      const { tokenType, phase } = getStreamTokenContext(callContext, false);
                       yield { type: 'TOKEN', data: content.text, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                     }
                   }
@@ -377,13 +349,13 @@ export class OpenAIAdapter implements ProviderAdapter {
 
           // Yield reasoning tokens first if available
           if (reasoningText.trim()) {
-            const { tokenType, phase } = getTokenContext(callContext, true);
+            const { tokenType, phase } = getStreamTokenContext(callContext, true);
             yield { type: 'TOKEN', data: reasoningText.trim(), tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
           }
 
           // Then yield response tokens
           if (responseText.trim()) {
-            const { tokenType, phase } = getTokenContext(callContext, false);
+            const { tokenType, phase } = getStreamTokenContext(callContext, false);
             yield { type: 'TOKEN', data: responseText.trim(), tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
           }
 
@@ -395,7 +367,7 @@ export class OpenAIAdapter implements ProviderAdapter {
               name: tu.name,
               input: tu.input,
             }));
-            const { tokenType, phase } = getTokenContext(callContext, false);
+            const { tokenType, phase } = getStreamTokenContext(callContext, false);
             yield { type: 'TOKEN', data: toolData, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
           }
 
@@ -424,7 +396,9 @@ export class OpenAIAdapter implements ProviderAdapter {
           (error instanceof Error && error.message.includes('OpenAI') ?
             new ARTError(`OpenAI API Error: ${error.message}`, ErrorCode.LLM_PROVIDER_ERROR, error) :
             new ARTError(error.message || 'Unknown OpenAI adapter error', ErrorCode.LLM_PROVIDER_ERROR, error));
-        yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+        const { phase } = getStreamTokenContext(callContext, false);
+        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
+        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
     }.bind(this);
