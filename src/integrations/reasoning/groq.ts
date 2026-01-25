@@ -18,7 +18,7 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
-import { getStreamTokenContext } from '@/utils/stream-event-helpers';
+import { getStreamTokenContext, createErrorStreamEvent } from '@/utils/stream-event-helpers';
 
 // Default model configuration
 const GROQ_DEFAULT_MODEL_ID = 'llama-3.3-70b-versatile';
@@ -120,9 +120,7 @@ export class GroqAdapter implements ProviderAdapter {
             Logger.error(`Error translating ArtStandardPrompt to Groq format: ${error.message}`, { error, threadId, traceId });
             const artError = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
             const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-                const { phase } = getStreamTokenContext(callContext, false);
-                Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-                yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
+                yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
                 yield { type: 'END', data: null, threadId, traceId, sessionId };
             };
             return errorGenerator();
@@ -312,9 +310,7 @@ export class GroqAdapter implements ProviderAdapter {
                     (error instanceof Groq.APIError ?
                         new ARTError(`Groq API Error (${error.status}): ${error.message}`, ErrorCode.LLM_PROVIDER_ERROR, error) :
                         new ARTError(error.message || 'Unknown Groq adapter error', ErrorCode.LLM_PROVIDER_ERROR, error));
-                const { phase } = getStreamTokenContext(callContext, false);
-                Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-                yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
+                yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
                 yield { type: 'END', data: null, threadId, traceId, sessionId };
             }
         }.bind(this);

@@ -9,7 +9,7 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors'; // Import ARTError and ErrorCode
-import { getStreamTokenContext } from '@/utils/stream-event-helpers';
+import { getStreamTokenContext, createErrorStreamEvent } from '@/utils/stream-event-helpers';
 
 // TODO: Implement streaming support for DeepSeek.
 // TODO: Implement support for 'tools' and 'tool_choice'.
@@ -124,9 +124,7 @@ export class DeepSeekAdapter implements ProviderAdapter {
       Logger.warn(`DeepSeekAdapter: Streaming requested but not implemented. Returning error stream.`, { threadId, traceId });
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
         const err = new ARTError("Streaming is not yet implemented for the DeepSeekAdapter.", ErrorCode.LLM_PROVIDER_ERROR);
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: err, phase, threadId: threadId ?? '', traceId: traceId ?? '', sessionId };
+        yield createErrorStreamEvent(err, threadId ?? '', traceId ?? '', sessionId, callContext);
         yield { type: 'END', data: null, threadId: threadId ?? '', traceId: traceId ?? '', sessionId };
       };
       return errorGenerator();
@@ -143,9 +141,7 @@ export class DeepSeekAdapter implements ProviderAdapter {
       Logger.error(`Error translating ArtStandardPrompt to DeepSeek/OpenAI format: ${error.message}`, { error, threadId, traceId });
       const generator = async function* (): AsyncIterable<StreamEvent> {
         const err = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: err, phase, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(err, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
       return generator();
@@ -196,9 +192,7 @@ export class DeepSeekAdapter implements ProviderAdapter {
             ErrorCode.LLM_PROVIDER_ERROR,
             new Error(errorBody) // Pass underlying error context
           );
-          const { phase } = getStreamTokenContext(callContext, false);
-          Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-          yield { type: 'ERROR', data: err, phase, threadId, traceId, sessionId };
+          yield createErrorStreamEvent(err, threadId, traceId, sessionId, callContext);
           yield { type: 'END', data: null, threadId, traceId, sessionId };
           return; // Stop the generator on error
         }
@@ -208,9 +202,7 @@ export class DeepSeekAdapter implements ProviderAdapter {
 
         if (!firstChoice?.message) {
           const err = new ARTError('Invalid response structure from DeepSeek API: No message found.', ErrorCode.LLM_PROVIDER_ERROR, new Error(JSON.stringify(data)));
-          const { phase } = getStreamTokenContext(callContext, false);
-          Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-          yield { type: 'ERROR', data: err, phase, threadId, traceId, sessionId };
+          yield createErrorStreamEvent(err, threadId, traceId, sessionId, callContext);
           yield { type: 'END', data: null, threadId, traceId, sessionId };
           return; // Stop the generator
         }
@@ -243,9 +235,7 @@ export class DeepSeekAdapter implements ProviderAdapter {
       } catch (error: any) {
         Logger.error(`Error during DeepSeek API call: ${error.message}`, { error, threadId, traceId });
         const artError = error instanceof ARTError ? error : new ARTError(error.message, ErrorCode.LLM_PROVIDER_ERROR, error);
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
     }; // No need for .bind(this)

@@ -10,7 +10,7 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
-import { getStreamTokenContext } from '@/utils/stream-event-helpers';
+import { getStreamTokenContext, createErrorStreamEvent } from '@/utils/stream-event-helpers';
 
 // Default model if not specified
 const ANTHROPIC_DEFAULT_MODEL_ID = 'claude-3-7-sonnet-20250219';
@@ -115,9 +115,7 @@ export class AnthropicAdapter implements ProviderAdapter {
     if (!maxTokens) {
       const err = new ARTError("Anthropic API requires 'max_tokens'.", ErrorCode.INVALID_CONFIG);
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: err, phase, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(err, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return errorGenerator();
@@ -133,9 +131,7 @@ export class AnthropicAdapter implements ProviderAdapter {
       Logger.error(`Error translating ArtStandardPrompt to Anthropic SDK format: ${error.message}`, { error, threadId, traceId });
       const artError = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return errorGenerator();
@@ -447,9 +443,7 @@ export class AnthropicAdapter implements ProviderAdapter {
         const artError = error instanceof ARTError ? error :
           (error instanceof Anthropic.APIError ? new ARTError(`Anthropic API Error (${error.status}): ${error.message}`, ErrorCode.LLM_PROVIDER_ERROR, error) :
             new ARTError(error.message || 'Unknown Anthropic adapter error', ErrorCode.LLM_PROVIDER_ERROR, error));
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
     }.bind(this);

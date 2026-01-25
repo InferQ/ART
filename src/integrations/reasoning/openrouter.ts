@@ -10,7 +10,7 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
-import { getStreamTokenContext } from '@/utils/stream-event-helpers';
+import { getStreamTokenContext, createErrorStreamEvent } from '@/utils/stream-event-helpers';
 
 
 // Using OpenAI-compatible structures, as OpenRouter adheres to them.
@@ -157,9 +157,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
           error instanceof ARTError
             ? error
             : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: err, phase, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(err, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return generator();
@@ -221,9 +219,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
           new Error(errorBody),
         );
         const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-          const { phase } = getStreamTokenContext(callContext, false);
-          Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-          yield { type: 'ERROR', data: err, phase, threadId, traceId, sessionId };
+          yield createErrorStreamEvent(err, threadId, traceId, sessionId, callContext);
           yield { type: 'END', data: null, threadId, traceId, sessionId };
         };
         return errorGenerator();
@@ -239,9 +235,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
       Logger.error(`Error during OpenRouter API call: ${error.message}`, { error, threadId, traceId });
       const artError = error instanceof ARTError ? error : new ARTError(error.message, ErrorCode.LLM_PROVIDER_ERROR, error);
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return errorGenerator();
@@ -361,9 +355,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
           error instanceof ARTError
             ? error
             : new ARTError(`Error reading OpenRouter stream: ${error.message}`, ErrorCode.LLM_PROVIDER_ERROR, error);
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${trid}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: artError, phase, threadId: tid, traceId: trid, sessionId: sid };
+        yield createErrorStreamEvent(artError, tid, trid, sid, callContext);
         return; // End generation on error
       }
     }
@@ -413,9 +405,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
         ErrorCode.LLM_PROVIDER_ERROR,
         new Error(JSON.stringify(data)),
       );
-      const { phase } = getStreamTokenContext(callContext, false);
-      Logger.debug(`[${trid}] ERROR event with phase: ${phase}`, { phase, callContext });
-      yield { type: 'ERROR', data: err, phase, threadId: tid, traceId: trid, sessionId: sid };
+      yield createErrorStreamEvent(err, tid, trid, sid, callContext);
       yield { type: 'END', data: null, threadId: tid, traceId: trid, sessionId: sid };
       return;
     }

@@ -10,7 +10,7 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
-import { getStreamTokenContext } from '@/utils/stream-event-helpers';
+import { getStreamTokenContext, createErrorStreamEvent } from '@/utils/stream-event-helpers';
 
 // Default model configuration
 const OPENAI_DEFAULT_MODEL_ID = 'gpt-4o';
@@ -180,9 +180,7 @@ export class OpenAIAdapter implements ProviderAdapter {
       Logger.error(`Error translating ArtStandardPrompt to OpenAI Responses format: ${error.message}`, { error, threadId, traceId });
       const artError = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return errorGenerator();
@@ -396,9 +394,7 @@ export class OpenAIAdapter implements ProviderAdapter {
           (error instanceof Error && error.message.includes('OpenAI') ?
             new ARTError(`OpenAI API Error: ${error.message}`, ErrorCode.LLM_PROVIDER_ERROR, error) :
             new ARTError(error.message || 'Unknown OpenAI adapter error', ErrorCode.LLM_PROVIDER_ERROR, error));
-        const { phase } = getStreamTokenContext(callContext, false);
-        Logger.debug(`[${traceId}] ERROR event with phase: ${phase}`, { phase, callContext });
-        yield { type: 'ERROR', data: artError, phase, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
     }.bind(this);
