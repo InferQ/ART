@@ -264,6 +264,9 @@ export interface Observation {
  * Allows for real-time delivery of tokens, metadata, errors, and lifecycle signals.
  * Adapters are responsible for translating provider-specific stream chunks into these standard events.
  *
+ * The `phase` property is populated on all event types including ERROR events, providing context
+ * about which agent execution phase the event occurred in (planning, execution, or synthesis).
+ *
  * @interface StreamEvent
  */
 export interface StreamEvent {

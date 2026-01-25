@@ -91,7 +91,7 @@ For _each_ Todo item, the agent enters a mini-ReAct loop (max 5 iterations):
 
 #### Change Tracking (v0.4.15)
 
-> **New in v0.4.15**: When the agent dynamically modifies its todo list, the `PLAN_UPDATE` observation includes detailed change tracking.
+> **New in v0.4.16**: When the agent dynamically modifies its todo list, the `PLAN_UPDATE` observation includes detailed change tracking.
 
 The framework automatically tracks changes to the todo list during execution:
 

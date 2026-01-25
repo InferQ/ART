@@ -109,7 +109,7 @@ These types capture the granular progress of an LLM generation stream.
 
 ## PLAN_UPDATE Content Structure
 
-> **New in v0.4.15**: `PLAN_UPDATE` observations now include detailed change tracking.
+> **New in v0.4.16**: `PLAN_UPDATE` observations now include detailed change tracking.
 
 The `content` field of `PLAN_UPDATE` observations contains:
 

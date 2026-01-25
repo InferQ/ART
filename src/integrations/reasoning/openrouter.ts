@@ -10,38 +10,8 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
+import { getStreamTokenContext, createErrorStreamEvent } from '@/utils/stream-event-helpers';
 
-/**
- * Helper to determine tokenType and phase based on callContext.
- * @since 0.4.11
- */
-function getTokenContext(callContext: string | undefined, isThinking: boolean): {
-  tokenType: string;
-  phase: 'planning' | 'execution' | 'synthesis' | undefined;
-} {
-  switch (callContext) {
-    case 'PLANNING_THOUGHTS':
-      return {
-        phase: 'planning',
-        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
-      };
-    case 'EXECUTION_THOUGHTS':
-      return {
-        phase: 'execution',
-        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
-      };
-    case 'SYNTHESIS_THOUGHTS':
-      return {
-        phase: 'synthesis',
-        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
-      };
-    default:
-      return {
-        phase: undefined,
-        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
-      };
-  }
-}
 
 // Using OpenAI-compatible structures, as OpenRouter adheres to them.
 // Based on https://openrouter.ai/docs#api-reference-chat-completions
@@ -187,7 +157,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
           error instanceof ARTError
             ? error
             : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
-        yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(err, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return generator();
@@ -249,7 +219,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
           new Error(errorBody),
         );
         const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-          yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
+          yield createErrorStreamEvent(err, threadId, traceId, sessionId, callContext);
           yield { type: 'END', data: null, threadId, traceId, sessionId };
         };
         return errorGenerator();
@@ -265,7 +235,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
       Logger.error(`Error during OpenRouter API call: ${error.message}`, { error, threadId, traceId });
       const artError = error instanceof ARTError ? error : new ARTError(error.message, ErrorCode.LLM_PROVIDER_ERROR, error);
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-        yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return errorGenerator();
@@ -332,7 +302,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
 
           // 1) Reasoning text (simple field)
           if (typeof delta.reasoning === 'string' && delta.reasoning.length > 0) {
-            const { tokenType, phase } = getTokenContext(callContext, true);
+            const { tokenType, phase } = getStreamTokenContext(callContext, true);
             yield { type: 'TOKEN', data: delta.reasoning, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
           }
 
@@ -342,10 +312,10 @@ export class OpenRouterAdapter implements ProviderAdapter {
             for (const rd of reasoningDetails) {
               // Prefer raw reasoning.text, else summarize/ignore encrypted
               if (rd?.type === 'reasoning.text' && typeof rd.text === 'string' && rd.text.length > 0) {
-                const { tokenType, phase } = getTokenContext(callContext, true);
+                const { tokenType, phase } = getStreamTokenContext(callContext, true);
                 yield { type: 'TOKEN', data: rd.text, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
               } else if (rd?.type === 'reasoning.summary' && typeof rd.summary === 'string' && rd.summary.length > 0) {
-                const { tokenType, phase } = getTokenContext(callContext, true);
+                const { tokenType, phase } = getStreamTokenContext(callContext, true);
                 yield { type: 'TOKEN', data: rd.summary, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
               }
               // Encrypted or unknown formats are ignored for token streaming
@@ -354,7 +324,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
 
           // 3) Content delta (normal response tokens)
           if (typeof delta.content === 'string' && delta.content.length > 0) {
-            const { tokenType, phase } = getTokenContext(callContext, false);
+            const { tokenType, phase } = getStreamTokenContext(callContext, false);
             yield { type: 'TOKEN', data: delta.content, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
           }
 
@@ -385,7 +355,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
           error instanceof ARTError
             ? error
             : new ARTError(`Error reading OpenRouter stream: ${error.message}`, ErrorCode.LLM_PROVIDER_ERROR, error);
-        yield { type: 'ERROR', data: artError, threadId: tid, traceId: trid, sessionId: sid };
+        yield createErrorStreamEvent(artError, tid, trid, sid, callContext);
         return; // End generation on error
       }
     }
@@ -398,7 +368,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
         name: String(tc?.function?.name ?? ''),
         input: JSON.parse((tc?.function?.arguments as string | undefined) ?? '{}'),
       }));
-      const { tokenType, phase } = getTokenContext(callContext, false);
+      const { tokenType, phase } = getStreamTokenContext(callContext, false);
       yield { type: 'TOKEN', data: toolData, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
     }
 
@@ -435,7 +405,7 @@ export class OpenRouterAdapter implements ProviderAdapter {
         ErrorCode.LLM_PROVIDER_ERROR,
         new Error(JSON.stringify(data)),
       );
-      yield { type: 'ERROR', data: err, threadId: tid, traceId: trid, sessionId: sid };
+      yield createErrorStreamEvent(err, tid, trid, sid, callContext);
       yield { type: 'END', data: null, threadId: tid, traceId: trid, sessionId: sid };
       return;
     }
@@ -444,22 +414,22 @@ export class OpenRouterAdapter implements ProviderAdapter {
 
     // Emit reasoning (non-streaming) if present
     if (typeof responseMessage.reasoning === 'string' && responseMessage.reasoning.length > 0) {
-      const { tokenType, phase } = getTokenContext(callContext, true);
+      const { tokenType, phase } = getStreamTokenContext(callContext, true);
       yield { type: 'TOKEN', data: responseMessage.reasoning, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
     }
     if (Array.isArray(responseMessage.reasoning_details)) {
       for (const rd of responseMessage.reasoning_details) {
         if (rd?.type === 'reasoning.text' && typeof rd.text === 'string' && rd.text.length > 0) {
-          const { tokenType, phase } = getTokenContext(callContext, true);
+          const { tokenType, phase } = getStreamTokenContext(callContext, true);
           yield { type: 'TOKEN', data: rd.text, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
         } else if (rd?.type === 'reasoning.summary' && typeof rd.summary === 'string' && rd.summary.length > 0) {
-          const { tokenType, phase } = getTokenContext(callContext, true);
+          const { tokenType, phase } = getStreamTokenContext(callContext, true);
           yield { type: 'TOKEN', data: rd.summary, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId: tid, traceId: trid, sessionId: sid };
         }
       }
     }
 
-    const { tokenType, phase } = getTokenContext(callContext, false);
+    const { tokenType, phase } = getStreamTokenContext(callContext, false);
 
     const toolData =
       (responseMessage.tool_calls as any[] | undefined)?.map((tc) => ({

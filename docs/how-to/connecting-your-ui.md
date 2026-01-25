@@ -303,7 +303,7 @@ async function loadInProgressTasks(threadId) {
 
 ## 7. Visualizing Plan Changes
 
-> **New in v0.4.15**: You can now visualize exactly how the agent's plan evolves during execution.
+> **New in v0.4.16**: You can now visualize exactly how the agent's plan evolves during execution.
 
 When the PES agent dynamically modifies its todo list (adding, modifying, or removing tasks), `PLAN_UPDATE` observations now include a `changes` field with detailed change tracking.
 
