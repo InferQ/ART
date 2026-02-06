@@ -267,7 +267,7 @@ const reorderedTodoList = [
 
 ## Tracking Plan Changes
 
-> **New in v0.4.15**: The ART Framework now provides detailed change tracking for dynamic todo list modifications.
+> **New in v0.4.16**: The ART Framework now provides detailed change tracking for dynamic todo list modifications.
 
 When the agent modifies its todo list during execution, `PLAN_UPDATE` observations now include a `changes` field that tells you exactly what changed—without needing to manually compare todo lists.
 
@@ -633,6 +633,6 @@ See the integration tests for examples:
 - **Remove items**: Omit items from `updatedPlan.todoList`
 - **Protection**: COMPLETED items retain their status
 - **Persistence**: Changes are automatically saved and recorded
-- **Change Tracking** (v0.4.15): `PLAN_UPDATE` observations include detailed `changes` field with `added`, `modified`, and `removed` arrays
+- **Change Tracking** (v0.4.16): `PLAN_UPDATE` observations include detailed `changes` field with `added`, `modified`, and `removed` arrays
 
 This dynamic capability enables adaptive agent behavior where the plan evolves based on real-time discoveries during execution.

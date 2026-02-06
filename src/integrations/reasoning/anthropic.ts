@@ -10,6 +10,7 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
+import { getStreamTokenContext, createErrorStreamEvent } from '@/utils/stream-event-helpers';
 
 // Default model if not specified
 const ANTHROPIC_DEFAULT_MODEL_ID = 'claude-3-7-sonnet-20250219';
@@ -31,37 +32,6 @@ export interface AnthropicAdapterOptions {
   defaultTemperature?: number;
 }
 
-/**
- * Helper to determine tokenType and phase based on callContext.
- * @since 0.4.11
- */
-function getTokenContext(callContext: string | undefined, isThinking: boolean): {
-  tokenType: string;
-  phase: 'planning' | 'execution' | 'synthesis' | undefined;
-} {
-  switch (callContext) {
-    case 'PLANNING_THOUGHTS':
-      return {
-        phase: 'planning',
-        tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
-      };
-    case 'EXECUTION_THOUGHTS':
-      return {
-        phase: 'execution',
-        tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
-      };
-    case 'SYNTHESIS_THOUGHTS':
-      return {
-        phase: 'synthesis',
-        tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
-      };
-    default:
-      return {
-        phase: undefined,
-        tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
-      };
-  }
-}
 
 // Types for Anthropic API interaction using the SDK
 type AnthropicSDKMessageParam = Anthropic.Messages.MessageParam;
@@ -145,7 +115,7 @@ export class AnthropicAdapter implements ProviderAdapter {
     if (!maxTokens) {
       const err = new ARTError("Anthropic API requires 'max_tokens'.", ErrorCode.INVALID_CONFIG);
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-        yield { type: 'ERROR', data: err, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(err, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return errorGenerator();
@@ -161,7 +131,7 @@ export class AnthropicAdapter implements ProviderAdapter {
       Logger.error(`Error translating ArtStandardPrompt to Anthropic SDK format: ${error.message}`, { error, threadId, traceId });
       const artError = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
       const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-        yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       };
       return errorGenerator();
@@ -248,7 +218,7 @@ export class AnthropicAdapter implements ProviderAdapter {
                   const thinkingText = (event.content_block as any).thinking || '';
                   if (thinkingText) {
                     if (timeToFirstTokenMs === undefined) timeToFirstTokenMs = Date.now() - startTime;
-                    const { tokenType, phase } = getTokenContext(callContext, true);
+                    const { tokenType, phase } = getStreamTokenContext(callContext, true);
                     yield {
                       type: 'TOKEN',
                       data: thinkingText,
@@ -275,7 +245,7 @@ export class AnthropicAdapter implements ProviderAdapter {
                   const textDelta = event.delta.text;
                   accumulatedText += textDelta;
                   if (timeToFirstTokenMs === undefined) timeToFirstTokenMs = Date.now() - startTime;
-                  const { tokenType, phase } = getTokenContext(callContext, false);
+                  const { tokenType, phase } = getStreamTokenContext(callContext, false);
                   yield {
                     type: 'TOKEN',
                     data: textDelta,
@@ -291,7 +261,7 @@ export class AnthropicAdapter implements ProviderAdapter {
                   const thinkingDelta = (event.delta as any).thinking || '';
                   if (thinkingDelta) {
                     if (timeToFirstTokenMs === undefined) timeToFirstTokenMs = Date.now() - startTime;
-                    const { tokenType, phase } = getTokenContext(callContext, true);
+                    const { tokenType, phase } = getStreamTokenContext(callContext, true);
                     yield {
                       type: 'TOKEN',
                       data: thinkingDelta,
@@ -370,7 +340,7 @@ export class AnthropicAdapter implements ProviderAdapter {
                 }
 
                 if (finalStopReason === 'tool_use' && accumulatedToolUses.length > 0) {
-                  const { tokenType, phase } = getTokenContext(callContext, false);
+                  const { tokenType, phase } = getStreamTokenContext(callContext, false);
                   const toolData = accumulatedToolUses.map(tu => ({
                     type: 'tool_use',
                     id: tu.id,
@@ -383,7 +353,7 @@ export class AnthropicAdapter implements ProviderAdapter {
                     yield { type: 'TOKEN', data: toolData, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                   }
                 } else if (accumulatedText.trim()) {
-                  const { tokenType, phase } = getTokenContext(callContext, false);
+                  const { tokenType, phase } = getStreamTokenContext(callContext, false);
                   yield { type: 'TOKEN', data: accumulatedText.trim(), tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                 }
 
@@ -432,7 +402,7 @@ export class AnthropicAdapter implements ProviderAdapter {
           });
           responseText = responseText.trim();
 
-          const { tokenType, phase } = getTokenContext(callContext, false);
+          const { tokenType, phase } = getStreamTokenContext(callContext, false);
 
           if (response.stop_reason === 'tool_use' && toolUseBlocks.length > 0) {
             const toolData = toolUseBlocks.map(tu => ({
@@ -473,7 +443,7 @@ export class AnthropicAdapter implements ProviderAdapter {
         const artError = error instanceof ARTError ? error :
           (error instanceof Anthropic.APIError ? new ARTError(`Anthropic API Error (${error.status}): ${error.message}`, ErrorCode.LLM_PROVIDER_ERROR, error) :
             new ARTError(error.message || 'Unknown Anthropic adapter error', ErrorCode.LLM_PROVIDER_ERROR, error));
-        yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+        yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
         yield { type: 'END', data: null, threadId, traceId, sessionId };
       }
     }.bind(this);

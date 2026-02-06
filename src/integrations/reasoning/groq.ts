@@ -18,43 +18,13 @@ import {
 } from '@/types';
 import { Logger } from '@/utils/logger';
 import { ARTError, ErrorCode } from '@/errors';
+import { getStreamTokenContext, createErrorStreamEvent } from '@/utils/stream-event-helpers';
 
 // Default model configuration
 const GROQ_DEFAULT_MODEL_ID = 'llama-3.3-70b-versatile';
 const GROQ_DEFAULT_MAX_TOKENS = 4096;
 const GROQ_DEFAULT_TEMPERATURE = 0.7;
 
-/**
- * Helper to determine tokenType and phase based on callContext.
- * @since 0.4.11
- */
-function getTokenContext(callContext: string | undefined, isThinking: boolean): {
-    tokenType: string;
-    phase: 'planning' | 'execution' | 'synthesis' | undefined;
-} {
-    switch (callContext) {
-        case 'PLANNING_THOUGHTS':
-            return {
-                phase: 'planning',
-                tokenType: isThinking ? 'PLANNING_LLM_THINKING' : 'PLANNING_LLM_RESPONSE'
-            };
-        case 'EXECUTION_THOUGHTS':
-            return {
-                phase: 'execution',
-                tokenType: isThinking ? 'EXECUTION_LLM_THINKING' : 'EXECUTION_LLM_RESPONSE'
-            };
-        case 'SYNTHESIS_THOUGHTS':
-            return {
-                phase: 'synthesis',
-                tokenType: isThinking ? 'SYNTHESIS_LLM_THINKING' : 'SYNTHESIS_LLM_RESPONSE'
-            };
-        default:
-            return {
-                phase: undefined,
-                tokenType: isThinking ? 'LLM_THINKING' : 'LLM_RESPONSE'
-            };
-    }
-}
 
 /**
  * Configuration options required for the `GroqAdapter`.
@@ -150,7 +120,7 @@ export class GroqAdapter implements ProviderAdapter {
             Logger.error(`Error translating ArtStandardPrompt to Groq format: ${error.message}`, { error, threadId, traceId });
             const artError = error instanceof ARTError ? error : new ARTError(`Prompt translation failed: ${error.message}`, ErrorCode.PROMPT_TRANSLATION_FAILED, error);
             const errorGenerator = async function* (): AsyncIterable<StreamEvent> {
-                yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+                yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
                 yield { type: 'END', data: null, threadId, traceId, sessionId };
             };
             return errorGenerator();
@@ -208,7 +178,7 @@ export class GroqAdapter implements ProviderAdapter {
                         // Handle text content
                         if (delta?.content) {
                             accumulatedText += delta.content;
-                            const { tokenType, phase } = getTokenContext(callContext, false);
+                            const { tokenType, phase } = getStreamTokenContext(callContext, false);
                             yield { type: 'TOKEN', data: delta.content, tokenType: tokenType as any, phase, timestamp: Date.now(), ...(stepContext && { stepId: stepContext.stepId, stepDescription: stepContext.stepDescription }), threadId, traceId, sessionId };
                         }
 
@@ -240,7 +210,7 @@ export class GroqAdapter implements ProviderAdapter {
 
                     // Handle accumulated tool calls at the end of stream
                     if (accumulatedToolCalls.size > 0) {
-                        const { tokenType, phase } = getTokenContext(callContext, false);
+                        const { tokenType, phase } = getStreamTokenContext(callContext, false);
                         const toolData = Array.from(accumulatedToolCalls.values()).map(tc => ({
                             type: 'tool_use',
                             id: tc.id,
@@ -297,7 +267,7 @@ export class GroqAdapter implements ProviderAdapter {
                     const responseText = responseMessage?.content || '';
                     const toolCalls = responseMessage?.tool_calls;
 
-                    const { tokenType, phase } = getTokenContext(callContext, false);
+                    const { tokenType, phase } = getStreamTokenContext(callContext, false);
 
                     if (toolCalls && toolCalls.length > 0) {
                         const toolData = toolCalls.map((tc: ChatCompletionMessageToolCall) => ({
@@ -340,7 +310,7 @@ export class GroqAdapter implements ProviderAdapter {
                     (error instanceof Groq.APIError ?
                         new ARTError(`Groq API Error (${error.status}): ${error.message}`, ErrorCode.LLM_PROVIDER_ERROR, error) :
                         new ARTError(error.message || 'Unknown Groq adapter error', ErrorCode.LLM_PROVIDER_ERROR, error));
-                yield { type: 'ERROR', data: artError, threadId, traceId, sessionId };
+                yield createErrorStreamEvent(artError, threadId, traceId, sessionId, callContext);
                 yield { type: 'END', data: null, threadId, traceId, sessionId };
             }
         }.bind(this);

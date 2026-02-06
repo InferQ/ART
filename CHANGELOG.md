@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.16] - 2026-01-25
+
+### 🔧 ERROR Event Phase Property
+
+This release adds the `phase` property to ERROR events, providing context about which agent execution phase (planning/execution/synthesis) an error occurred in.
+
+### 📝 Changes
+
+**Fixed**:
+- ERROR events now include the `phase` property, enabling better error observability and phase-based UI error suppression
+- Planning phase errors are now correctly suppressible in UI components
+
+**Changed**:
+- Extracted `getTokenContext` to shared utility `src/utils/stream-event-helpers.ts` to eliminate code duplication across all provider adapters
+- All provider adapters (Anthropic, OpenAI, Gemini, Groq, Ollama, DeepSeek, OpenRouter) now use the shared utility
+
+**Added**:
+- `getStreamTokenContext(callContext, isThinking)`: Extracts phase and tokenType from callContext
+- `createErrorStreamEvent(error, threadId, traceId, sessionId, callContext)`: Creates ERROR events with phase
+
+### 🔍 Example Usage
+
+```typescript
+// ERROR events now include phase information
+socket.subscribe((event) => {
+  if (event.type === 'ERROR' && event.phase === 'planning') {
+    // Suppress planning phase errors - agent may retry
+    return;
+  }
+  // Show execution/synthesis phase errors to user
+  showErrorToast(event.data);
+}, ['ERROR']);
+```
+
 ## [0.4.15] - 2026-01-21
 
 ### ✨ Dynamic Todo List Change Tracking
